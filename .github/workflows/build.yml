@@ -60,10 +60,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           tags: |
-            docker.io/fnndsc/chris_ui:latest${{ steps.postfix_of_latest.outputs.postfix_of_latest}}
-            docker.io/fnndsc/chris_ui:${{ steps.info.outputs.version_string }}
-            ghcr.io/fnndsc/chris_ui:latest${{ steps.postfix_of_latest.outputs.postfix_of_latest}}
-            ghcr.io/fnndsc/chris_ui:${{ steps.info.outputs.version_string }}
+            ghcr.io/chhsiao1981/chris_ui:latest${{ steps.postfix_of_latest.outputs.postfix_of_latest}}
+            ghcr.io/chhsiao1981/chris_ui:${{ steps.info.outputs.version_string }}
           context: .
           file: ./Dockerfile_cp
           platforms: linux/amd64,linux/arm64
