@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    if: github.repository_owner == 'FNNDSC'
+    # if: github.repository_owner == 'FNNDSC'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,6 +29,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
+        continue-on-error: true
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -36,6 +37,13 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.7
+      - run: npm ci
+      - run: npm run build
 
       - name: Get postfix of latest
         id: postfix_of_latest
@@ -47,12 +55,6 @@ jobs:
             echo "Postfix of latest: -$GITHUB_REF_NAME"
             echo "postfix_of_latest=-$GITHUB_REF_NAME" >> $GITHUB_OUTPUT
           fi
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20.7
-      - run: npm ci
-      - run: npm run build
 
       - name: Copy and push
         uses: docker/build-push-action@v5
