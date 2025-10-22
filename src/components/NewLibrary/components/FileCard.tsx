@@ -30,7 +30,7 @@ import { OperationContext, type OriginState } from "../context";
 import useLongPress, {
   elipses,
   getBackgroundRowColor,
-} from "../utils/longpress";
+} from "../utils/useLongPress";
 import { FolderContextMenu } from "./ContextMenu";
 
 type Pagination = {
@@ -279,14 +279,14 @@ export const SubFileCard: React.FC<SubFileCardProps> = ({
 
   const handleClick = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
     e.stopPropagation();
-    handlers.handleOnClick(e, file, file.data.fname, "file", () => {
+    handlers.onClick(e, file, file.data.fname, "file", () => {
       setIsPreview(!preview);
     });
   };
 
   const handleCheckboxChange = (e: React.FormEvent<HTMLInputElement>) => {
     e.stopPropagation();
-    handlers.handleCheckboxChange(e, file.data.fname, file, "file");
+    handlers.onChangeCheckbox(e, file.data.fname, file, "file");
   };
 
   return (
@@ -298,7 +298,7 @@ export const SubFileCard: React.FC<SubFileCardProps> = ({
           additionalKeys: [computedPath],
         }}
         onClick={handleClick}
-        onMouseDown={handlers.handleOnMouseDown}
+        onMouseDown={handlers.onMouseDown}
         onCheckboxChange={handleCheckboxChange}
         onContextMenuClick={handleClick}
         onNavigate={() => setIsPreview(!preview)}
@@ -377,14 +377,14 @@ export const SubLinkCard: React.FC<SubLinkCardProps> = ({
 
   const handleClick = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
     e.stopPropagation();
-    handlers.handleOnClick(e, linkFile, linkFile.data.path, "linkFile", () => {
+    handlers.onClick(e, linkFile, linkFile.data.path, "linkFile", () => {
       navigate(linkFile.data.path);
     });
   };
 
   const handleCheckboxChange = (e: React.FormEvent<HTMLInputElement>) => {
     e.stopPropagation();
-    handlers.handleCheckboxChange(e, linkFile.data.path, linkFile, "linkFile");
+    handlers.onChangeCheckbox(e, linkFile.data.path, linkFile, "linkFile");
   };
 
   return (
@@ -396,7 +396,7 @@ export const SubLinkCard: React.FC<SubLinkCardProps> = ({
           additionalKeys: [computedPath],
         }}
         onClick={handleClick}
-        onMouseDown={handlers.handleOnMouseDown}
+        onMouseDown={handlers.onMouseDown}
         onCheckboxChange={handleCheckboxChange}
         onContextMenuClick={handleClick}
         onNavigate={() => navigate(linkFile.data.path)}

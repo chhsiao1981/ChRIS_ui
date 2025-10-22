@@ -20,7 +20,7 @@ import { OperationContext } from "../context";
 import useLongPress, {
   getBackgroundRowColor,
   useAssociatedFeed,
-} from "../utils/longpress";
+} from "../utils/useLongPress";
 import { FolderContextMenu } from "./ContextMenu";
 
 type Pagination = {
@@ -73,7 +73,11 @@ export const SubFolderCard: React.FC<SubFolderCardProps> = (props) => {
   const selectedPaths = useAppSelector((state) => state.cart.selectedPaths);
   const { handlers } = useLongPress();
 
-  const { handleOnClick, handleOnMouseDown, handleCheckboxChange } = handlers;
+  const {
+    onClick: handleOnClick,
+    onMouseDown: handleOnMouseDown,
+    onChangeCheckbox: handleCheckboxChange,
+  } = handlers;
   const folderName = getFolderName(folder, computedPath);
   const { data: feedName, isLoading } = useAssociatedFeed(folderName);
 

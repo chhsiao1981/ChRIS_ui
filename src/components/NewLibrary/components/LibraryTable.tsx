@@ -29,7 +29,7 @@ import { OperationContext } from "../context";
 import useLongPress, {
   getBackgroundRowColor,
   useAssociatedFeed,
-} from "../utils/longpress";
+} from "../utils/useLongPress";
 import useNewResourceHighlight from "../utils/useNewResourceHighlight";
 import { FolderContextMenu } from "./ContextMenu";
 import { getFileName, getLinkFileName } from "./FileCard";
@@ -89,7 +89,7 @@ export const BaseRow: React.FC<RowProps> = ({
   origin,
 }) => {
   const { handlers } = useLongPress();
-  const { handleOnClick } = handlers;
+  const { onClick: handleOnClick } = handlers;
   const selectedPaths = useAppSelector((state) => state.cart.selectedPaths);
   const { isDarkTheme } = useContext(ThemeContext);
   const { isNewResource, scrollToNewResource } = useNewResourceHighlight(date);
@@ -140,7 +140,7 @@ export const BaseRow: React.FC<RowProps> = ({
               event.nativeEvent.stopImmediatePropagation();
             }}
             onChange={(event) => {
-              handlers.handleCheckboxChange(event, path, resource, type);
+              handlers.onChangeCheckbox(event, path, resource, type);
             }}
           />
         </Td>

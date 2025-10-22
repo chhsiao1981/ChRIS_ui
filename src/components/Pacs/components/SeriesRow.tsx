@@ -19,7 +19,7 @@ import {
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../DarkTheme/useTheme";
-import { getBackgroundRowColor } from "../../NewLibrary/utils/longpress.tsx";
+import { getBackgroundRowColor } from "../../NewLibrary/utils/useLongPress.tsx";
 import { type PacsSeriesState, SeriesPullState } from "../types.ts";
 import { isSeriesLoading } from "./helpers.ts";
 import ModalityBadges from "./ModalityBadges.tsx";

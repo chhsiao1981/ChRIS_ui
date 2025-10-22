@@ -1,3 +1,9 @@
+import {
+  getRootID,
+  getState,
+  type ThunkModuleToFunc,
+  type UseThunk,
+} from "@chhsiao1981/use-thunk";
 import type { FileBrowserFolderList } from "@fnndsc/chrisapi";
 import {
   Badge,
@@ -10,8 +16,7 @@ import {
 } from "@patternfly/react-core";
 import { FileIcon, FolderIcon, TimesIcon } from "@patternfly/react-icons";
 import { useContext, useEffect, useRef, useState } from "react";
-import { clearAllPaths, clearSelectedPaths } from "../../store/cart/cartSlice";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import * as DoCart from "../../reducers/cart";
 import { ThemeContext } from "../DarkTheme/useTheme";
 import {
   AnalysisIcon,
@@ -29,20 +34,27 @@ import {
 } from "../NewLibrary/utils/useOperations";
 import styles from "./gnome.module.css";
 
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+
 type Props = {
   username: string;
   origin: OriginState;
   computedPath?: string;
   folderList?: FileBrowserFolderList;
+
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
-const GnomeBulkActionBar = (props: Props) => {
-  const { username, origin, computedPath, folderList } = props;
+export default (props: Props) => {
+  const { username, origin, computedPath, folderList, useCart } = props;
+  const [classStateCart, doCart] = useCart;
+  const cart = getState(classStateCart) || DoCart.defaultState;
+  const { selectedPaths } = cart;
+  const cartID = getRootID(classStateCart);
+
   const { isDarkTheme } = useContext(ThemeContext);
-  const selectedPaths = useAppSelector((s) => s.cart.selectedPaths);
   const [useIconsOnly, setUseIconsOnly] = useState(false);
   const actionBarRef = useRef<HTMLDivElement>(null);
-  const dispatch = useAppDispatch();
   const [isSelectionPopoverOpen, setIsSelectionPopoverOpen] = useState(false);
 
   const { modalState, handleModalSubmitMutation, handleOperations } =
@@ -88,7 +100,7 @@ const GnomeBulkActionBar = (props: Props) => {
   };
 
   const handleClearAllSelections = () => {
-    dispatch(clearAllPaths());
+    doCart.clearSelectedPaths(cartID);
   };
 
   const handleClearPath = (path: string) => {
@@ -96,7 +108,7 @@ const GnomeBulkActionBar = (props: Props) => {
     const isLastItem = selectedPaths.length === 1;
 
     // Dispatch the action to clear this path
-    dispatch(clearSelectedPaths(path));
+    doCart.removeSelectedPath(cartID, path);
 
     // If it was the last item, also close the popover
     if (isLastItem) {
@@ -193,6 +205,7 @@ const GnomeBulkActionBar = (props: Props) => {
                   </div>
                 }
               >
+                {/** biome-ignore lint/a11y/noStaticElementInteractions: <explanation> */}
                 <div
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent event bubbling
@@ -319,5 +332,3 @@ const GnomeBulkActionBar = (props: Props) => {
     </>
   );
 };
-
-export default GnomeBulkActionBar;

@@ -1,12 +1,10 @@
 import {
   init as _init,
-  genUUID,
   getState,
   type State as rState,
   setData,
   type Thunk,
 } from "@chhsiao1981/use-thunk";
-import { select } from "d3-selection";
 import type { Feed } from "../api/types";
 import {
   CartLayout,

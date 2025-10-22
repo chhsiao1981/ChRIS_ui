@@ -20,11 +20,11 @@ import { createFeed as createFeedSaga } from "../../../store/cart/downloadSaga";
 import type { SelectionPayload } from "../../../store/cart/types";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { notification } from "../../Antd";
+import fetchFeedForPath from "../../GnomeLibrary/utils/fetchFeedForPath";
 import { getFolderName } from "../components/FolderCard";
 import type { AdditionalValues } from "../components/Operations";
 import { type OriginState, useOperationsContext } from "../context";
 import useDeletePayload from "../utils/useDeletePayload";
-import { fetchFeedForPath } from "./longpress";
 import useFeedOperations from "./useFeedOperations";
 
 export interface ModalState {

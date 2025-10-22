@@ -26,7 +26,7 @@ import {
   formatBytesWithPadding,
   ShowInFolder,
   TitleNameClipped,
-} from "../utils/longpress";
+} from "../utils/useLongPress";
 import "./Cart.css";
 
 const Cart = () => {

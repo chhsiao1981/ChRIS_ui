@@ -20,7 +20,7 @@ import {
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { formatBytes } from "../Feeds/utilties";
 import type { OperationContext } from "../NewLibrary/context";
-import { useAssociatedFeed } from "../NewLibrary/utils/longpress";
+import { useAssociatedFeed } from "../NewLibrary/utils/useLongPress";
 import useNewResourceHighlight from "../NewLibrary/utils/useNewResourceHighlight";
 import { GnomeContextMenu } from "./GnomeContextMenu";
 import styles from "./gnome.module.css";

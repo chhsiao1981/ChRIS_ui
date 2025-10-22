@@ -44,7 +44,7 @@ import { SearchIcon } from "../Icons";
 import { FolderContextMenu } from "../NewLibrary/components/ContextMenu";
 import Operations from "../NewLibrary/components/Operations";
 import { OperationContext } from "../NewLibrary/context";
-import useLongPress from "../NewLibrary/utils/longpress";
+import useLongPress from "../NewLibrary/utils/useLongPress";
 import Wrapper from "../Wrapper";
 import FeedSearch from "./FeedsSearch";
 import { useFeedListData } from "./useFeedListData";
@@ -375,7 +375,7 @@ const TableRow = (props: TableRowProps) => {
   const { rowIndex, feed, additionalKeys, type, username } = props;
   const selectedPaths = useAppSelector((state) => state.cart.selectedPaths);
   const { handlers } = useLongPress();
-  const { handleOnClick } = handlers;
+  const { onClick: handleOnClick } = handlers;
   const navigate = useNavigate();
   const { isDarkTheme } = useContext(ThemeContext);
 
@@ -469,7 +469,7 @@ const TableRow = (props: TableRowProps) => {
                 payload = await getFolderForThisFeed();
               } else if (isSelected) {
                 // If unchecking, we don't need to fetch again, just use the path
-                handlers.handleCheckboxChange(
+                handlers.onChangeCheckbox(
                   event,
                   feed.data.folder_path,
                   null,
@@ -496,7 +496,7 @@ const TableRow = (props: TableRowProps) => {
                 },
               };
 
-              handlers.handleCheckboxChange(
+              handlers.onChangeCheckbox(
                 newEvent as unknown as React.FormEvent<HTMLInputElement>,
                 feed.data.folder_path,
                 payload,
