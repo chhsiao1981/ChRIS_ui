@@ -1,3 +1,11 @@
+import type {
+  FileBrowserFolder,
+  FileBrowserFolderFile,
+  FileBrowserFolderLinkFile,
+} from "@fnndsc/chrisapi";
+
+import type { Feed } from "../api/types";
+
 export enum Role {
   Guest = "a guest",
 
@@ -11,3 +19,73 @@ export enum Role {
 export const Roles = [Role.Clinician, Role.Researcher];
 
 export const StaffRoles = [Role.Clinician, Role.Researcher, Role.Admin];
+
+export enum CartLayout {
+  Grid = "grid",
+  List = "list",
+}
+
+export enum PathType {
+  Folder = "folder",
+  FolderFile = "folder-file",
+  FolderLinkFile = "folder-link-file",
+  File = "file",
+}
+
+export type PayloadType =
+  | FileBrowserFolder
+  | FileBrowserFolderFile
+  | FileBrowserFolderLinkFile;
+
+export interface SelectedPath {
+  path: string;
+  type: PathType;
+  payload: PayloadType;
+}
+
+export enum UploadStep {
+  Complete = "Upload Complete",
+}
+
+export type FolderUploadObject = {
+  currentStep: UploadStep;
+  done: number;
+  total: number;
+  controller: AbortController | null;
+  path: string;
+  type: PathType;
+};
+
+export type FileUploadObject = {
+  currentStep: UploadStep;
+  progress: number;
+  loaded: number;
+  total: number;
+  controller: AbortController | null;
+  path: string;
+  type: PathType;
+};
+
+export interface FolderUpload {
+  [path: string]: FolderUploadObject;
+}
+
+export interface FileUpload {
+  [path: string]: FileUploadObject;
+}
+
+export enum DownloadStep {
+  started = "started",
+  progress = "processing",
+  finished = "finished",
+  cancelled = "cancelled",
+}
+
+export type DownloadStatus = {
+  [path: string]: {
+    step: DownloadStep;
+    error?: string;
+    filename?: string;
+    feed?: Feed;
+  };
+};

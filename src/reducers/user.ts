@@ -51,8 +51,6 @@ export const defaultState: State = {
 };
 
 export const init = (): Thunk<State> => {
-  const myID = genUUID();
-
   return async (dispatch, _) => {
     const cookie = new Cookies();
     const username = cookie.get("username") || "";
@@ -88,7 +86,7 @@ export const init = (): Thunk<State> => {
       isLoggedIn,
     });
 
-    dispatch(_init({ myID, state }));
+    dispatch(_init({ state }));
   };
 };
 
