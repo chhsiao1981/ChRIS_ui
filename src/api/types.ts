@@ -248,3 +248,34 @@ export interface Link {
 export interface AuthToken {
   token: string;
 }
+
+// http://localhost:8000/api/v1/filebrowser/files/960/input.meta.json
+export interface FileBrowserFolderFile {
+  id: number;
+  creation_date: string;
+  fname: string;
+  fsize: number;
+  public: boolean;
+  owner_username: string;
+}
+
+// http://localhost:8000/api/v1/filebrowser/files/960/input.meta.json
+export interface FileBrowserFolderLink {
+  id: number;
+  creation_date: string;
+  fname: string;
+  fsize: number;
+  public: boolean;
+  owner_username: string;
+
+  path: string;
+}
+
+export interface FileBrowserFolder {
+  id: number;
+  creation_date: string;
+  public: boolean;
+  owner_username: string;
+
+  path: string;
+}

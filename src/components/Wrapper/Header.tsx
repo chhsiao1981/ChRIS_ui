@@ -10,6 +10,7 @@ import {
   PageToggleButton,
 } from "@patternfly/react-core";
 import type React from "react";
+import type * as DoCart from "../../reducers/cart";
 import type * as DoDrawer from "../../reducers/drawer";
 import * as DoUser from "../../reducers/user";
 import { useAppSelector } from "../../store/hooks";
@@ -18,6 +19,7 @@ import Toolbar from "./Toolbar";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type Props = {
   onNavToggle: () => void;
@@ -27,10 +29,18 @@ type Props = {
 
   useUser: UseThunk<DoUser.State, TDoUser>;
   useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 export default (props: Props) => {
-  const { useUser, useDrawer, onNavToggle, titleComponent, isNavOpen } = props;
+  const {
+    useUser,
+    useDrawer,
+    useCart,
+    onNavToggle,
+    titleComponent,
+    isNavOpen,
+  } = props;
 
   const [classStateUser, _] = useUser;
 
@@ -63,6 +73,7 @@ export default (props: Props) => {
           title={titleComponent}
           useUser={useUser}
           useDrawer={useDrawer}
+          useCart={useCart}
         />
       </MastheadContent>
     </Masthead>

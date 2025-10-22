@@ -30,6 +30,7 @@ export enum PathType {
   FolderFile = "folder-file",
   FolderLinkFile = "folder-link-file",
   File = "file",
+  Link = "link",
 }
 
 export type PayloadType =

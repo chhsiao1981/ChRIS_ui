@@ -66,17 +66,6 @@ export const init = (): Thunk<State> => {
       isLoggedIn = !!userID;
     }
 
-    console.info(
-      "user.init: username:",
-      username,
-      "token:",
-      token,
-      "isStaff:",
-      isStaff,
-      "role:",
-      role,
-    );
-
     const state: State = Object.assign({}, defaultState, {
       username,
       token,

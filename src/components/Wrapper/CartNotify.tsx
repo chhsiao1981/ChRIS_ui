@@ -1,22 +1,36 @@
+import {
+  getRootID,
+  getState,
+  type ThunkModuleToFunc,
+  type UseThunk,
+} from "@chhsiao1981/use-thunk";
 import { Button } from "@patternfly/react-core";
-import { Badge } from "../Antd";
 import { isEmpty } from "lodash";
 import { useEffect, useState } from "react";
-import { setToggleCart } from "../../store/cart/cartSlice";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import * as DoCart from "../../reducers/cart";
+import { Badge } from "../Antd";
 import { BrainIcon } from "../Icons";
 
-const CartNotify = () => {
-  const dispatch = useAppDispatch();
-  const state = useAppSelector((state) => state.cart);
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+
+type Props = {
+  useCart: UseThunk<DoCart.State, TDoCart>;
+};
+
+export default (props: Props) => {
+  const { useCart } = props;
+  const [classStateCart, doCart] = useCart;
+  const cart = getState(classStateCart) || DoCart.defaultState;
+  const cartID = getRootID(classStateCart);
+
   const {
     fileDownloadStatus,
     fileUploadStatus,
     folderDownloadStatus,
     folderUploadStatus,
-  } = state;
+  } = cart;
 
-  const [showNotification, setShowNotification] = useState(false);
+  const [isShowNotification, setShowNotification] = useState(false);
 
   useEffect(() => {
     const showNotification = !isEmpty({
@@ -34,14 +48,12 @@ const CartNotify = () => {
   ]);
 
   return (
-    <Badge dot={showNotification}>
+    <Badge dot={isShowNotification}>
       <Button
         variant="tertiary"
         icon={<BrainIcon />}
-        onClick={() => dispatch(setToggleCart())}
+        onClick={() => doCart.toggle(cartID)}
       />
     </Badge>
   );
 };
-
-export default CartNotify;

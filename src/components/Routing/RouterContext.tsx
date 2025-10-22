@@ -35,6 +35,8 @@ type RouterProviderProps<S = any, A = any> = {
 export const RouterProvider = (props: RouterProviderProps) => {
   const { context, state, actions, children } = props;
 
+  console.info("RouterProivder: state:", state, "actions:", actions);
+
   return (
     <context.Provider
       value={{

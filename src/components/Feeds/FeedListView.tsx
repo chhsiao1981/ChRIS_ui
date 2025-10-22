@@ -32,6 +32,7 @@ import type React from "react";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useNavigate } from "react-router";
+import type * as DoCart from "../../reducers/cart";
 import type * as DoDrawer from "../../reducers/drawer";
 import type * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
@@ -57,6 +58,7 @@ import {
 type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 const { Paragraph } = Typography;
 
@@ -107,13 +109,14 @@ type Props = {
   useUI: UseThunk<DoUI.State, TDoUI>;
   useUser: UseThunk<DoUser.State, TDoUser>;
   useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 export default (props: Props) => {
-  const { title, isShared, useUI, useUser, useDrawer } = props;
+  const { title, isShared, useUI, useUser, useDrawer, useCart } = props;
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
-  const { isLoggedIn, username, isInit } = user;
+  const { isLoggedIn, username, isInit, isStaff } = user;
   const theType = isShared ? "public" : "private";
 
   const navigate = useNavigate();
@@ -277,6 +280,7 @@ export default (props: Props) => {
       useUI={useUI}
       useUser={useUser}
       useDrawer={useDrawer}
+      useCart={useCart}
       title={TitleComponent}
     >
       <PageSection
@@ -297,7 +301,8 @@ export default (props: Props) => {
 
         {isLoggedIn && (
           <Operations
-            username=""
+            username={username}
+            isStaff={isStaff}
             origin={{
               type: OperationContext.FEEDS,
               additionalKeys: [perPage, page, theType, search, searchType],

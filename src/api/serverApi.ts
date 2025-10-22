@@ -9,6 +9,9 @@ import type {
   AuthToken,
   DownloadToken,
   Feed,
+  FileBrowserFolder,
+  FileBrowserFolderFile,
+  FileBrowserFolderLink,
   Link,
   NodeInfo,
   PACSSeries,
@@ -189,6 +192,45 @@ export const createDataWithFilepath = async (
 
   return feedResult;
 };
+
+export const getSubFolders = async (
+  folderID: number,
+  offset: number = 0,
+  limit: number = 50,
+) =>
+  api<FileBrowserFolder>({
+    endpoint: `/filebrowser/${folderID}/children/`,
+    query: {
+      offset,
+      limit,
+    },
+  });
+
+export const getSubFiles = async (
+  folderID: number,
+  offset: number = 0,
+  limit: number = 50,
+) =>
+  api<FileBrowserFolderFile>({
+    endpoint: `/filebrowser/${folderID}/files/`,
+    query: {
+      offset,
+      limit,
+    },
+  });
+
+export const getSubLinks = async (
+  folderID: number,
+  offset: number = 0,
+  limit: number = 50,
+) =>
+  api<FileBrowserFolderLink>({
+    endpoint: `/filebrowser/${folderID}/links/`,
+    query: {
+      offset,
+      limit,
+    },
+  });
 
 export const createPackage = (pipeline: UploadPipeline) =>
   api({

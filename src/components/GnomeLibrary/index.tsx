@@ -7,6 +7,7 @@ import type { FileBrowserFolder } from "@fnndsc/chrisapi";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import type * as DoCart from "../../reducers/cart";
 import type * as DoDrawer from "../../reducers/drawer";
 import type * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
@@ -14,23 +15,25 @@ import { EmptyStateComponent, InfoSection, SpinContainer } from "../Common";
 import { OperationContext, OperationsProvider } from "../NewLibrary/context";
 import Wrapper from "../Wrapper";
 import GnomeCentralBreadcrumb from "./GnomeCentralBreadcrumb";
-import GnomeLibraryTable from "./GnomeList";
-import GnomeLibrarySidebar from "./GnomeSidebar";
+import GnomeSidebar from "./GnomeSidebar";
+import GnomeTable from "./GnomeTable";
 import styles from "./gnome.module.css";
 import useFolders from "./utils/hooks/useFolders";
 
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type Props = {
   useUI: UseThunk<DoUI.State, TDoUI>;
   useUser: UseThunk<DoUser.State, TDoUser>;
   useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 export default (props: Props) => {
-  const { useUI, useUser, useDrawer } = props;
+  const { useUI, useUser, useDrawer, useCart } = props;
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
   const { username } = user;
@@ -100,7 +103,7 @@ export default (props: Props) => {
   );
 
   // Navigate to a folder when clicked
-  const handleFolderClick = useCallback(
+  const onFolderClick = useCallback(
     (folder: FileBrowserFolder) => {
       // Cache the folder object in React Query cache
       queryClient.setQueryData(["folder", folder.data.id], folder);
@@ -154,6 +157,7 @@ export default (props: Props) => {
         useUI={useUI}
         useUser={useUser}
         useDrawer={useDrawer}
+        useCart={useCart}
         title={
           <InfoSection
             title="Library"
@@ -167,7 +171,7 @@ export default (props: Props) => {
         }
       >
         <div className={styles.gnomeLibraryContainer}>
-          <GnomeLibrarySidebar
+          <GnomeSidebar
             activeSidebarItem={activeSidebarItem}
             computedPath={computedPath}
             handleSidebarItemClick={onSidebarItemClick}
@@ -201,10 +205,10 @@ export default (props: Props) => {
                   <EmptyStateComponent title="This folder is empty" />
                 ) : (
                   data && (
-                    <GnomeLibraryTable
+                    <GnomeTable
                       data={data}
                       computedPath={computedPath}
-                      handleFolderClick={handleFolderClick}
+                      onFolderClick={onFolderClick}
                       fetchMore={fetchMore}
                       handlePagination={handlePagination}
                       filesLoading={isFetching}

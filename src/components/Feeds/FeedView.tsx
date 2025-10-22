@@ -31,6 +31,7 @@ import {
   PluginInstanceStatus,
   type PluginInstance as PluginInstanceType,
 } from "../../api/types";
+import type * as DoCart from "../../reducers/cart";
 import * as DoDrawer from "../../reducers/drawer";
 import { Role } from "../../reducers/types";
 import type * as DoUI from "../../reducers/ui";
@@ -44,15 +45,17 @@ import { onMaximize, onMinimize } from "./utilties";
 type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type Props = {
   useUI: UseThunk<DoUI.State, TDoUI>;
   useUser: UseThunk<DoUser.State, TDoUser>;
   useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 export default (props: Props) => {
-  const { useUI, useUser, useDrawer } = props;
+  const { useUI, useUser, useDrawer, useCart } = props;
 
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
@@ -193,6 +196,7 @@ export default (props: Props) => {
       useUI={useUI}
       useUser={useUser}
       useDrawer={useDrawer}
+      useCart={useCart}
       title={TitleComponent}
     >
       {contextHolder}

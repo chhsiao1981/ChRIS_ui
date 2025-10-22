@@ -18,6 +18,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useCookies } from "react-cookie";
 import { createPackage } from "../../api/serverApi";
 import type { Plugin as PluginType, UploadPipeline } from "../../api/types";
+import type * as DoCart from "../../reducers/cart";
 import type * as DoDrawer from "../../reducers/drawer";
 import type * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
@@ -40,11 +41,13 @@ import StoreToggle from "./StoreToggle";
 type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type Props = {
   useUI: UseThunk<DoUI.State, TDoUI>;
   useUser: UseThunk<DoUser.State, TDoUser>;
   useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 const DEFAULT_SEARCH_FIELD = "name";
@@ -52,7 +55,7 @@ const COOKIE_NAME = "storeCreds";
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // seconds
 
 export default (props: Props) => {
-  const { useUI, useUser, useDrawer } = props;
+  const { useUI, useUser, useDrawer, useCart } = props;
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
   const { isStaff, isLoggedIn, token } = user;
@@ -118,14 +121,6 @@ export default (props: Props) => {
       { name: plugin.name, version: plugin.version, url: plugin.url },
       resources,
     );
-    console.info(
-      "NewStore.Store.handleInstall: after handleInstallPlugin: plugin:",
-      plugin,
-      "resources",
-      resources,
-      "result:",
-      result,
-    );
 
     const pipelineName = `${plugin.name}-${plugin.version}`;
 
@@ -145,11 +140,6 @@ export default (props: Props) => {
     };
 
     const resultPipeline = await createPackage(pipeline);
-
-    console.info(
-      "NewStore.Store.handleInstall: after createPipeline: resultPipeline:",
-      resultPipeline,
-    );
   };
 
   const onModify = async (plugin: Plugin, resources: ComputeResource[]) => {
@@ -276,6 +266,7 @@ export default (props: Props) => {
         useUI={useUI}
         useUser={useUser}
         useDrawer={useDrawer}
+        useCart={useCart}
         title={
           <InfoSection title="Import Package" content="Work in Progress" />
         }

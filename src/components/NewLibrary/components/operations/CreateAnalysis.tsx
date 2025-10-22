@@ -9,17 +9,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useContext, useState } from "react";
 import { catchError } from "../../../../api/common";
 import { getData, getDataInstances } from "../../../../api/serverApi";
-import type { Feed, PluginInstance } from "../../../../api/types";
+import type { PluginInstance } from "../../../../api/types";
 import { MainRouterContext } from "../../../../routes";
 import type { SelectionPayload } from "../../../../store/cart/types";
-import { useAppDispatch, useAppSelector } from "../../../../store/hooks";
+import { useAppSelector } from "../../../../store/hooks";
 import { AddNodeContext } from "../../../AddNode/context";
 import BasicInformation from "../../../CreateFeed/BasicInformation";
 import { CreateFeedContext } from "../../../CreateFeed/context";
-import {
-  createFeedInstanceWithFS,
-  createFeeds,
-} from "../../../CreateFeed/createFeedHelper";
+import { createFeeds } from "../../../CreateFeed/createFeedHelper";
 import Review from "../../../CreateFeed/Review";
 import withSelectionAlert from "../../../CreateFeed/SelectionAlert";
 import { type ChRISFeed, Types } from "../../../CreateFeed/types/feed";
@@ -29,11 +26,11 @@ import { PipelineContext } from "../../../PipelinesCopy/context";
 import OperationButton from "./OperationButton";
 
 type Props = {
-  handleOperations: (operationKey: string) => void;
   count: number;
+  isStaff: boolean;
 };
 export default (props: Props) => {
-  const { count } = props;
+  const { count, isStaff } = props;
   const { selectedPaths } = useAppSelector((state) => state.cart);
 
   const queryClient = useQueryClient();
@@ -54,7 +51,6 @@ export default (props: Props) => {
 
   const { state: pipelineState, dispatch: pipelineDispatch } =
     useContext(PipelineContext);
-  const user = useAppSelector((state) => state.user);
 
   const [feedProcessing, setFeedProcessing] = useState(false);
 
@@ -93,17 +89,7 @@ export default (props: Props) => {
     });
   };
 
-  const handleSave = async () => {
-    console.info(
-      "CreateAnalysis: handleSave: start: dataCreateFeed.chrisFiles:",
-      dataCreateFeed.chrisFiles,
-      "data:",
-      dataCreateFeed,
-      "selectedConfig:",
-      createFeedConfig,
-      "pipelineState:",
-      pipelineState,
-    );
+  const onSave = async () => {
     setFeedProcessing(true);
     dispatchCreateFeed({
       type: Types.SetFeedCreationState,
@@ -201,18 +187,10 @@ export default (props: Props) => {
       return { name: "", filename: "", theID: -1, createDateTime: "" };
     }
 
-    console.info(
-      "CreateAnalysis.feedIDToLastFilename: feedID:",
-      feedID,
-      "data:",
-      pluginInstances.data,
-    );
     pluginInstances.data.sort((a: PluginInstance, b: PluginInstance) => {
       return b.id - a.id;
     });
     const { output_path: filename } = pluginInstances.data[0];
-
-    console.info("feedIDToLastChRISFile: feedID:", feedID, "feed:", feed);
 
     const { name, id, creation_date } = feed.data;
 
@@ -231,12 +209,7 @@ export default (props: Props) => {
   };
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-  const handleOperations = useCallback(() => {
-    console.info(
-      "CreateAnalysis.handleOperations: start: selectedPaths:",
-      selectedPaths,
-    );
-
+  const onOperations = useCallback(() => {
     closeWizard();
 
     dispatchCreateFeed({
@@ -293,7 +266,7 @@ export default (props: Props) => {
   return (
     <>
       <OperationButton
-        handleOperations={handleOperations}
+        handleOperations={onOperations}
         count={count}
         icon={<AnalysisIcon />}
         ariaLabel={ariaLabel}
@@ -336,18 +309,18 @@ export default (props: Props) => {
             {withSelectionAlert(<BasicInformation />)}
           </WizardStep>
           <WizardStep id={3} name="Pipelines">
-            <PipelinesCopy />
+            <PipelinesCopy isStaff={isStaff} />
           </WizardStep>
           <WizardStep
             id={4}
             name="Review"
             footer={{
-              onNext: handleSave,
+              onNext: onSave,
               nextButtonText: "Create Analysis",
               isNextDisabled: !!(!enableSave || feedProcessing),
             }}
           >
-            <Review handleSave={handleSave} />
+            <Review handleSave={onSave} />
           </WizardStep>
         </Wizard>
       </Modal>

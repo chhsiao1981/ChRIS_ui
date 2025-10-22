@@ -8,236 +8,28 @@ import {
   FileBrowserFolderFile,
   type FileBrowserFolderLinkFile,
 } from "@fnndsc/chrisapi";
-import { Button, Checkbox, Skeleton, Spinner } from "@patternfly/react-core";
+import { Spinner } from "@patternfly/react-core";
 import {
   AngleDownIcon,
-  ExternalLinkSquareAltIcon,
-  FileIcon,
-  FolderIcon,
   SortAmountDownIcon,
   SortAmountUpIcon,
 } from "@patternfly/react-icons";
-import { Drawer, notification, Tag } from "antd";
-import { format } from "date-fns";
+import { Drawer, notification } from "antd";
 import type React from "react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import * as DoUser from "../../reducers/user";
-import {
-  clearSelectedPaths,
-  setSelectedPaths,
-} from "../../store/cart/cartSlice";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { formatBytes } from "../Feeds/utilties";
 import {
   getFileName,
   getLinkFileName,
 } from "../NewLibrary/components/FileCard";
 import { getFolderName } from "../NewLibrary/components/FolderCard";
 import { OperationContext } from "../NewLibrary/context";
-import { useAssociatedFeed } from "../NewLibrary/utils/longpress";
-import useNewResourceHighlight from "../NewLibrary/utils/useNewResourceHighlight";
 import FileDetailView from "../Preview/FileDetailView";
 import GnomeBulkActionBar from "./GnomeActionBar";
-import { GnomeContextMenu } from "./GnomeContextMenu";
+import { GnomeFileRow, GnomeFolderRow, GnomeLinkRow } from "./GnomeRow";
 import styles from "./gnome.module.css";
 import { useInfiniteScroll } from "./utils/hooks/useInfiniteScroll";
-
-type RowProps = {
-  rowIndex: number;
-  key: string;
-  resource:
-    | FileBrowserFolder
-    | FileBrowserFolderFile
-    | FileBrowserFolderLinkFile;
-  name: string;
-  date: string;
-  owner: string;
-  size: number;
-  type: "folder" | "file" | "link";
-  computedPath: string;
-  handleFolderClick: () => void;
-  handleFileClick: () => void;
-  origin: {
-    type: OperationContext;
-    additionalKeys: string[];
-  };
-
-  username: string;
-};
-
-export const GnomeBaseRow = (props: RowProps) => {
-  const {
-    resource,
-    name,
-    date,
-    owner,
-    size,
-    type,
-    computedPath,
-    handleFolderClick,
-    handleFileClick,
-    origin,
-    rowIndex,
-    username,
-  } = props;
-
-  // Redux dispatch for selection management
-  const dispatch = useAppDispatch();
-  const selectedPaths = useAppSelector((state) => state.cart.selectedPaths);
-  const { isNewResource, scrollToNewResource } = useNewResourceHighlight(date);
-  const isSelected = selectedPaths.some((payload) => {
-    if (type === "folder" || type === "link") {
-      return payload.path === resource.data.path;
-    }
-    if (type === "file") {
-      return payload.path === resource.data.fname;
-    }
-    return false;
-  });
-
-  const pathForCart =
-    type === "folder" || type === "link"
-      ? resource.data.path
-      : resource.data.fname;
-
-  const toggleSelection = () => {
-    if (isSelected) {
-      dispatch(clearSelectedPaths(pathForCart));
-    } else {
-      dispatch(
-        setSelectedPaths({ path: pathForCart, type, payload: resource }),
-      );
-    }
-  };
-
-  const handleRowClick = (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-  ) => {
-    // Stop propagation to prevent other handlers from firing
-    e.stopPropagation();
-
-    // Handle ctrl+click for selection
-    if (e.ctrlKey) {
-      toggleSelection();
-    } else {
-      // Otherwise navigate
-      if (type === "folder") {
-        handleFolderClick();
-      } else {
-        handleFileClick();
-      }
-    }
-  };
-
-  // Handle context menu events
-  const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-
-    // Select the item that was right-clicked if not already selected
-    if (!isSelected) {
-      dispatch(
-        setSelectedPaths({ path: pathForCart, type, payload: resource }),
-      );
-    }
-  };
-
-  return (
-    <GnomeContextMenu
-      username={username}
-      origin={origin}
-      computedPath={computedPath}
-    >
-      <li
-        key={pathForCart}
-        ref={scrollToNewResource}
-        className={`${styles.fileListRow} ${isSelected ? styles.selectedItem : ""}`}
-      >
-        <div className={styles.checkboxCell}>
-          <div className={styles.checkboxWrapper}>
-            <Checkbox
-              id={`select-${type}-${rowIndex}`}
-              aria-label="Select row"
-              isChecked={isSelected}
-              className={`${styles.largeCheckbox} ${styles.checkboxAlign}`}
-              onChange={() => {
-                toggleSelection();
-              }}
-              onClick={(event) => {
-                event.stopPropagation();
-              }}
-            />
-          </div>
-        </div>
-        <Button
-          variant="plain"
-          className={`${styles.fileListItem} ${styles.fileListButton}`}
-          onClick={handleRowClick}
-          onContextMenu={handleContextMenu}
-          aria-label={`${name} ${type}`}
-        >
-          <div className={styles.fileName}>
-            {type === "folder" ? (
-              <FolderIcon />
-            ) : type === "link" ? (
-              <ExternalLinkSquareAltIcon />
-            ) : (
-              <FileIcon />
-            )}
-            <span className={styles.fileNameText} title={name}>
-              {name}
-            </span>
-            {isNewResource && (
-              <span className={styles.newlyAddedTag}>
-                <Tag color="#3E8635">Newly Added</Tag>
-              </span>
-            )}
-          </div>
-          <div
-            className={styles.fileDate}
-            title={format(new Date(date), "dd MMM yyyy, HH:mm")}
-          >
-            {format(new Date(date), "dd MMM yyyy, HH:mm")}
-          </div>
-          {origin.type !== "fileBrowser" && (
-            <div className={styles.fileOwner} title={owner}>
-              {owner}
-            </div>
-          )}
-          <div
-            className={styles.fileSize}
-            title={size > 0 ? formatBytes(size, 0) : " "}
-          >
-            {size > 0 ? formatBytes(size, 0) : " "}
-          </div>
-        </Button>
-      </li>
-    </GnomeContextMenu>
-  );
-};
-
-export const GnomeFolderRow: React.FC<Omit<RowProps, "type">> = (props) => {
-  const { data, isLoading } = useAssociatedFeed(props.name);
-  if (isLoading) {
-    return (
-      <li className={styles.fileListItem}>
-        <Skeleton width="100%" />
-      </li>
-    );
-  }
-  return (
-    <GnomeBaseRow {...props} name={data ? data : props.name} type="folder" />
-  );
-};
-
-export const GnomeFileRow: React.FC<Omit<RowProps, "type">> = (props) => (
-  <GnomeBaseRow {...props} type="file" />
-);
-
-type GnomeLinkRowProps = Omit<RowProps, "type">;
-export const GnomeLinkRow = (props: GnomeLinkRowProps) => (
-  <GnomeBaseRow {...props} type="link" />
-);
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 
@@ -260,7 +52,7 @@ type Props = {
     };
   };
   computedPath: string;
-  handleFolderClick: (folder: FileBrowserFolder) => void;
+  onFolderClick: (folder: FileBrowserFolder) => void;
   fetchMore?: boolean;
   handlePagination?: () => void;
   filesLoading?: boolean;
@@ -272,7 +64,7 @@ export default (props: Props) => {
   const {
     data,
     computedPath,
-    handleFolderClick,
+    onFolderClick: handleFolderClick,
     fetchMore,
     handlePagination,
     filesLoading,
@@ -308,12 +100,15 @@ export default (props: Props) => {
   });
 
   const onFileClick = (file: FileBrowserFolderFile) => {
+    console.info("GnomeTable: onFileClick: file:", file);
     setSelectedFile(file);
     setShowPreview(true);
   };
 
   // Handle clicks on link entries: resolve to folder or file
   const onLinkClick = async (resource: FileBrowserFolderLinkFile) => {
+    console.info("GnomeTable: onLinkClick: file:", resource);
+
     try {
       const linked = await resource.getLinkedResource();
       // folder link
@@ -322,6 +117,7 @@ export default (props: Props) => {
         "path" in linked.data &&
         linked instanceof FileBrowserFolder
       ) {
+        console.info("GnomeTable: onLinkClick: linked as Folder:", linked);
         navigate(`/library/${linked.data.path}`);
       }
       // file link
@@ -557,8 +353,8 @@ export default (props: Props) => {
               owner={r.data.owner_username}
               size={0}
               computedPath={computedPath}
-              handleFolderClick={() => handleFolderClick(r)}
-              handleFileClick={() => {}}
+              onFolderClick={() => handleFolderClick(r)}
+              onFileClick={() => {}}
               origin={origin}
               username={username}
             />
@@ -574,8 +370,8 @@ export default (props: Props) => {
               owner={r.data.owner_username}
               size={r.data.fsize}
               computedPath={computedPath}
-              handleFolderClick={() => {}}
-              handleFileClick={() => onFileClick(r)}
+              onFolderClick={() => {}}
+              onFileClick={() => onFileClick(r)}
               origin={origin}
               username={username}
             />
@@ -591,8 +387,8 @@ export default (props: Props) => {
               owner={r.data.owner_username}
               size={r.data.fsize}
               computedPath={computedPath}
-              handleFolderClick={() => {}}
-              handleFileClick={() => onLinkClick(r)}
+              onFolderClick={() => {}}
+              onFileClick={() => onLinkClick(r)}
               origin={origin}
               username={username}
             />

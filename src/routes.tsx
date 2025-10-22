@@ -30,6 +30,7 @@ import {
 } from "./components/Routing/RouterContext";
 import Signup from "./components/Signup";
 import SinglePlugin from "./components/SinglePlugin";
+import * as DoCart from "./reducers/cart";
 import * as DoDrawer from "./reducers/drawer";
 import * as DoUI from "./reducers/ui";
 import * as DoUser from "./reducers/user";
@@ -37,6 +38,7 @@ import * as DoUser from "./reducers/user";
 type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 interface State {
   selectData?: Series;
@@ -90,6 +92,7 @@ export default () => {
 
   const useUI = useThunk<DoUI.State, TDoUI>(DoUI);
   const [_2, doUI] = useUI;
+
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, doUser] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
@@ -97,6 +100,9 @@ export default () => {
 
   const useDrawer = useThunk<DoDrawer.State, TDoDrawer>(DoDrawer);
   const [_3, doDrawer] = useDrawer;
+
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
+  const [_4, doCart] = useCart;
 
   console.info("routes: start: route:", route);
 
@@ -137,6 +143,7 @@ export default () => {
     doUI.init(uiID);
     doUser.init();
     doDrawer.init();
+    doCart.init();
   }, []);
 
   // Update the active sidebar item based on the current route
@@ -150,7 +157,12 @@ export default () => {
     {
       path: "/",
       element: (
-        <Dashboard useUI={useUI} useUser={useUser} useDrawer={useDrawer} />
+        <Dashboard
+          useUI={useUI}
+          useUser={useUser}
+          useDrawer={useDrawer}
+          useCart={useCart}
+        />
       ),
     },
     {
@@ -166,6 +178,7 @@ export default () => {
                 useUI={useUI}
                 useUser={useUser}
                 useDrawer={useDrawer}
+                useCart={useCart}
               />
             </OperationsProvider>
           </RouterProvider>
@@ -180,7 +193,12 @@ export default () => {
           context={MainRouterContext}
         >
           <OperationsProvider>
-            <FeedView useUI={useUI} useUser={useUser} useDrawer={useDrawer} />
+            <FeedView
+              useUI={useUI}
+              useUser={useUser}
+              useDrawer={useDrawer}
+              useCart={useCart}
+            />
           </OperationsProvider>
         </RouterProvider>
       ),
@@ -199,6 +217,7 @@ export default () => {
               useUI={useUI}
               useUser={useUser}
               useDrawer={useDrawer}
+              useCart={useCart}
             />
           </OperationsProvider>
         </RouterProvider>
@@ -218,6 +237,7 @@ export default () => {
               useUI={useUI}
               useUser={useUser}
               useDrawer={useDrawer}
+              useCart={useCart}
             />
           </OperationsProvider>
         </RouterProvider>
@@ -226,14 +246,24 @@ export default () => {
     {
       path: "package/:id",
       element: (
-        <SinglePlugin useUI={useUI} useUser={useUser} useDrawer={useDrawer} />
+        <SinglePlugin
+          useUI={useUI}
+          useUser={useUser}
+          useDrawer={useDrawer}
+          useCart={useCart}
+        />
       ),
     },
     {
       path: "pacs",
       element: (
         <PrivateRoute useUser={useUser}>
-          <Pacs useUI={useUI} useUser={useUser} useDrawer={useDrawer} />
+          <Pacs
+            useUI={useUI}
+            useUser={useUser}
+            useDrawer={useDrawer}
+            useCart={useCart}
+          />
         </PrivateRoute>
       ),
     },
@@ -248,29 +278,56 @@ export default () => {
     {
       path: "package",
       element: (
-        <PipelinePage useUI={useUI} useUser={useUser} useDrawer={useDrawer} />
+        <PipelinePage
+          useUI={useUI}
+          useUser={useUser}
+          useDrawer={useDrawer}
+          useCart={useCart}
+        />
       ),
     },
     {
       path: "compute",
       element: (
-        <ComputePage useUI={useUI} useUser={useUser} useDrawer={useDrawer} />
+        <ComputePage
+          useUI={useUI}
+          useUser={useUser}
+          useDrawer={useDrawer}
+          useCart={useCart}
+        />
       ),
     },
     {
       path: "import",
-      element: <Store useUI={useUI} useUser={useUser} useDrawer={useDrawer} />,
+      element: (
+        <Store
+          useUI={useUI}
+          useUser={useUser}
+          useDrawer={useDrawer}
+          useCart={useCart}
+        />
+      ),
     },
     {
       path: "install/*",
       element: (
-        <PluginInstall useUI={useUI} useUser={useUser} useDrawer={useDrawer} />
+        <PluginInstall
+          useUI={useUI}
+          useUser={useUser}
+          useDrawer={useDrawer}
+          useCart={useCart}
+        />
       ),
     },
     {
       path: "*",
       element: (
-        <NotFound useUI={useUI} useUser={useUser} useDrawer={useDrawer} />
+        <NotFound
+          useUI={useUI}
+          useUser={useUser}
+          useDrawer={useDrawer}
+          useCart={useCart}
+        />
       ),
     },
   ]);

@@ -8,6 +8,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { debounce } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import type * as DoCart from "../../reducers/cart";
 import type * as DoDrawer from "../../reducers/drawer";
 import type * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
@@ -26,18 +27,20 @@ import fetchFolders from "./utils/fetchFolders";
 type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type Props = {
   useUI: UseThunk<DoUI.State, TDoUI>;
   useUser: UseThunk<DoUser.State, TDoUser>;
   useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 export default (props: Props) => {
-  const { useUI, useUser, useDrawer } = props;
+  const { useUI, useUser, useDrawer, useCart } = props;
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
-  const { username } = user;
+  const { username, isStaff } = user;
   const [api, contextHolder] = notification.useNotification();
   const { pathname } = window.location;
   const navigate = useNavigate();
@@ -136,6 +139,7 @@ export default (props: Props) => {
       useUI={useUI}
       useUser={useUser}
       useDrawer={useDrawer}
+      useCart={useCart}
       title={TitleComponent}
     >
       {contextHolder}
@@ -147,6 +151,7 @@ export default (props: Props) => {
       >
         <Operations
           username={username}
+          isStaff={isStaff}
           origin={{
             type: OperationContext.LIBRARY,
             additionalKeys: [computedPath],

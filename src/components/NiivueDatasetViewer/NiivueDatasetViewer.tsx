@@ -12,6 +12,7 @@ import { useImmer } from "use-immer";
 import ChrisAPIClient from "../../api/chrisapiclient";
 import { FpClient } from "../../api/fp/chrisapi";
 import { flexRowSpaceBetween, hideOnMobile } from "../../cssUtils.ts";
+import type * as DoCart from "../../reducers/cart";
 import type * as DoDrawer from "../../reducers/drawer";
 import type * as DoUI from "../../reducers/ui";
 import type * as DoUser from "../../reducers/user";
@@ -49,6 +50,7 @@ import type { Problem, TagsDictionary, VisualDataset } from "./types";
 type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 /**
  * The "Niivue Datasets Viewer" is a view of ChRIS_ui which implements a
@@ -70,9 +72,10 @@ type Props = {
   useUI: UseThunk<DoUI.State, TDoUI>;
   useUser: UseThunk<DoUser.State, TDoUser>;
   useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 const NiivueDatasetViewer = (props: Props) => {
-  const { plinstId, useUI, useUser, useDrawer } = props;
+  const { plinstId, useUI, useUser, useDrawer, useCart } = props;
   const [dataset, setDataset] = useState<VisualDataset | null>(null);
   const [feed, setFeed] = useState<Feed | null>(null);
   /**
@@ -319,7 +322,12 @@ const NiivueDatasetViewer = (props: Props) => {
           .map(({ state }) => state);
 
   return (
-    <Wrapper useUI={useUI} useDrawer={useDrawer} useUser={useUser}>
+    <Wrapper
+      useUI={useUI}
+      useDrawer={useDrawer}
+      useUser={useUser}
+      useCart={useCart}
+    >
       <PageSection>
         <div className={hideOnMobile}>
           <div className={flexRowSpaceBetween}>

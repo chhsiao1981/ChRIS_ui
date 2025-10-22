@@ -98,7 +98,7 @@ export default (props: Props) => {
 
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
-  const { username } = user;
+  const { username, isStaff } = user;
 
   const [classStateDrawer, doDrawer] = useDrawer;
   const drawer = getState(classStateDrawer) || DoDrawer.defaultState;
@@ -251,6 +251,7 @@ export default (props: Props) => {
                     computedPath={additionalKey}
                     folderList={folderList}
                     username={username}
+                    isStaff={isStaff}
                   />
                   <div className="file-browser-header">
                     <div className="file-browser-header-row">

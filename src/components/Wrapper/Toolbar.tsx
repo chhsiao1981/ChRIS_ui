@@ -20,6 +20,7 @@ import { BarsIcon } from "@patternfly/react-icons"; // Add a tools icon
 import { type ReactElement, useContext, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useNavigate } from "react-router";
+import type * as DoCart from "../../reducers/cart";
 import type * as DoDrawer from "../../reducers/drawer";
 import { type Role, Roles, StaffRoles } from "../../reducers/types";
 import * as DoUser from "../../reducers/user";
@@ -31,6 +32,7 @@ import styles from "./Toolbar.module.css";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type Props = {
   showToolbar: boolean;
@@ -39,6 +41,7 @@ type Props = {
 
   useUser: UseThunk<DoUser.State, TDoUser>;
   useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 export default (props: Props) => {
@@ -49,6 +52,7 @@ export default (props: Props) => {
     title,
     useUser: [classStateUser, doUser],
     useDrawer,
+    useCart,
   } = props;
 
   const navigate = useNavigate();
@@ -146,7 +150,7 @@ export default (props: Props) => {
               </FlexItem>
             )}
             <FlexItem>
-              <CartNotify />
+              <CartNotify useCart={useCart} />
             </FlexItem>
             <FlexItem>
               <Switch
