@@ -1,11 +1,15 @@
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import {
+  getChildrenFolders,
+  getFiles,
+  getFolders,
+  getLinkFiles,
+} from "../../../../api/serverApi";
 import type {
   FileBrowserFolder,
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
-  FileBrowserFolderList,
-} from "@fnndsc/chrisapi";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import ChrisAPIClient from "../../../../api/chrisapiclient";
+} from "../../../../api/types";
 
 // Define the interface for pagination
 interface PaginationInfo {
@@ -27,12 +31,12 @@ export interface FolderTableData {
 
 // Extended interface for our hook's return data
 export interface FolderHookData extends FolderTableData {
-  folderList?: FileBrowserFolderList;
+  folderList?: FileBrowserFolder[];
   errorMessages?: string[];
 }
 
 /**
- * Fetches folder data from the API
+s * Fetches folder data from the API
  */
 export async function fetchFolders(
   computedPath: string,
@@ -41,27 +45,21 @@ export async function fetchFolders(
   selectedFolder?: FileBrowserFolder,
 ): Promise<FolderHookData> {
   // Get the client instance with proper authentication
-  const client = ChrisAPIClient.getClient();
   const itemsPerPage = 50;
   const errorMessages: string[] = [];
 
   try {
     // Only fetch folder list if we don't have a selectedFolder
-    let folderList: FileBrowserFolderList | undefined;
     let folders: FileBrowserFolder[] = [];
 
     // Skip folder list fetching entirely when we have a selectedFolder
     if (!selectedFolder) {
       // If we have previous data and haven't changed paths, reuse the folder list
       if (previousData?.folderList && pageNumber > 1) {
-        folderList = previousData.folderList;
-        folders = folderList.getItems() as FileBrowserFolder[];
+        folders = previousData.folderList;
       } else {
         // Otherwise fetch the folder list
-        folderList = await client.getFileBrowserFolders({
-          path: computedPath,
-        });
-        folders = folderList.getItems() as FileBrowserFolder[];
+        folders = await getFolders(computedPath);
       }
     }
 
@@ -111,13 +109,9 @@ export async function fetchFolders(
         const folderOffset = pageNumber === 1 ? 0 : subFolders.length;
 
         fetchPromises.push(
-          folder
-            .getChildren({
-              limit: itemsPerPage,
-              offset: folderOffset,
-            })
-            .then((children) => {
-              const newFolders = children.getItems() as FileBrowserFolder[];
+          getChildrenFolders(folder, itemsPerPage, folderOffset)
+            .then(([children, totalCount, hasNextPage]) => {
+              const newFolders = children as FileBrowserFolder[];
 
               // Append new folders to existing ones if paginating
               if (pageNumber > 1) {
@@ -129,8 +123,8 @@ export async function fetchFolders(
 
               // Update pagination info
               foldersPagination = {
-                totalCount: children.totalCount,
-                hasNextPage: children.hasNextPage,
+                totalCount,
+                hasNextPage,
                 currentPage: pageNumber,
                 itemsPerPage,
               };
@@ -154,14 +148,9 @@ export async function fetchFolders(
         const linkOffset = pageNumber === 1 ? 0 : linkFiles.length;
 
         fetchPromises.push(
-          folder
-            .getLinkFiles({
-              limit: itemsPerPage,
-              offset: linkOffset,
-            })
-            .then((linkFilesResult) => {
-              const newLinkFiles =
-                linkFilesResult.getItems() as FileBrowserFolderLinkFile[];
+          getLinkFiles(folder, itemsPerPage, linkOffset)
+            .then(([linkFilesResult, totalCount, hasNextPage]) => {
+              const newLinkFiles = linkFilesResult;
 
               // Append new link files to existing ones if paginating
               if (pageNumber > 1) {
@@ -173,8 +162,8 @@ export async function fetchFolders(
 
               // Update pagination info
               linksPagination = {
-                totalCount: linkFilesResult.totalCount,
-                hasNextPage: linkFilesResult.hasNextPage,
+                totalCount,
+                hasNextPage,
                 currentPage: pageNumber,
                 itemsPerPage,
               };
@@ -198,14 +187,9 @@ export async function fetchFolders(
         const fileOffset = pageNumber === 1 ? 0 : files.length;
 
         fetchPromises.push(
-          folder
-            .getFiles({
-              limit: itemsPerPage,
-              offset: fileOffset,
-            })
-            .then((folderFiles) => {
-              const newFiles =
-                folderFiles.getItems() as FileBrowserFolderFile[];
+          getFiles(folder, itemsPerPage, fileOffset)
+            .then(([folderFiles, totalCount, hasNextPage]) => {
+              const newFiles = folderFiles;
 
               // Append new files to existing ones if paginating
               if (pageNumber > 1) {
@@ -217,8 +201,8 @@ export async function fetchFolders(
 
               // Update pagination info
               filesPagination = {
-                totalCount: folderFiles.totalCount,
-                hasNextPage: folderFiles.hasNextPage,
+                totalCount,
+                hasNextPage,
                 currentPage: pageNumber,
                 itemsPerPage,
               };
@@ -243,7 +227,7 @@ export async function fetchFolders(
       filesPagination,
       foldersPagination,
       linksPagination,
-      folderList,
+      folderList: folders,
       errorMessages,
     };
   } catch (e) {
@@ -266,12 +250,7 @@ export const useFolders = (
   selectedFolder?: FileBrowserFolder,
 ) => {
   return useQuery({
-    queryKey: [
-      "library_folders",
-      computedPath,
-      pageNumber,
-      selectedFolder?.data.id,
-    ],
+    queryKey: ["library_folders", computedPath, pageNumber, selectedFolder?.id],
     queryFn: () =>
       fetchFolders(computedPath, pageNumber, undefined, selectedFolder),
     placeholderData: keepPreviousData,

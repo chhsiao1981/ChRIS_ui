@@ -3,10 +3,10 @@ import {
   type ThunkModuleToFunc,
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
-import type { FileBrowserFolder } from "@fnndsc/chrisapi";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import type { FileBrowserFolder } from "../../api/types";
 import type * as DoCart from "../../reducers/cart";
 import type * as DoDrawer from "../../reducers/drawer";
 import type * as DoUI from "../../reducers/ui";
@@ -152,7 +152,7 @@ export default (props: Props) => {
   }, [isFetching, totalResources]);
 
   return (
-    <OperationsProvider>
+    <OperationsProvider useCart={useCart}>
       <Wrapper
         useUI={useUI}
         useUser={useUser}

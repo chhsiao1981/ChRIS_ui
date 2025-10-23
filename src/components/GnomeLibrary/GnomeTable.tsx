@@ -10,8 +10,7 @@ import {
   SortAmountUpIcon,
 } from "@patternfly/react-icons";
 import { Drawer, notification } from "antd";
-import type React from "react";
-import { useRef, useState } from "react";
+import { type RefObject, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { getLinkedResource } from "../../api/serverApi";
 import type {
@@ -390,7 +389,7 @@ export default (props: Props) => {
           ))}
           {/* Sentinel element for infinite scrolling */}
           <li
-            ref={sentinelRef as React.RefObject<HTMLLIElement>}
+            ref={sentinelRef as RefObject<HTMLLIElement>}
             style={{ height: "1px", opacity: 0 }}
           />
         </ul>

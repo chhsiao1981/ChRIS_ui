@@ -353,4 +353,36 @@ export const getFileExtension = (filename: string) => {
 
 export const getLinkedResource = (
   link: FileBrowserFolderLinkFile,
-): FileBrowserFolderFile | FileBrowserFolder => {};
+): FileBrowserFolderFile | FileBrowserFolder | null => {
+  return null;
+};
+
+export const getFolders = async (
+  path: string,
+): Promise<FileBrowserFolder[]> => {
+  return [];
+};
+
+export const getChildrenFolders = async (
+  folder: FileBrowserFolder,
+  limit: number,
+  offset: number,
+): Promise<[FileBrowserFolder[], number, boolean]> => {
+  return [[], 0, false];
+};
+
+export const getLinkFiles = async (
+  folder: FileBrowserFolder,
+  limit: number,
+  offset: number,
+): Promise<[FileBrowserFolderLinkFile[], number, boolean]> => {
+  return [[], 0, false];
+};
+
+export const getFiles = async (
+  folder: FileBrowserFolder,
+  limit: number,
+  offset: number,
+): Promise<[FileBrowserFolderFile[], number, boolean]> => {
+  return [[], 0, false];
+};

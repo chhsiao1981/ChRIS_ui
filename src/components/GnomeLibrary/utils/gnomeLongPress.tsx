@@ -91,7 +91,7 @@ export default (props: Props) => {
     pathType: PathType,
   ) => {
     const isExist = selectedPaths.some(
-      (item) => item.payload.data.id === payload.data.id,
+      (item) => item.payload.id === payload.id,
     );
     if (isExist) {
       deselectFolder(pathForCart);
@@ -108,7 +108,7 @@ export default (props: Props) => {
     callback?: () => void,
   ) => {
     const isExist = selectedPaths.some(
-      (item) => item.payload.data.id === payload.data.id,
+      (item) => item.payload.id === payload.id,
     );
 
     // Handle special clicks (Ctrl+Click or context menu) immediately
@@ -190,7 +190,7 @@ export default (props: Props) => {
     callback?: () => void,
   ) => {
     const isExist = selectedPaths.some(
-      (item) => item.payload.data.id === payload.data.id,
+      (item) => item.payload.id === payload.id,
     );
 
     // Handle special clicks (Ctrl+Click or context menu) immediately

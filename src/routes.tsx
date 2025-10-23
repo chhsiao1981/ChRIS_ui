@@ -173,7 +173,7 @@ export default () => {
             {...{ actions, state, route, setRoute }}
             context={MainRouterContext}
           >
-            <OperationsProvider>
+            <OperationsProvider useCart={useCart}>
               <GnomeLibrary
                 useUI={useUI}
                 useUser={useUser}
@@ -192,7 +192,7 @@ export default () => {
           {...{ actions, state, route, setRoute }}
           context={MainRouterContext}
         >
-          <OperationsProvider>
+          <OperationsProvider useCart={useCart}>
             <FeedView
               useUI={useUI}
               useUser={useUser}
@@ -210,7 +210,7 @@ export default () => {
           {...{ actions, state, route, setRoute }}
           context={MainRouterContext}
         >
-          <OperationsProvider>
+          <OperationsProvider useCart={useCart}>
             <FeedsListView
               title="My Data"
               isShared={false}
@@ -230,7 +230,7 @@ export default () => {
           {...{ actions, state, route, setRoute }}
           context={MainRouterContext}
         >
-          <OperationsProvider>
+          <OperationsProvider useCart={useCart}>
             <FeedsListView
               title="Shared Data"
               isShared={true}
