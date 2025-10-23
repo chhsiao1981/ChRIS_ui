@@ -17,7 +17,9 @@ type Props = {
 };
 
 export default (props: Props) => {
-  const { selectedFile, preview, isHide, useUser } = props;
+  const { selectedFile, preview, isHide: isHideProps, useUser } = props;
+  const isHide = isHideProps || false;
+
   let viewerName = "";
   if (selectedFile) {
     const fileType = getFileExtension(selectedFile.fname);

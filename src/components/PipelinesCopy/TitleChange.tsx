@@ -24,7 +24,7 @@ function TitleChange({ currentPipeline }: OwnProps) {
     fetchTitle(activeNode, pluginPipings);
   }, [activeNode, pluginPipings]); // Add dependencies based on when you want to refetch the title
 
-  function fetchTitle(activeNode?: string, pluginPipings?: PluginPiping[]) {
+  const fetchTitle = (activeNode?: string, pluginPipings?: PluginPiping[]) => {
     try {
       if (pluginPipings && activeNode) {
         if (userEnteredTitle) {
@@ -39,7 +39,7 @@ function TitleChange({ currentPipeline }: OwnProps) {
     } catch (error) {
       throw new Error("Failed to fetch title");
     }
-  }
+  };
 
   const handleSaveTitle = () => {
     try {

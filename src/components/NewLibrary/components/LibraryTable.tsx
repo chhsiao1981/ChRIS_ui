@@ -1,41 +1,34 @@
-import type {
-  FileBrowserFolder,
-  FileBrowserFolderFile,
-  FileBrowserFolderLinkFile,
-} from "@fnndsc/chrisapi";
-import { Skeleton } from "@patternfly/react-core";
+import type { ThunkModuleToFunc, UseThunk } from "@chhsiao1981/use-thunk";
 import {
   type ISortBy,
   type OnSort,
   type SortByDirection,
   Table,
-  TableText,
   Tbody,
-  Td,
   Th,
   Thead,
   Tr,
 } from "@patternfly/react-table";
-import { Drawer, Tag } from "antd";
-import { format } from "date-fns";
-import React, { useContext, useState } from "react";
+import { Drawer } from "antd";
+import { Fragment, useState } from "react";
 import { useNavigate } from "react-router";
-import { useAppSelector } from "../../../store/hooks";
-import { getIcon } from "../../Common";
-import { ThemeContext } from "../../DarkTheme/useTheme";
-import { formatBytes } from "../../Feeds/utilties";
+import type {
+  FileBrowserFolder,
+  FileBrowserFolderFile,
+  FileBrowserFolderLinkFile,
+} from "../../../api/types";
+import type * as DoUser from "../../../reducers/user";
 import FileDetailView from "../../Preview/FileDetailView";
 import { OperationContext } from "../context";
-import useLongPress, {
-  getBackgroundRowColor,
-  useAssociatedFeed,
-} from "../utils/useLongPress";
-import useNewResourceHighlight from "../utils/useNewResourceHighlight";
-import { getFileName, getLinkFileName } from "./FileCard";
-import { getFolderName } from "./FolderCard";
-import { FolderContextMenu } from "./FolderContextMenu";
+import getFileName from "../utils/getFileName";
+import getFolderName from "../utils/getFolderName";
+import getLinkFileName from "../utils/getLinkFileName";
+import { COLUMN_NAMES } from "./constants";
+import { FileRow, FolderRow, LinkRow } from "./LibraryRow";
 
-interface TableProps {
+type TDoUser = ThunkModuleToFunc<typeof DoUser>;
+
+type Props = {
   data: {
     folders: FileBrowserFolder[];
     files: FileBrowserFolderFile[];
@@ -46,188 +39,17 @@ interface TableProps {
   fetchMore?: boolean;
   handlePagination?: () => void;
   filesLoading?: boolean;
-}
 
-const columnNames = {
-  name: "Name",
-  date: "Created",
-  owner: "Creator",
-  size: "Size",
+  useUser: UseThunk<DoUser.State, TDoUser>;
 };
 
-interface RowProps {
-  rowIndex: number;
-  key: string;
-  resource:
-    | FileBrowserFolder
-    | FileBrowserFolderFile
-    | FileBrowserFolderLinkFile;
-  name: string;
-  date: string;
-  owner: string;
-  size: number;
-  type: "folder" | "file" | "link";
-  computedPath: string;
-  handleFolderClick: () => void;
-  handleFileClick: () => void;
-  origin: {
-    type: OperationContext;
-    additionalKeys: string[];
-  };
-}
-
-export const BaseRow: React.FC<RowProps> = ({
-  resource,
-  name,
-  date,
-  owner,
-  size,
-  type,
-  computedPath,
-  handleFolderClick,
-  handleFileClick,
-  origin,
-}) => {
-  const { handlers } = useLongPress();
-  const { onClick: handleOnClick } = handlers;
-  const selectedPaths = useAppSelector((state) => state.cart.selectedPaths);
-  const { isDarkTheme } = useContext(ThemeContext);
-  const { isNewResource, scrollToNewResource } = useNewResourceHighlight(date);
-  const isSelected = selectedPaths.some((payload) => {
-    if (type === "folder" || type === "link") {
-      return payload.path === resource.data.path;
-    }
-    if (type === "file") {
-      return payload.path === resource.data.fname;
-    }
-    return false;
-  });
-  const shouldHighlight = isNewResource || isSelected;
-  const highlightedBgRow = getBackgroundRowColor(shouldHighlight, isDarkTheme);
-  const icon = getIcon(type, isDarkTheme, { marginRight: "0.5em" });
-  const path =
-    type === "folder" || type === "link"
-      ? resource.data.path
-      : resource.data.fname;
-  const handleItem = () => {
-    if (type === "folder") {
-      handleFolderClick();
-    } else {
-      handleFileClick();
-    }
-  };
-  return (
-    <FolderContextMenu origin={origin} key={path} computedPath={computedPath}>
-      <Tr
-        ref={scrollToNewResource}
-        style={{ background: highlightedBgRow, cursor: "pointer" }}
-        onClick={(e) => {
-          e.stopPropagation();
-          handleOnClick(e, resource, path, type, () => {
-            handleItem();
-          });
-        }}
-        onContextMenu={(e) => {
-          handleOnClick(e, resource, path, type);
-        }}
-      >
-        <Td className="pf-v5-c-table__check">
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onClick={(event) => {
-              event.stopPropagation();
-              event.nativeEvent.stopImmediatePropagation();
-            }}
-            onChange={(event) => {
-              handlers.onChangeCheckbox(event, path, resource, type);
-            }}
-          />
-        </Td>
-        <Td dataLabel={columnNames.name} modifier="nowrap">
-          <div style={{ display: "flex", alignItems: "center" }}>
-            {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                handleItem();
-              }}
-              style={{ cursor: "pointer", color: "#1fa7f8" }}
-            >
-              {icon}
-            </div>
-            <TableText
-              wrapModifier="truncate"
-              tooltip={name}
-              style={{
-                cursor: "pointer",
-                marginLeft: "0.5em",
-                color: "#1fa7f8",
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleItem();
-              }}
-            >
-              {name}
-              {isNewResource && (
-                <span style={{ marginLeft: "0.5em" }}>
-                  <Tag color="#3E8635">Newly Added</Tag>
-                </span>
-              )}
-            </TableText>
-          </div>
-        </Td>
-        <Td dataLabel={columnNames.date} modifier="nowrap">
-          <TableText
-            wrapModifier="truncate"
-            tooltip={format(new Date(date), "dd MMM yyyy, HH:mm")}
-          >
-            {format(new Date(date), "dd MMM yyyy, HH:mm")}
-          </TableText>
-        </Td>
-        {origin.type !== "fileBrowser" && (
-          <Td dataLabel={columnNames.owner} modifier="nowrap">
-            <TableText wrapModifier="truncate" tooltip={owner}>
-              {owner}
-            </TableText>
-          </Td>
-        )}
-        <Td dataLabel={columnNames.size} modifier="nowrap">
-          <TableText>{size > 0 ? formatBytes(size, 0) : " "}</TableText>
-        </Td>
-      </Tr>
-    </FolderContextMenu>
-  );
-};
-
-export const FolderRow: React.FC<Omit<RowProps, "type">> = (props) => {
-  const { data, isLoading } = useAssociatedFeed(props.name);
-  if (isLoading) {
-    return (
-      <Tr>
-        <Td>
-          <Skeleton width="100%" />
-        </Td>
-      </Tr>
-    );
-  }
-  return <BaseRow {...props} name={data ? data : props.name} type="folder" />;
-};
-
-export const FileRow: React.FC<Omit<RowProps, "type">> = (props) => (
-  <BaseRow {...props} type="file" />
-);
-
-export const LinkRow: React.FC<Omit<RowProps, "type">> = (props) => (
-  <BaseRow {...props} type="link" />
-);
-
-const LibraryTable: React.FC<TableProps> = ({
-  data,
-  computedPath,
-  handleFolderClick,
-}) => {
+export default (props: Props) => {
+  const {
+    data,
+    computedPath,
+    handleFolderClick: onFolderClick,
+    useUser,
+  } = props;
   const navigate = useNavigate();
   const [preview, setShowPreview] = useState(false);
   const [selectedFile, setSelectedFile] = useState<FileBrowserFolderFile>();
@@ -235,7 +57,7 @@ const LibraryTable: React.FC<TableProps> = ({
     index: 0,
     direction: "asc",
   });
-  const handleFileClick = (file: FileBrowserFolderFile) => {
+  const onFileClick = (file: FileBrowserFolderFile) => {
     setSelectedFile(file);
     setShowPreview(true);
   };
@@ -264,18 +86,18 @@ const LibraryTable: React.FC<TableProps> = ({
       );
     } else if (index === 2) {
       sortedData.folders.sort((a, b) => {
-        const dateA = new Date(a.data.creation_date).getTime();
-        const dateB = new Date(b.data.creation_date).getTime();
+        const dateA = new Date(a.creation_date).getTime();
+        const dateB = new Date(b.creation_date).getTime();
         return (dateA - dateB) * (direction === "asc" ? 1 : -1);
       });
       sortedData.files.sort((a, b) => {
-        const dateA = new Date(a.data.creation_date).getTime();
-        const dateB = new Date(b.data.creation_date).getTime();
+        const dateA = new Date(a.creation_date).getTime();
+        const dateB = new Date(b.creation_date).getTime();
         return (dateA - dateB) * (direction === "asc" ? 1 : -1);
       });
       sortedData.linkFiles.sort((a, b) => {
-        const dateA = new Date(a.data.creation_date).getTime();
-        const dateB = new Date(b.data.creation_date).getTime();
+        const dateA = new Date(a.creation_date).getTime();
+        const dateB = new Date(b.creation_date).getTime();
         return (dateA - dateB) * (direction === "asc" ? 1 : -1);
       });
     }
@@ -284,8 +106,10 @@ const LibraryTable: React.FC<TableProps> = ({
     type: OperationContext.LIBRARY,
     additionalKeys: [computedPath],
   };
+
+  const isHideFileDetailView = !selectedFile;
   return (
-    <React.Fragment>
+    <Fragment>
       <Drawer
         width="100%"
         open={preview}
@@ -296,9 +120,12 @@ const LibraryTable: React.FC<TableProps> = ({
         }}
         placement="right"
       >
-        {selectedFile && (
-          <FileDetailView selectedFile={selectedFile} preview="large" />
-        )}
+        <FileDetailView
+          selectedFile={selectedFile}
+          preview="large"
+          isHide={isHideFileDetailView}
+          useUser={useUser}
+        />
       </Drawer>
 
       <Table
@@ -316,20 +143,20 @@ const LibraryTable: React.FC<TableProps> = ({
               width={40}
               name="name"
             >
-              {columnNames.name}
+              {COLUMN_NAMES.name}
             </Th>
             <Th
               sort={{ sortBy, onSort, columnIndex: 2 }}
               width={20}
               name="date"
             >
-              {columnNames.date}
+              {COLUMN_NAMES.date}
             </Th>
             <Th name="owner" width={20}>
-              {columnNames.owner}
+              {COLUMN_NAMES.owner}
             </Th>
             <Th name="size" width={20}>
-              {columnNames.size}
+              {COLUMN_NAMES.size}
             </Th>
           </Tr>
         </Thead>
@@ -337,16 +164,16 @@ const LibraryTable: React.FC<TableProps> = ({
           {data.folders.map((resource: FileBrowserFolder, index) => (
             <FolderRow
               rowIndex={index}
-              key={resource.data.path}
+              key={resource.path}
               resource={resource}
               name={getFolderName(resource, computedPath)}
-              date={resource.data.creation_date}
-              owner={resource.data.owner_username}
+              date={resource.creation_date}
+              owner={resource.owner_username}
               size={0}
               computedPath={computedPath}
               handleFolderClick={() => {
                 const name = getFolderName(resource, computedPath);
-                handleFolderClick(name);
+                onFolderClick(name);
               }}
               handleFileClick={() => {
                 return;
@@ -357,18 +184,18 @@ const LibraryTable: React.FC<TableProps> = ({
           {data.files.map((resource: FileBrowserFolderFile, index) => (
             <FileRow
               rowIndex={index}
-              key={resource.data.fname}
+              key={resource.fname}
               resource={resource}
               name={getFileName(resource)}
-              date={resource.data.creation_date}
-              owner={resource.data.owner_username}
-              size={resource.data.fsize}
+              date={resource.creation_date}
+              owner={resource.owner_username}
+              size={resource.fsize}
               computedPath={computedPath}
               handleFolderClick={() => {
                 return;
               }}
               handleFileClick={() => {
-                handleFileClick(resource);
+                onFileClick(resource);
               }}
               origin={origin}
             />
@@ -376,26 +203,24 @@ const LibraryTable: React.FC<TableProps> = ({
           {data.linkFiles.map((resource: FileBrowserFolderLinkFile, index) => (
             <LinkRow
               rowIndex={index}
-              key={resource.data.path}
+              key={resource.path}
               resource={resource}
               name={getLinkFileName(resource)}
-              date={resource.data.creation_date}
-              owner={resource.data.owner_username}
-              size={resource.data.fsize}
+              date={resource.creation_date}
+              owner={resource.owner_username}
+              size={resource.fsize}
               computedPath={computedPath}
               handleFolderClick={() => {
                 return;
               }}
               handleFileClick={() => {
-                navigate(resource.data.path);
+                navigate(resource.path);
               }}
               origin={origin}
             />
           ))}
         </Tbody>
       </Table>
-    </React.Fragment>
+    </Fragment>
   );
 };
-
-export default LibraryTable;

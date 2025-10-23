@@ -35,7 +35,7 @@ import { onMaximize, onMinimize } from "../Feeds/utilties";
 import {
   getFileName,
   getLinkFileName,
-} from "../NewLibrary/components/FileCard";
+} from "../NewLibrary/components/FilesCard";
 import { getFolderName } from "../NewLibrary/components/FolderCard";
 import {
   FileRow,

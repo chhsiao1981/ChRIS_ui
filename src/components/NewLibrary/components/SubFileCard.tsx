@@ -1,4 +1,8 @@
-import type { ThunkModuleToFunc, UseThunk } from "@chhsiao1981/use-thunk";
+import {
+  getState,
+  type ThunkModuleToFunc,
+  type UseThunk,
+} from "@chhsiao1981/use-thunk";
 import {
   Button,
   Card,
@@ -16,8 +20,9 @@ import type React from "react";
 import { useContext, useEffect, useState } from "react";
 import { getFileExtension } from "../../../api/model";
 import type { FileBrowserFolderFile } from "../../../api/types";
-import type * as DoCart from "../../../reducers/cart";
+import * as DoCart from "../../../reducers/cart";
 import { PathType } from "../../../reducers/types";
+import * as DoUser from "../../../reducers/user";
 import useDownload, { useAppSelector } from "../../../store/hooks";
 import { notification } from "../../Antd";
 import { getIcon } from "../../Common";
@@ -25,41 +30,39 @@ import { ThemeContext } from "../../DarkTheme/useTheme";
 import FileDetailView from "../../Preview/FileDetailView";
 import { OperationContext } from "../context";
 import getBackgroundRowColor from "../utils/getBackgroundRowColor";
-import { getFileName } from "../utils/getFileName";
+import getFileName from "../utils/getFileName";
 import useLongPress from "../utils/useLongPress";
 import Presentation from "./Presentation";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 
 type Props = {
   theFile: FileBrowserFolderFile;
   computedPath: string;
 
-  // For dicom scrolling
-  theList?: FileBrowserFolderFile[];
-  fetchMore?: boolean;
-  onPagination?: () => void;
-  filesLoading?: boolean;
-
   useCart: UseThunk<DoCart.State, TDoCart>;
-  username: string;
+  useUser: UseThunk<DoUser.State, TDoUser>;
 };
 
 export default (props: Props) => {
   const {
     theFile,
     computedPath,
-    theList,
-    fetchMore,
-    onPagination,
-    filesLoading,
 
     useCart,
-    username,
+    useUser,
   } = props;
 
+  const [classStateCart, _] = useCart;
+  const cart = getState(classStateCart) || DoCart.defaultState;
+  const { selectedPaths } = cart;
+
+  const [classStateUser, _2] = useUser;
+  const user = getState(classStateUser) || DoUser.defaultState;
+  const { username } = user;
+
   const { isDarkTheme } = useContext(ThemeContext);
-  const selectedPaths = useAppSelector((state) => state.cart.selectedPaths);
   const handleDownloadMutation = useDownload();
   const { handlers } = useLongPress(useCart);
   const [api, contextHolder] = notification.useNotification();
@@ -169,7 +172,11 @@ export default (props: Props) => {
         isOpen={preview}
         onClose={() => setIsPreview(false)}
       >
-        <FileDetailView selectedFile={theFile} preview="large" />
+        <FileDetailView
+          selectedFile={theFile}
+          preview="large"
+          useUser={useUser}
+        />
       </Modal>
     </>
   );

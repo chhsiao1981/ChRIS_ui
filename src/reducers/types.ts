@@ -27,9 +27,9 @@ export enum CartLayout {
 export enum PathType {
   Folder = "folder",
   FolderFile = "file",
-  FolderLinkFile = "link",
+  FolderLinkFile = "linkFile",
   File = "file",
-  Link = "link",
+  Link = "linkFile",
 }
 
 export type PayloadType =

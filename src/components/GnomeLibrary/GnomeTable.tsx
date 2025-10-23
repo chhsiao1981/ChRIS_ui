@@ -23,7 +23,7 @@ import * as DoUser from "../../reducers/user";
 import {
   getFileName,
   getLinkFileName,
-} from "../NewLibrary/components/FileCard";
+} from "../NewLibrary/components/FilesCard";
 import { OperationContext } from "../NewLibrary/context";
 import getFolderName from "../NewLibrary/utils/getFolderName";
 import FileDetailView from "../Preview/FileDetailView";

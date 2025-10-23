@@ -17,7 +17,7 @@ import { Alert, notification } from "../Antd";
 import { EmptyStateComponent, InfoSection, SpinContainer } from "../Common";
 import Wrapper from "../Wrapper";
 import BreadcrumbContainer from "./components/BreadcrumbContainer";
-import { FilesCard, LinkCard } from "./components/FileCard";
+import { FilesCard, LinkCard } from "./components/FilesCard";
 import { FolderCard } from "./components/FolderCard";
 import LibraryTable from "./components/LibraryTable";
 import Operations from "./components/Operations";
