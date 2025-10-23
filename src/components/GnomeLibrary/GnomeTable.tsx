@@ -13,6 +13,7 @@ import { Drawer, notification } from "antd";
 import type React from "react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import { getLinkedResource } from "../../api/serverApi";
 import type {
   FileBrowserFolder,
   FileBrowserFolderFile,
@@ -20,12 +21,10 @@ import type {
 } from "../../api/types";
 import type * as DoCart from "../../reducers/cart";
 import * as DoUser from "../../reducers/user";
-import {
-  getFileName,
-  getLinkFileName,
-} from "../NewLibrary/components/FilesCard";
 import { OperationContext } from "../NewLibrary/context";
+import getFileName from "../NewLibrary/utils/getFileName";
 import getFolderName from "../NewLibrary/utils/getFolderName";
+import getLinkFileName from "../NewLibrary/utils/getLinkFileName";
 import FileDetailView from "../Preview/FileDetailView";
 import GnomeBulkActionBar from "./GnomeActionBar";
 import { GnomeFileRow, GnomeFolderRow, GnomeLinkRow } from "./GnomeRow";
@@ -350,6 +349,7 @@ export default (props: Props) => {
               onFileClick={() => {}}
               origin={origin}
               username={username}
+              useCart={useCart}
             />
           ))}
 

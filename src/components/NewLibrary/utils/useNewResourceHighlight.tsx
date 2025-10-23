@@ -1,9 +1,9 @@
-import { useRef, useState, useEffect } from "react";
 import { differenceInSeconds } from "date-fns";
+import { useEffect, useRef, useState } from "react";
 
 // Custom hook to handle new resource highlighting
 const useNewResourceHighlight = (creationDate: string) => {
-  const rowRef = useRef<HTMLLIElement>(null);
+  const rowRef = useRef<HTMLTableRowElement>(null);
   const secondsSinceCreation = differenceInSeconds(
     new Date(),
     new Date(creationDate),

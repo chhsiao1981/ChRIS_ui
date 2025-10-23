@@ -1,13 +1,18 @@
+import type { ThunkModuleToFunc, UseThunk } from "@chhsiao1981/use-thunk";
+import { Skeleton } from "@patternfly/react-core";
 import { TableText, Td, Tr } from "@patternfly/react-table";
-import { Skeleton, Tag } from "antd";
-import { format } from "path";
+import { Tag } from "antd";
+import { format } from "date-fns";
+import { type } from "os";
+import path from "path";
 import { useContext } from "react";
 import type {
   FileBrowserFolder,
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
 } from "../../../api/types";
-import { PathType } from "../../../reducers/types";
+import type * as DoCart from "../../../reducers/cart";
+import { PathType, type PayloadType } from "../../../reducers/types";
 import { useAppSelector } from "../../../store/hooks";
 import { getIcon } from "../../Common";
 import { ThemeContext } from "../../DarkTheme/useTheme";
@@ -19,6 +24,8 @@ import useLongPress from "../utils/useLongPress";
 import useNewResourceHighlight from "../utils/useNewResourceHighlight";
 import { COLUMN_NAMES } from "./constants";
 import FolderContextMenu from "./FolderContextMenu";
+
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type BaseProps = {
   rowIndex: number;
@@ -33,66 +40,79 @@ type BaseProps = {
   size: number;
   type: PathType;
   computedPath: string;
-  handleFolderClick: () => void;
-  handleFileClick: () => void;
+  onFolderClick: () => void;
+  onFileClick: () => void;
   origin: {
     type: OperationContext;
     additionalKeys: string[];
   };
+
+  username: string;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 const BaseRow = (props: BaseProps) => {
   const {
     resource,
     name,
-    date,
+    date: theDate,
     owner,
-    size,
-    type,
+    size: theSize,
+    type: theType,
     computedPath,
-    handleFolderClick: onFolderClick,
-    handleFileClick: onFileClick,
+    onFolderClick,
+    onFileClick,
     origin,
+
+    username,
+    useCart,
   } = props;
-  const { handlers } = useLongPress();
+
+  const { handlers } = useLongPress(useCart);
   const { onClick } = handlers;
   const selectedPaths = useAppSelector((state) => state.cart.selectedPaths);
   const { isDarkTheme } = useContext(ThemeContext);
-  const { isNewResource, scrollToNewResource } = useNewResourceHighlight(date);
-  const isSelected = selectedPaths.some((payload) => {
-    if (type === "folder" || type === "link") {
-      return payload.path === resource.path;
-    }
-    if (type === "file") {
-      return payload.path === resource.fname;
+  const { isNewResource, scrollToNewResource } =
+    useNewResourceHighlight(theDate);
+  const isSelected = selectedPaths.some((eachPath) => {
+    if (theType === PathType.Folder) {
+      return eachPath.path === (resource as FileBrowserFolder).path;
+    } else if (theType === PathType.Link) {
+      return eachPath.path === (resource as FileBrowserFolderLinkFile).path;
+    } else if (theType === PathType.File) {
+      return eachPath.path === (resource as FileBrowserFolderFile).fname;
     }
     return false;
   });
+  const path = getResourcePath(theType, resource);
   const shouldHighlight = isNewResource || isSelected;
   const highlightedBgRow = getBackgroundRowColor(shouldHighlight, isDarkTheme);
-  const icon = getIcon(type, isDarkTheme, { marginRight: "0.5em" });
-  const path =
-    type === "folder" || type === "link" ? resource.path : resource.fname;
+  const icon = getIcon(theType, isDarkTheme, { marginRight: "0.5em" });
   const onClickItem = () => {
-    if (type === PathType.Folder) {
+    if (theType === PathType.Folder) {
       onFolderClick();
     } else {
       onFileClick();
     }
   };
   return (
-    <FolderContextMenu origin={origin} key={path} computedPath={computedPath}>
+    <FolderContextMenu
+      origin={origin}
+      key={path}
+      computedPath={computedPath}
+      username={username}
+    >
       <Tr
         ref={scrollToNewResource}
         style={{ background: highlightedBgRow, cursor: "pointer" }}
         onClick={(e) => {
           e.stopPropagation();
-          onClick(e, resource, path, type, () => {
+          onClick(e, resource, path, theType, () => {
             onClickItem();
           });
         }}
         onContextMenu={(e) => {
-          onClick(e, resource, path, type);
+          onClick(e, resource, path, theType);
         }}
       >
         <Td className="pf-v5-c-table__check">
@@ -104,7 +124,7 @@ const BaseRow = (props: BaseProps) => {
               event.nativeEvent.stopImmediatePropagation();
             }}
             onChange={(event) => {
-              handlers.onChangeCheckbox(event, path, resource, type);
+              handlers.onChangeCheckbox(event, path, resource, theType);
             }}
           />
         </Td>
@@ -146,9 +166,9 @@ const BaseRow = (props: BaseProps) => {
         <Td dataLabel={COLUMN_NAMES.date} modifier="nowrap">
           <TableText
             wrapModifier="truncate"
-            tooltip={format(new Date(date), "dd MMM yyyy, HH:mm")}
+            tooltip={format(new Date(theDate), "dd MMM yyyy, HH:mm")}
           >
-            {format(new Date(date), "dd MMM yyyy, HH:mm")}
+            {format(new Date(theDate), "dd MMM yyyy, HH:mm")}
           </TableText>
         </Td>
         {origin.type !== "fileBrowser" && (
@@ -159,7 +179,7 @@ const BaseRow = (props: BaseProps) => {
           </Td>
         )}
         <Td dataLabel={COLUMN_NAMES.size} modifier="nowrap">
-          <TableText>{size > 0 ? formatBytes(size, 0) : " "}</TableText>
+          <TableText>{theSize > 0 ? formatBytes(theSize, 0) : " "}</TableText>
         </Td>
       </Tr>
     </FolderContextMenu>
@@ -195,3 +215,14 @@ export const FileRow = (props: Props) => (
 export const LinkRow = (props: Props) => (
   <BaseRow {...props} type={PathType.Link} />
 );
+
+const getResourcePath = (theType: PathType, resource: PayloadType) => {
+  if (theType === PathType.Folder) {
+    return (resource as FileBrowserFolder).path;
+  } else if (theType === PathType.Link) {
+    return (resource as FileBrowserFolderLinkFile).path;
+  } else if (theType === PathType.File) {
+    return (resource as FileBrowserFolderFile).fname;
+  }
+  return "";
+};

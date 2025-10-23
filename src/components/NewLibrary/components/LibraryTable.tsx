@@ -1,4 +1,8 @@
-import type { ThunkModuleToFunc, UseThunk } from "@chhsiao1981/use-thunk";
+import {
+  getState,
+  type ThunkModuleToFunc,
+  type UseThunk,
+} from "@chhsiao1981/use-thunk";
 import {
   type ISortBy,
   type OnSort,
@@ -17,7 +21,8 @@ import type {
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
 } from "../../../api/types";
-import type * as DoUser from "../../../reducers/user";
+import type * as DoCart from "../../../reducers/cart";
+import * as DoUser from "../../../reducers/user";
 import FileDetailView from "../../Preview/FileDetailView";
 import { OperationContext } from "../context";
 import getFileName from "../utils/getFileName";
@@ -27,6 +32,7 @@ import { COLUMN_NAMES } from "./constants";
 import { FileRow, FolderRow, LinkRow } from "./LibraryRow";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type Props = {
   data: {
@@ -41,6 +47,7 @@ type Props = {
   filesLoading?: boolean;
 
   useUser: UseThunk<DoUser.State, TDoUser>;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 export default (props: Props) => {
@@ -49,7 +56,13 @@ export default (props: Props) => {
     computedPath,
     handleFolderClick: onFolderClick,
     useUser,
+    useCart,
   } = props;
+
+  const [classStateUser, doUser] = useUser;
+  const user = getState(classStateUser) || DoUser.defaultState;
+  const { username } = user;
+
   const navigate = useNavigate();
   const [preview, setShowPreview] = useState(false);
   const [selectedFile, setSelectedFile] = useState<FileBrowserFolderFile>();
@@ -171,14 +184,16 @@ export default (props: Props) => {
               owner={resource.owner_username}
               size={0}
               computedPath={computedPath}
-              handleFolderClick={() => {
+              onFolderClick={() => {
                 const name = getFolderName(resource, computedPath);
                 onFolderClick(name);
               }}
-              handleFileClick={() => {
+              onFileClick={() => {
                 return;
               }}
               origin={origin}
+              username={username}
+              useCart={useCart}
             />
           ))}
           {data.files.map((resource: FileBrowserFolderFile, index) => (
@@ -191,13 +206,15 @@ export default (props: Props) => {
               owner={resource.owner_username}
               size={resource.fsize}
               computedPath={computedPath}
-              handleFolderClick={() => {
+              onFolderClick={() => {
                 return;
               }}
-              handleFileClick={() => {
+              onFileClick={() => {
                 onFileClick(resource);
               }}
               origin={origin}
+              username={username}
+              useCart={useCart}
             />
           ))}
           {data.linkFiles.map((resource: FileBrowserFolderLinkFile, index) => (
@@ -210,13 +227,15 @@ export default (props: Props) => {
               owner={resource.owner_username}
               size={resource.fsize}
               computedPath={computedPath}
-              handleFolderClick={() => {
+              onFolderClick={() => {
                 return;
               }}
-              handleFileClick={() => {
+              onFileClick={() => {
                 navigate(resource.path);
               }}
               origin={origin}
+              username={username}
+              useCart={useCart}
             />
           ))}
         </Tbody>

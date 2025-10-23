@@ -350,3 +350,7 @@ export const getFileResourceUrl = (theFile: FileBrowserFolderFile): string => {
 export const getFileExtension = (filename: string) => {
   return "";
 };
+
+export const getLinkedResource = (
+  link: FileBrowserFolderLinkFile,
+): FileBrowserFolderFile | FileBrowserFolder => {};
