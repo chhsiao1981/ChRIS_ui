@@ -1,13 +1,10 @@
 import { type CSSProperties, useEffect, useRef, useState } from "react";
-import { getFileExtension, type IFileBlob } from "../../../api/model";
+import { getFileExtension } from "../../../api/model";
+import { getFileBlob } from "../../../api/serverApi";
 import styles from "./ImageDisplay.module.css";
+import type { DisplayProps } from "./types";
 
-type Props = {
-  selectedFile?: IFileBlob;
-  isHide?: boolean;
-};
-
-export default (props: Props) => {
+export default (props: DisplayProps) => {
   const { selectedFile, isHide } = props;
   const [url, setUrl] = useState("");
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -23,7 +20,7 @@ export default (props: Props) => {
       return;
     }
 
-    const fileType = getFileExtension(selectedFile.data.fname).toLowerCase();
+    const fileType = getFileExtension(selectedFile.fname).toLowerCase();
     if (fileType !== "png" && fileType !== "jpg" && fileType !== "jpeg") {
       return;
     }
@@ -38,27 +35,27 @@ export default (props: Props) => {
 
       try {
         // Get the Blob if the file doesn't have a URL
-        const blob = await selectedFile.getFileBlob();
-        if (blob) {
-          let type = "";
-          const fileType = getFileExtension(
-            selectedFile.data.fname,
-          ).toLowerCase();
-          if (fileType === "png") {
-            type = "image/png";
-          } else if (fileType === "jpg" || fileType === "jpeg") {
-            type = "image/jpeg";
-          } else {
-            // use antd notifications here
-            // Handle unsupported file types if necessary
-            console.warn(`Unsupported file type: ${fileType}`);
-            return;
-          }
-
-          // Create a Blob URL with the correct MIME type for images
-          objectUrl = window.URL.createObjectURL(new Blob([blob], { type }));
-          setUrl(objectUrl);
+        const blob = await getFileBlob(selectedFile);
+        if (!blob) {
+          setUrl("");
+          return;
         }
+        let type = "";
+        const fileType = getFileExtension(selectedFile.fname).toLowerCase();
+        if (fileType === "png") {
+          type = "image/png";
+        } else if (fileType === "jpg" || fileType === "jpeg") {
+          type = "image/jpeg";
+        } else {
+          // use antd notifications here
+          // Handle unsupported file types if necessary
+          console.warn(`Unsupported file type: ${fileType}`);
+          return;
+        }
+
+        // Create a Blob URL with the correct MIME type for images
+        objectUrl = window.URL.createObjectURL(new Blob([blob], { type }));
+        setUrl(objectUrl);
       } catch (error) {
         console.error("Error constructing image URL:", error);
       }
@@ -68,9 +65,10 @@ export default (props: Props) => {
 
     // Cleanup the object URL to avoid memory leaks
     return () => {
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
+      if (!objectUrl) {
+        return;
       }
+      window.URL.revokeObjectURL(objectUrl);
     };
   }, [selectedFile, isHide]);
 
@@ -133,7 +131,7 @@ export default (props: Props) => {
         className={styles[imgClassName]}
         ref={imgRef}
         src={url}
-        alt={selectedFile?.data.fname}
+        alt={selectedFile?.fname}
         onClick={(e) => e.preventDefault()} // Prevent default behavior on click
         onKeyDown={(e) => e.preventDefault()}
       />

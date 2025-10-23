@@ -1,34 +1,38 @@
 import { type CSSProperties, useEffect, useState } from "react";
-import type { IFileBlob } from "../../../api/model";
+import { getFileBlob } from "../../../api/serverApi";
+import type { DisplayProps } from "./types";
 
-type Props = {
-  selectedFile?: IFileBlob;
-  isHide?: boolean;
-};
-
-export default (props: Props) => {
+export default (props: DisplayProps) => {
   const { selectedFile, isHide } = props;
   const [url, setUrl] = useState<string>("");
 
   useEffect(() => {
-    async function constructURL() {
-      if (!selectedFile) return;
-      const blob = await selectedFile?.getFileBlob();
-      if (blob) {
-        const objectUrl = window.URL.createObjectURL(
-          new Blob([blob], { type: "application/pdf" }),
-        );
-        setUrl(objectUrl);
-
-        // Clean up the URL when the component unmounts
-        return () => {
-          window.URL.revokeObjectURL(objectUrl);
-        };
-      }
+    if (isHide) {
+      return;
     }
 
+    const constructedURL = { url: "" };
+    const constructURL = async () => {
+      if (!selectedFile) return;
+      const blob = await getFileBlob(selectedFile);
+      if (!blob) {
+        return;
+      }
+      const objectUrl = window.URL.createObjectURL(
+        new Blob([blob], { type: "application/pdf" }),
+      );
+      constructedURL.url = objectUrl;
+      setUrl(objectUrl);
+    };
     constructURL();
-  }, [selectedFile]);
+
+    return () => {
+      if (!constructedURL.url) {
+        return;
+      }
+      window.URL.revokeObjectURL(constructedURL.url);
+    };
+  }, [selectedFile, isHide]);
 
   const style: CSSProperties = {};
   if (isHide) {
@@ -38,7 +42,7 @@ export default (props: Props) => {
   return (
     <div className="iframe-container" style={style}>
       <iframe
-        key={selectedFile?.data.fname}
+        key={selectedFile?.fname}
         src={url}
         width="100%"
         height="100%"

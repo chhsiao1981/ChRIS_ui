@@ -1,18 +1,9 @@
-import { cons } from "fp-ts/lib/ReadonlyNonEmptyArray";
-import React, {
-  type CSSProperties,
-  Fragment,
-  useEffect,
-  useState,
-} from "react";
-import { getFileExtension, type IFileBlob } from "../../../api/model";
+import { type CSSProperties, Fragment, useEffect, useState } from "react";
+import { getFileExtension } from "../../../api/model";
+import { getFileBlob } from "../../../api/serverApi";
+import type { DisplayProps } from "./types";
 
-type Props = {
-  selectedFile?: IFileBlob;
-  isHide?: boolean;
-};
-
-export default (props: Props) => {
+export default (props: DisplayProps) => {
   const { selectedFile, isHide } = props;
   const [url, setURL] = useState<string>("");
 
@@ -36,11 +27,16 @@ export default (props: Props) => {
 
     const constructedURL = { url: "" };
     const constructURL = async () => {
-      const fileType = getFileExtension(selectedFile.data.fname);
-      const blob = await selectedFile.getFileBlob();
+      const fileType = getFileExtension(selectedFile.fname);
+      const blob = await getFileBlob(selectedFile);
+      if (!blob) {
+        return;
+      }
 
-      const type = fileType === "html" ? "text/html" : "";
-      constructedURL.url = URL.createObjectURL(new Blob([blob], { type }));
+      const theType = fileType === "html" ? "text/html" : "";
+      constructedURL.url = URL.createObjectURL(
+        new Blob([blob], { type: theType }),
+      );
       setURL(constructedURL.url);
     };
 
@@ -63,7 +59,7 @@ export default (props: Props) => {
       <div className="iframe-container" style={style}>
         <iframe
           id="myframe"
-          key={selectedFile?.data.fname}
+          key={selectedFile?.fname}
           src={url}
           width="100%"
           height="100%"

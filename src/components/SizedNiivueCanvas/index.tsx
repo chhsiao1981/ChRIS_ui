@@ -171,29 +171,35 @@ export default (props: Props) => {
   }, [theNiivue, glRef.current, isHide]);
 
   useEffect(() => {
+    if (isHide) {
+      return;
+    }
     if (!theNiivue) {
       return;
     }
     theNiivue.setSliceType(SLICE_TYPE_MAP[sliceType]);
-  }, [theNiivue, sliceType]);
+  }, [theNiivue, sliceType, isHide]);
 
   useEffect(() => {
+    if (isHide) {
+      return;
+    }
+
     if (!theNiivue) {
       return;
     }
 
     theNiivue.setRadiologicalConvention(isRadiologistView);
-  }, [theNiivue, isRadiologistView]);
+  }, [theNiivue, isRadiologistView, isHide]);
 
   useEffect(() => {
+    if (isHide) {
+      return;
+    }
     if (!theNiivue) {
       return;
     }
 
-    console.info(
-      "SizedNiivueCanvas: updated colormap: volumes:",
-      theNiivue.volumes.length,
-    );
     if (!theNiivue.volumes.length) {
       return;
     }
@@ -202,24 +208,9 @@ export default (props: Props) => {
     theNiivue.volumes[0].cal_min = calMin;
     theNiivue.volumes[0].cal_max = calMax;
 
-    console.info(
-      "SizedNiivueCanvas: to refreshLayers: colormap:",
-      colormap,
-      "calMax:",
-      calMax,
-      "volumes[0].cal_max:",
-      theNiivue.volumes[0].cal_max,
-      "calMin:",
-      calMin,
-      "volumes[0].cal_min:",
-      theNiivue.volumes[0].cal_min,
-      "volumes:",
-      theNiivue.volumes[0],
-    );
-
     theNiivue.refreshLayers(theNiivue.volumes[0], 0);
     theNiivue.refreshDrawing(true);
-  }, [theNiivue, calMin, calMax, colormap]);
+  }, [theNiivue, calMin, calMax, colormap, isHide]);
 
   useEffect(() => {
     if (isHide) {
@@ -281,19 +272,6 @@ export default (props: Props) => {
       console.info("after theNiivue.loadVolumes:", theNiivue.volumes.length);
     })();
   }, [theNiivue, urls, isLoggedIn, isHide]);
-
-  /*
-  const fullOptions = React.useMemo(() => {
-    // set textHeight.
-    // Internal to niivue, the font size scales with the outer canvas size.
-    // To undo this effect, we need to divide by the canvas' width or height.
-    // See https://github.com/niivue/niivue/issues/857
-    const multiplier =
-      2 / (isScaling ? Math.min(canvasWidth, canvasHeight) : 800);
-    const textHeight = multiplier * (size || 10);
-    return options ? { ...options, textHeight } : { textHeight };
-  }, [options, size, isScaling, canvasWidth, canvasHeight]);
-  */
 
   return (
     <div className={styles.niivueContainer}>

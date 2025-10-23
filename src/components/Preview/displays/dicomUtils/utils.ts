@@ -12,9 +12,7 @@ import {
   type Types as CornerstoneToolTypes,
   init as csToolsInit,
 } from "@cornerstonejs/tools";
-import { Collection } from "@fnndsc/chrisapi";
 import dicomParser from "dicom-parser";
-import type { IFileBlob } from "../../../../api/model";
 import ptScalingMetaDataProvider from "./ptScalingMetaDataProvider";
 
 const { ViewportType } = Enums;
@@ -39,7 +37,7 @@ export const stopClip = utilities.cine.stopClip;
 export const playClip = utilities.cine.playClip;
 let toolGroup: CornerstoneToolTypes.IToolGroup | undefined;
 
-function initProviders() {
+const initProviders = () => {
   cornerstone.metaData.addProvider(
     ptScalingMetaDataProvider.get.bind(ptScalingMetaDataProvider),
     10000,
@@ -50,7 +48,7 @@ function initProviders() {
     ),
     11000,
   );
-}
+};
 
 export const registerToolingOnce = () => {
   cornerstoneTools.addTool(PanTool);
@@ -83,7 +81,7 @@ export const cleanupCornerstoneTooling = () => {
   }
 };
 
-export function setUpTooling(uniqueToolId: string) {
+export const setUpTooling = (uniqueToolId: string) => {
   const id = toolGroup?.id;
   if (!id) {
     registerToolingOnce();
@@ -98,7 +96,7 @@ export function setUpTooling(uniqueToolId: string) {
       toolGroup.addTool(MagnifyTool.toolName);
     }
   }
-}
+};
 
 export const initializeCornerstoneForDicoms = () => {
   cornerstoneDICOMImageLoader.external.cornerstone = cornerstone;
@@ -180,13 +178,13 @@ export const loadDicomImage = async (blob: Blob) => {
 
 type ImagePoint = [number, number];
 
-function createDisplayArea(
+const createDisplayArea = (
   size: number,
   pointValue: number | ImagePoint,
   canvasValue: number | [number, number] = pointValue,
   rotation = 0,
   flipHorizontal = false,
-) {
+) => {
   const imagePoint: ImagePoint = Array.isArray(pointValue)
     ? pointValue
     : [pointValue, pointValue];
@@ -204,7 +202,7 @@ function createDisplayArea(
       },
     },
   };
-}
+};
 
 export const displayDicomImage = async (
   element: HTMLDivElement,
@@ -246,10 +244,3 @@ export const displayDicomImage = async (
     throw new Error("Failed to render");
   }
 };
-
-export function getFileResourceUrl(file: IFileBlob): string {
-  return Collection.getLinkRelationUrls(
-    file?.collection.items[0],
-    "file_resource",
-  )[0];
-}

@@ -1,24 +1,18 @@
-import type { CSSProperties } from "react";
-import { getFileExtension, type IFileBlob } from "../../../api/model";
+import { getFileExtension } from "../../../api/serverApi";
 import { Alert } from "../../Antd";
+import type { DisplayProps } from "./types";
 
-type Props = {
-  selectedFile?: IFileBlob;
-  isHide?: boolean;
-};
-
-export default (props: Props) => {
+export default (props: DisplayProps) => {
   const { selectedFile, isHide } = props;
-  const extension = getFileExtension(selectedFile?.data?.fname || "");
-  const style: CSSProperties = {};
+  const extension = getFileExtension(selectedFile?.fname || "");
   if (isHide) {
     return <div style={{ display: "none" }}></div>;
   }
+
   return (
     <Alert
       type="info"
       description={`No preview available for the filetype ${extension}`}
-      style={style}
     />
   );
 };

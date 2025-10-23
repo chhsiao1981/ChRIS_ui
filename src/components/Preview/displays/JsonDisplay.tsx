@@ -1,20 +1,11 @@
 import ReactJSON from "@microlink/react-json-view";
 import { Text } from "@patternfly/react-core";
-import React, {
-  type CSSProperties,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import type { IFileBlob } from "../../../api/model";
+import { type CSSProperties, useContext, useEffect, useState } from "react";
+import { getFileBlob } from "../../../api/serverApi";
 import { ThemeContext } from "../../DarkTheme/useTheme";
+import type { DisplayProps } from "./types";
 
-type AllProps = {
-  selectedFile?: IFileBlob;
-  isHide?: boolean;
-};
-
-const JsonDisplay: React.FunctionComponent<AllProps> = (props: AllProps) => {
+export default (props: DisplayProps) => {
   const isDarkTheme = useContext(ThemeContext);
   const [blobText, setBlobText] = useState({});
   const { selectedFile, isHide } = props;
@@ -33,8 +24,11 @@ const JsonDisplay: React.FunctionComponent<AllProps> = (props: AllProps) => {
         const blobText = e.target.result;
         setBlobText(JSON.parse(blobText));
       });
-      const blob = await selectedFile?.getFileBlob();
-      blob && reader.readAsText(blob);
+      const blob = await getFileBlob(selectedFile);
+      if (!blob) {
+        return;
+      }
+      reader.readAsText(blob);
     })();
   }, [selectedFile, isHide]);
 
@@ -67,7 +61,3 @@ const JsonDisplay: React.FunctionComponent<AllProps> = (props: AllProps) => {
     </>
   );
 };
-
-const MemoedJsonDisplay = React.memo(JsonDisplay);
-
-export default MemoedJsonDisplay;

@@ -336,3 +336,17 @@ export const queryPACSSeries = (service: string, seriesInstanceUID: string) =>
       limit: 1,
     },
   });
+
+export const getFileBlob = async (
+  theFile: FileBrowserFolderFile,
+): Promise<Blob | null> => {
+  return null;
+};
+
+export const getFileResourceUrl = (theFile: FileBrowserFolderFile): string => {
+  return "";
+};
+
+export const getFileExtension = (filename: string) => {
+  return "";
+};

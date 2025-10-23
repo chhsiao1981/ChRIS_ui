@@ -1,33 +1,43 @@
 import { type CSSProperties, useEffect, useState } from "react";
-import type { IFileBlob } from "../../../api/model";
+import { getFileBlob } from "../../../api/serverApi";
+import type { DisplayProps } from "./types";
 
-type Props = {
-  selectedFile?: IFileBlob;
-  isHide?: boolean;
-};
-
-export default (props: Props) => {
+export default (props: DisplayProps) => {
   const { selectedFile, isHide } = props;
   const [url, setUrl] = useState<string>("");
   const [sourceType, setSourceType] = useState<string>("");
 
   useEffect(() => {
-    (async () => {
-      const blob = await selectedFile?.getFileBlob();
-      if (blob) {
-        const objectUrl = window.URL.createObjectURL(
-          new Blob([blob], { type: blob.type }),
-        );
-        setUrl(objectUrl);
-        setSourceType(blob.type);
+    if (isHide) {
+      return;
+    }
+    if (!selectedFile) {
+      return;
+    }
 
-        // Clean up the object URL when the component unmounts
-        return () => {
-          window.URL.revokeObjectURL(objectUrl);
-        };
+    const constructedURL = { url: "" };
+    const constructURL = async () => {
+      const blob = await getFileBlob(selectedFile);
+      if (!blob) {
+        return;
       }
-    })();
-  }, [selectedFile]);
+
+      const objectUrl = window.URL.createObjectURL(
+        new Blob([blob], { type: blob.type }),
+      );
+      setUrl(objectUrl);
+      constructedURL.url = objectUrl;
+      setSourceType(blob.type);
+    };
+    constructURL();
+
+    return () => {
+      if (!constructedURL.url) {
+        return;
+      }
+      window.URL.revokeObjectURL(constructedURL.url);
+    };
+  }, [selectedFile, isHide]);
 
   const style: CSSProperties = {};
   if (isHide) {

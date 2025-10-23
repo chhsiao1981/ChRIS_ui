@@ -1,53 +1,59 @@
 import Papa from "papaparse"; // Import PapaParse for CSV parsing
-import React, { type CSSProperties, useEffect, useRef } from "react";
-import type { IFileBlob } from "../../../api/model";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
+import { getFileBlob } from "../../../api/serverApi";
 import useSize from "../../FeedTree/useSize";
+import type { DisplayProps } from "./types";
 
-type AllProps = {
-  selectedFile?: IFileBlob;
-  isHide?: boolean;
-};
-
-export default (props: AllProps) => {
+export default (props: DisplayProps) => {
   const { selectedFile, isHide } = props;
   const divRef = useRef<HTMLDivElement>(null);
   useSize(divRef);
 
-  const [content, setContent] = React.useState<string | null>(null);
-  const [csvData, setCsvData] = React.useState<string[][] | null>(null);
+  const [content, setContent] = useState<string | null>(null);
+  const [csvData, setCsvData] = useState<string[][] | null>(null);
 
   useEffect(() => {
+    if (isHide) {
+      return;
+    }
+
+    if (!selectedFile) {
+      return;
+    }
+
     const displayContent = async () => {
-      if (selectedFile) {
-        const blob = await selectedFile.getFileBlob();
-        const reader = new FileReader();
-
-        reader.addEventListener(
-          "load",
-          () => {
-            const result = reader.result as string;
-            const fileName = selectedFile.data?.fname || "";
-            const isCSVFile = fileName.endsWith(".csv");
-
-            if (isCSVFile) {
-              // Parse CSV
-              const parsed = Papa.parse(result, { header: false });
-              setCsvData(parsed.data);
-              setContent(null);
-            } else {
-              setContent(result);
-              setCsvData(null);
-            }
-          },
-          false,
-        );
-
-        reader.readAsText(blob);
+      const blob = await getFileBlob(selectedFile);
+      if (!blob) {
+        return;
       }
+
+      const reader = new FileReader();
+
+      reader.addEventListener(
+        "load",
+        () => {
+          const result = reader.result as string;
+          const fileName = selectedFile.fname || "";
+          const isCSVFile = fileName.endsWith(".csv");
+
+          if (isCSVFile) {
+            // Parse CSV
+            const parsed = Papa.parse(result, { header: false });
+            setCsvData(parsed.data);
+            setContent(null);
+          } else {
+            setContent(result);
+            setCsvData(null);
+          }
+        },
+        false,
+      );
+
+      reader.readAsText(blob);
     };
 
     displayContent();
-  }, [selectedFile]);
+  }, [selectedFile, isHide]);
 
   const style: CSSProperties = {
     display: "block",

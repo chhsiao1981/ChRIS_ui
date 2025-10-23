@@ -1,6 +1,3 @@
-import type { ThunkModuleToFunc, UseThunk } from "@chhsiao1981/use-thunk";
-import type { FileBrowserFolderFile, PACSFile } from "@fnndsc/chrisapi";
-import type * as DoUser from "../../../reducers/user";
 import {
   CatchallDisplay,
   DcmDisplay,
@@ -13,20 +10,10 @@ import {
   VideoDisplay,
   XtkDisplay,
 } from "./index";
-
-type TDoUser = ThunkModuleToFunc<typeof DoUser>;
-
-type Props = {
-  selectedFile?: FileBrowserFolderFile | PACSFile;
-  viewerName: string;
-  preview?: string;
-  isHide?: boolean;
-
-  useUser: UseThunk<DoUser.State, TDoUser>;
-};
+import type { DisplayProps } from "./types";
 
 // XXX Because it is possible that some special display requires some persistently attached (ex: d3/niivue/canvas/etc., we use display-none strategy.
-export default (props: Props) => {
+export default (props: DisplayProps) => {
   const { selectedFile, viewerName, isHide } = props;
 
   const isShowJSON = !isHide && selectedFile && viewerName === "JsonDisplay";
@@ -53,36 +40,11 @@ export default (props: Props) => {
     !isShowNiivue &&
     !isShowVideo;
 
-  console.info(
-    "ViewerDisplay: viewerName:",
-    viewerName,
-    "isShowJSON:",
-    isShowJSON,
-    "isShowIframe:",
-    isShowIframe,
-    "isShowImage:",
-    isShowImage,
-    "isShowDCM:",
-    isShowDCM,
-    "isShowPDF:",
-    isShowPDF,
-    "isShowXtk:",
-    isShowXtk,
-    "isShowText:",
-    isShowText,
-    "isShowNiivue:",
-    isShowNiivue,
-    "isShowVideo:",
-    isShowVideo,
-    "isShowCatchAll:",
-    isShowCatchAll,
-  );
   return (
     <>
       <JsonDisplay {...props} isHide={!isShowJSON} />
       <IframeDisplay {...props} isHide={!isShowIframe} />
       <ImageDisplay {...props} isHide={!isShowImage} />
-      {/* @ts-expect-error dcmdisplay */}
       <DcmDisplay {...props} isHide={!isShowDCM} />
       <PdfDisplay {...props} isHide={!isShowPDF} />
       <XtkDisplay {...props} isHide={!isShowXtk} />

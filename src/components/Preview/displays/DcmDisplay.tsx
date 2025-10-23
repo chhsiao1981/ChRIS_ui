@@ -8,6 +8,7 @@ import {
 } from "@patternfly/react-core";
 import ResetIcon from "@patternfly/react-icons/dist/esm/icons/history-icon";
 import * as dcmjs from "dcmjs";
+import { current } from "immer";
 import {
   type CSSProperties,
   useCallback,
@@ -16,6 +17,7 @@ import {
   useState,
 } from "react";
 import type { IFileBlob } from "../../../api/model";
+import { getFileBlob } from "../../../api/serverApi";
 import { SpinContainer } from "../../Common";
 import useSize from "../../FeedTree/useSize";
 import {
@@ -35,20 +37,15 @@ import {
   loadDicomImage,
   setUpTooling,
 } from "./dicomUtils/utils";
+import type { DisplayProps } from "./types";
 
 const TOOL_KEY = "cornerstone-display";
-
-export type Props = {
-  selectedFile: IFileBlob;
-  preview: string;
-  isHide?: boolean;
-};
 
 type LocalToolState = {
   [key: string]: boolean;
 };
 
-export default (props: Props) => {
+export default (props: DisplayProps) => {
   const { selectedFile, preview, isHide } = props;
   const dicomImageRef = useRef<HTMLDivElement>(null);
   const elementRef = useRef<HTMLDivElement>(null);
@@ -60,8 +57,8 @@ export default (props: Props) => {
   const [parsingError, setParsingError] = useState("");
   const [previouslyActive, setPreviouslyActive] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-  const size = useSize(dicomImageRef);
-  const fname = selectedFile?.data?.fname || "";
+  const theSize = useSize(dicomImageRef);
+  const fname = selectedFile?.fname || "";
 
   const [toolState, setToolState] = useState<LocalToolState>({
     Zoom: false,
@@ -85,7 +82,7 @@ export default (props: Props) => {
     { name: "TagInfo", icon: <InfoIcon /> },
   ];
 
-  function onToolClick(toolName: string) {
+  const onToolClick = (toolName: string) => {
     if (["Reset", "TagInfo"].includes(toolName)) {
       setToolState((prev) => ({
         ...deactivateAllNormalTools(prev),
@@ -98,9 +95,9 @@ export default (props: Props) => {
         return next;
       });
     }
-  }
+  };
 
-  function deactivateAllNormalTools(prev: LocalToolState) {
+  const deactivateAllNormalTools = (prev: LocalToolState) => {
     const next = { ...prev };
     const normalTools = Object.keys(next).filter((toolName) =>
       [
@@ -116,11 +113,11 @@ export default (props: Props) => {
       next[toolName] = false;
     });
     return next;
-  }
+  };
 
-  const handleResize = useCallback(() => {
-    if (!dicomImageRef.current || !elementRef.current || !size) return;
-    const { width, height } = size;
+  const onResize = useCallback(() => {
+    if (!dicomImageRef.current || !elementRef.current || !theSize) return;
+    const { width, height } = theSize;
     elementRef.current.style.width = `${width}px`;
     elementRef.current.style.height = `${height}px`;
     if (renderingEngineRef.current) {
@@ -129,15 +126,15 @@ export default (props: Props) => {
     if (activeViewportRef.current) {
       activeViewportRef.current.resize();
     }
-  }, [size]);
+  }, [theSize]);
 
   useEffect(() => {
-    window.addEventListener("resize", handleResize);
-    handleResize();
+    window.addEventListener("resize", onResize);
+    onResize();
     return () => {
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("resize", onResize);
     };
-  }, [handleResize]);
+  }, [onResize]);
 
   const setupCornerstone = useCallback(async () => {
     await basicInit();
@@ -161,7 +158,17 @@ export default (props: Props) => {
 
   const displayPreviewFile = useCallback(async () => {
     if (!elementRef.current) return;
-    const blob = await selectedFile.getFileBlob();
+    if (isHide) {
+      return;
+    }
+    if (!selectedFile) {
+      return;
+    }
+    const blob = await getFileBlob(selectedFile);
+    if (!blob) {
+      return;
+    }
+
     setDicomBlob(blob);
     try {
       setIsLoading(true);
@@ -180,7 +187,7 @@ export default (props: Props) => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedFile, renderImagesOnElement]);
+  }, [selectedFile, renderImagesOnElement, isHide]);
 
   const parseDicomTags = useCallback(async () => {
     if (!dicomBlob) return;

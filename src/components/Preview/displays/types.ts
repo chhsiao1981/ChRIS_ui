@@ -1,5 +1,19 @@
+import type { ThunkModuleToFunc, UseThunk } from "@chhsiao1981/use-thunk";
 import type { SLICE_TYPE } from "@niivue/niivue";
+import type { FileBrowserFolderFile } from "../../../api/types";
+import type * as DoUser from "../../../reducers/user";
 
+type TDoUser = ThunkModuleToFunc<typeof DoUser>;
+
+export type DisplayProps = {
+  viewerName: string;
+  isHide: boolean;
+
+  selectedFile?: FileBrowserFolderFile;
+  preview?: string;
+
+  useUser: UseThunk<DoUser.State, TDoUser>;
+};
 /**
  * Type emitted by Niivue.onLocationChange
  *

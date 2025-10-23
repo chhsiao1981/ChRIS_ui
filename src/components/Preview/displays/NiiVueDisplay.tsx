@@ -1,15 +1,13 @@
-import type { ThunkModuleToFunc, UseThunk } from "@chhsiao1981/use-thunk";
 import { Switch } from "@patternfly/react-core";
 import { InputNumber, Select } from "antd";
 import { type CSSProperties, useState } from "react";
-import type { IFileBlob } from "../../../api/model.ts";
-import type * as DoUser from "../../../reducers/user";
+import { getFileResourceUrl } from "../../../api/serverApi.ts";
 import SizedNiivueCanvas from "../../SizedNiivueCanvas";
-import { getFileResourceUrl } from "./dicomUtils/utils.ts";
 import styles from "./NiiVueDisplay.module.css";
 import {
   type CrosshairLocation,
   DisplayColorMap,
+  type DisplayProps,
   DisplayType,
   type DisplayTypeMap,
   SliceType,
@@ -88,16 +86,7 @@ const DISPLAY_TYPE_MAP: DisplayTypeMap = {
   },
 };
 
-type TDoUser = ThunkModuleToFunc<typeof DoUser>;
-
-type Props = {
-  selectedFile?: IFileBlob;
-  isHide?: boolean;
-
-  useUser: UseThunk<DoUser.State, TDoUser>;
-};
-
-export default (props: Props) => {
+export default (props: DisplayProps) => {
   const { selectedFile, isHide, useUser } = props;
   const [sliceTypeName, setSliceTypeName] = useState(SliceType.Multiplanar);
   const [crosshairText, setCrosshairText] = useState("");
@@ -186,15 +175,6 @@ export default (props: Props) => {
   } else {
     errorStyle.display = "none";
   }
-
-  console.info(
-    "NiiVueDisplay: displayStyle:",
-    displayStyle,
-    "isHide:",
-    isHide,
-    "urls:",
-    urls,
-  );
 
   return (
     <>
