@@ -210,7 +210,7 @@ export default (props: Props) => {
                       computedPath={computedPath}
                       onFolderClick={onFolderClick}
                       fetchMore={fetchMore}
-                      handlePagination={handlePagination}
+                      onPagination={handlePagination}
                       filesLoading={isFetching}
                       useUser={useUser}
                     />

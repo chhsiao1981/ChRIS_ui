@@ -11,7 +11,7 @@ import type {
   Feed,
   FileBrowserFolder,
   FileBrowserFolderFile,
-  FileBrowserFolderLink,
+  FileBrowserFolderLinkFile,
   Link,
   NodeInfo,
   PACSSeries,
@@ -224,7 +224,7 @@ export const getSubLinks = async (
   offset: number = 0,
   limit: number = 50,
 ) =>
-  api<FileBrowserFolderLink>({
+  api<FileBrowserFolderLinkFile>({
     endpoint: `/filebrowser/${folderID}/links/`,
     query: {
       offset,

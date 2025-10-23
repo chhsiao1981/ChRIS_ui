@@ -23,7 +23,7 @@ type Props = {
   folderList?: FileBrowserFolderList;
 };
 
-export const FolderContextMenu = (props: Props) => {
+export default (props: Props) => {
   const { children, username, origin, folderList, computedPath } = props;
   const isFeedsTable =
     matchPath({ path: "/feeds", end: true }, location.pathname) !== null; // This checks if the path matches and returns true or false

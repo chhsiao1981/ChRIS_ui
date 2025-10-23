@@ -31,7 +31,7 @@ import useLongPress, {
   elipses,
   getBackgroundRowColor,
 } from "../utils/useLongPress";
-import { FolderContextMenu } from "./ContextMenu";
+import { FolderContextMenu } from "./FolderContextMenu";
 
 type Pagination = {
   totalCount: number;

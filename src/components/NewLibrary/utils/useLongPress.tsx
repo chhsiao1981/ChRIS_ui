@@ -4,8 +4,6 @@ import {
   type ThunkModuleToFunc,
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
-import type { Feed } from "@fnndsc/chrisapi";
-import { useQuery } from "@tanstack/react-query";
 import {
   type FormEvent,
   type KeyboardEvent,
@@ -14,17 +12,12 @@ import {
   useRef,
   useState,
 } from "react";
-import ChrisAPIClient from "../../../api/chrisapiclient";
 import * as DoCart from "../../../reducers/cart";
 import type { PathType, PayloadType } from "../../../reducers/types";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
-type Props = {
-  useCart: UseThunk<DoCart.State, TDoCart>;
-};
-export default (props: Props) => {
-  const { useCart } = props;
+export default (useCart: UseThunk<DoCart.State, TDoCart>) => {
   const [classStateCart, doCart] = useCart;
   const cart = getState(classStateCart) || DoCart.defaultState;
   const cartID = getRootID(classStateCart);

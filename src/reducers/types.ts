@@ -1,10 +1,9 @@
 import type {
+  Feed,
   FileBrowserFolder,
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
-} from "@fnndsc/chrisapi";
-
-import type { Feed } from "../api/types";
+} from "../api/types";
 
 export enum Role {
   Guest = "a guest",
@@ -27,8 +26,8 @@ export enum CartLayout {
 
 export enum PathType {
   Folder = "folder",
-  FolderFile = "folder-file",
-  FolderLinkFile = "folder-link-file",
+  FolderFile = "file",
+  FolderLinkFile = "link",
   File = "file",
   Link = "link",
 }

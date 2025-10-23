@@ -1,8 +1,9 @@
-import type {
-  FileBrowserFolder,
-  FileBrowserFolderFile,
-  FileBrowserFolderLinkFile,
-} from "@fnndsc/chrisapi";
+import {
+  getRootID,
+  getState,
+  type ThunkModuleToFunc,
+  type UseThunk,
+} from "@chhsiao1981/use-thunk";
 import { Button, Checkbox, Skeleton } from "@patternfly/react-core";
 import {
   ExternalLinkSquareAltIcon,
@@ -12,18 +13,21 @@ import {
 import { Tag } from "antd";
 import { format } from "date-fns";
 import type { MouseEvent } from "react";
+import type {
+  FileBrowserFolder,
+  FileBrowserFolderFile,
+  FileBrowserFolderLinkFile,
+} from "../../api/types";
+import * as DoCart from "../../reducers/cart";
 import { PathType } from "../../reducers/types";
-import {
-  clearSelectedPaths,
-  setSelectedPaths,
-} from "../../store/cart/cartSlice";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { formatBytes } from "../Feeds/utilties";
 import type { OperationContext } from "../NewLibrary/context";
-import { useAssociatedFeed } from "../NewLibrary/utils/useLongPress";
 import useNewResourceHighlight from "../NewLibrary/utils/useNewResourceHighlight";
 import { GnomeContextMenu } from "./GnomeContextMenu";
 import styles from "./gnome.module.css";
+import useAssociatedFeed from "./utils/useAssociatedFeed";
+
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type BaseProps = {
   rowIndex: number;
@@ -36,7 +40,7 @@ type BaseProps = {
   date: string;
   owner: string;
   size: number;
-  type: PathType;
+  theType: PathType;
   computedPath: string;
   onFolderClick: () => void;
   onFileClick: () => void;
@@ -46,6 +50,8 @@ type BaseProps = {
   };
 
   username: string;
+
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 const GnomeBaseRow = (props: BaseProps) => {
@@ -55,41 +61,60 @@ const GnomeBaseRow = (props: BaseProps) => {
     date,
     owner,
     size,
-    type,
+    theType,
     computedPath,
     onFolderClick,
     onFileClick,
     origin,
     rowIndex,
     username,
+    useCart,
   } = props;
 
   // Redux dispatch for selection management
-  const dispatch = useAppDispatch();
-  const selectedPaths = useAppSelector((state) => state.cart.selectedPaths);
+  const [classStateCart, doCart] = useCart;
+  const cartID = getRootID(classStateCart);
+  const cart = getState(classStateCart) || DoCart.defaultState;
+  const { selectedPaths } = cart;
+
   const { isNewResource, scrollToNewResource } = useNewResourceHighlight(date);
   const isSelected = selectedPaths.some((payload) => {
-    if (type === "folder" || type === "link") {
-      return payload.path === resource.data.path;
-    }
-    if (type === "file") {
-      return payload.path === resource.data.fname;
+    if (theType === PathType.Folder) {
+      const folder = resource as FileBrowserFolder;
+      return payload.path === folder.path;
+    } else if (theType === PathType.Link) {
+      const link = resource as FileBrowserFolderLinkFile;
+      return payload.path === link.path;
+    } else if (theType === PathType.File) {
+      const theFile = resource as FileBrowserFolderFile;
+      return payload.path === theFile.fname;
     }
     return false;
   });
 
-  const pathForCart =
-    type === "folder" || type === "link"
-      ? resource.data.path
-      : resource.data.fname;
+  const pathForCart = (() => {
+    if (theType === PathType.Folder) {
+      const folder = resource as FileBrowserFolder;
+      return folder.path;
+    } else if (theType === PathType.Link) {
+      const link = resource as FileBrowserFolderLinkFile;
+      return link.path;
+    } else if (theType === PathType.File) {
+      const theFile = resource as FileBrowserFolderFile;
+      return theFile.fname;
+    }
+    return "";
+  })();
 
   const toggleSelection = () => {
     if (isSelected) {
-      dispatch(clearSelectedPaths(pathForCart));
+      doCart.removeSelectedPath(cartID, pathForCart);
     } else {
-      dispatch(
-        setSelectedPaths({ path: pathForCart, type, payload: resource }),
-      );
+      doCart.addSelectedPath(cartID, {
+        path: pathForCart,
+        type: theType,
+        payload: resource,
+      });
     }
   };
 
@@ -104,7 +129,7 @@ const GnomeBaseRow = (props: BaseProps) => {
       toggleSelection();
     } else {
       // Otherwise navigate
-      if (type === "folder") {
+      if (theType === PathType.Folder) {
         onFolderClick();
       } else {
         onFileClick();
@@ -113,14 +138,16 @@ const GnomeBaseRow = (props: BaseProps) => {
   };
 
   // Handle context menu events
-  const handleContextMenu = (e: MouseEvent) => {
+  const onContextMenu = (e: MouseEvent) => {
     e.preventDefault();
 
     // Select the item that was right-clicked if not already selected
     if (!isSelected) {
-      dispatch(
-        setSelectedPaths({ path: pathForCart, type, payload: resource }),
-      );
+      doCart.addSelectedPath(cartID, {
+        path: pathForCart,
+        type: theType,
+        payload: resource,
+      });
     }
   };
 
@@ -138,7 +165,7 @@ const GnomeBaseRow = (props: BaseProps) => {
         <div className={styles.checkboxCell}>
           <div className={styles.checkboxWrapper}>
             <Checkbox
-              id={`select-${type}-${rowIndex}`}
+              id={`select-${theType}-${rowIndex}`}
               aria-label="Select row"
               isChecked={isSelected}
               className={`${styles.largeCheckbox} ${styles.checkboxAlign}`}
@@ -155,13 +182,13 @@ const GnomeBaseRow = (props: BaseProps) => {
           variant="plain"
           className={`${styles.fileListItem} ${styles.fileListButton}`}
           onClick={onRowClick}
-          onContextMenu={handleContextMenu}
-          aria-label={`${name} ${type}`}
+          onContextMenu={onContextMenu}
+          aria-label={`${name} ${theType}`}
         >
           <div className={styles.fileName}>
-            {type === "folder" ? (
+            {theType === "folder" ? (
               <FolderIcon />
-            ) : type === "link" ? (
+            ) : theType === "link" ? (
               <ExternalLinkSquareAltIcon />
             ) : (
               <FileIcon />
@@ -198,7 +225,7 @@ const GnomeBaseRow = (props: BaseProps) => {
   );
 };
 
-type Props = Omit<BaseProps, "type">;
+type Props = Omit<BaseProps, "theType">;
 export const GnomeFolderRow = (props: Props) => {
   const { name } = props;
   const { data, isLoading } = useAssociatedFeed(name);
@@ -210,14 +237,18 @@ export const GnomeFolderRow = (props: Props) => {
     );
   }
   return (
-    <GnomeBaseRow {...props} name={data ? data : name} type={PathType.Folder} />
+    <GnomeBaseRow
+      {...props}
+      name={data ? data : name}
+      theType={PathType.Folder}
+    />
   );
 };
 
 export const GnomeFileRow = (props: Props) => (
-  <GnomeBaseRow {...props} type={PathType.File} />
+  <GnomeBaseRow {...props} theType={PathType.File} />
 );
 
 export const GnomeLinkRow = (props: Props) => (
-  <GnomeBaseRow {...props} type={PathType.Link} />
+  <GnomeBaseRow {...props} theType={PathType.Link} />
 );

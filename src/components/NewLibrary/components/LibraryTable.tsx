@@ -31,9 +31,9 @@ import useLongPress, {
   useAssociatedFeed,
 } from "../utils/useLongPress";
 import useNewResourceHighlight from "../utils/useNewResourceHighlight";
-import { FolderContextMenu } from "./ContextMenu";
 import { getFileName, getLinkFileName } from "./FileCard";
 import { getFolderName } from "./FolderCard";
+import { FolderContextMenu } from "./FolderContextMenu";
 
 interface TableProps {
   data: {

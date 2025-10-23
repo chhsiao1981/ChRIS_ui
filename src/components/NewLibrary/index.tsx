@@ -213,7 +213,7 @@ export default (props: Props) => {
           <Grid hasGutter={true}>
             <FolderCard
               folders={data?.subFoldersMap || []}
-              handleFolderClick={handleFolderClick}
+              onFolderClick={handleFolderClick}
               computedPath={computedPath}
               pagination={data?.foldersPagination}
             />

@@ -41,7 +41,7 @@ import { Typography } from "../Antd";
 import { InfoSection } from "../Common";
 import { ThemeContext } from "../DarkTheme/useTheme";
 import { SearchIcon } from "../Icons";
-import { FolderContextMenu } from "../NewLibrary/components/ContextMenu";
+import { FolderContextMenu } from "../NewLibrary/components/FolderContextMenu";
 import Operations from "../NewLibrary/components/Operations";
 import { OperationContext } from "../NewLibrary/context";
 import useLongPress from "../NewLibrary/utils/useLongPress";

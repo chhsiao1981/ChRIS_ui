@@ -260,7 +260,7 @@ export interface FileBrowserFolderFile {
 }
 
 // http://localhost:8000/api/v1/filebrowser/files/960/input.meta.json
-export interface FileBrowserFolderLink {
+export interface FileBrowserFolderLinkFile {
   id: number;
   creation_date: string;
   fname: string;

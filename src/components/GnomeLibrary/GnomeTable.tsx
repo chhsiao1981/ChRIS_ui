@@ -3,11 +3,6 @@ import {
   type ThunkModuleToFunc,
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
-import {
-  FileBrowserFolder,
-  FileBrowserFolderFile,
-  type FileBrowserFolderLinkFile,
-} from "@fnndsc/chrisapi";
 import { Spinner } from "@patternfly/react-core";
 import {
   AngleDownIcon,
@@ -18,13 +13,19 @@ import { Drawer, notification } from "antd";
 import type React from "react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import type {
+  FileBrowserFolder,
+  FileBrowserFolderFile,
+  FileBrowserFolderLinkFile,
+} from "../../api/types";
+import type * as DoCart from "../../reducers/cart";
 import * as DoUser from "../../reducers/user";
 import {
   getFileName,
   getLinkFileName,
 } from "../NewLibrary/components/FileCard";
-import { getFolderName } from "../NewLibrary/components/FolderCard";
 import { OperationContext } from "../NewLibrary/context";
+import getFolderName from "../NewLibrary/utils/getFolderName";
 import FileDetailView from "../Preview/FileDetailView";
 import GnomeBulkActionBar from "./GnomeActionBar";
 import { GnomeFileRow, GnomeFolderRow, GnomeLinkRow } from "./GnomeRow";
@@ -32,6 +33,7 @@ import styles from "./gnome.module.css";
 import { useInfiniteScroll } from "./utils/hooks/useInfiniteScroll";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type Props = {
   data: {
@@ -54,22 +56,24 @@ type Props = {
   computedPath: string;
   onFolderClick: (folder: FileBrowserFolder) => void;
   fetchMore?: boolean;
-  handlePagination?: () => void;
+  onPagination?: () => void;
   filesLoading?: boolean;
 
   useUser: UseThunk<DoUser.State, TDoUser>;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 export default (props: Props) => {
   const {
     data,
     computedPath,
-    onFolderClick: handleFolderClick,
+    onFolderClick,
     fetchMore,
-    handlePagination,
+    onPagination,
     filesLoading,
 
     useUser,
+    useCart,
   } = props;
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
@@ -91,7 +95,7 @@ export default (props: Props) => {
 
   // Use our custom infinite scroll hook
   const { sentinelRef, isNearBottom } = useInfiniteScroll({
-    onLoadMore: handlePagination || (() => {}),
+    onLoadMore: onPagination || (() => {}),
     hasMore: !!fetchMore,
     isLoading: !!filesLoading,
     root: listRef, // Pass the ref directly, the hook will handle it
@@ -106,26 +110,18 @@ export default (props: Props) => {
   };
 
   // Handle clicks on link entries: resolve to folder or file
-  const onLinkClick = async (resource: FileBrowserFolderLinkFile) => {
-    console.info("GnomeTable: onLinkClick: file:", resource);
+  const onLinkClick = async (link: FileBrowserFolderLinkFile) => {
+    console.info("GnomeTable: onLinkClick: file:", link);
 
     try {
-      const linked = await resource.getLinkedResource();
+      const linked = await getLinkedResource(link);
       // folder link
-      if (
-        linked &&
-        "path" in linked.data &&
-        linked instanceof FileBrowserFolder
-      ) {
+      if (linked && "path" in linked) {
         console.info("GnomeTable: onLinkClick: linked as Folder:", linked);
-        navigate(`/library/${linked.data.path}`);
+        navigate(`/library/${linked.path}`);
       }
       // file link
-      else if (
-        linked &&
-        "fname" in linked.data &&
-        linked instanceof FileBrowserFolderFile
-      ) {
+      else if (linked && "fname" in linked) {
         setSelectedFile(linked);
         setShowPreview(true);
       }
@@ -166,38 +162,35 @@ export default (props: Props) => {
     } else if (index === 1) {
       sorted.folders.sort(
         (a, b) =>
-          (new Date(a.data.creation_date).getTime() -
-            new Date(b.data.creation_date).getTime()) *
+          (new Date(a.creation_date).getTime() -
+            new Date(b.creation_date).getTime()) *
           dir,
       );
       sorted.files.sort(
         (a, b) =>
-          (new Date(a.data.creation_date).getTime() -
-            new Date(b.data.creation_date).getTime()) *
+          (new Date(a.creation_date).getTime() -
+            new Date(b.creation_date).getTime()) *
           dir,
       );
       sorted.linkFiles.sort(
         (a, b) =>
-          (new Date(a.data.creation_date).getTime() -
-            new Date(b.data.creation_date).getTime()) *
+          (new Date(a.creation_date).getTime() -
+            new Date(b.creation_date).getTime()) *
           dir,
       );
     } else if (index === 2) {
       sorted.folders.sort(
-        (a, b) =>
-          a.data.owner_username.localeCompare(b.data.owner_username) * dir,
+        (a, b) => a.owner_username.localeCompare(b.owner_username) * dir,
       );
       sorted.files.sort(
-        (a, b) =>
-          a.data.owner_username.localeCompare(b.data.owner_username) * dir,
+        (a, b) => a.owner_username.localeCompare(b.owner_username) * dir,
       );
       sorted.linkFiles.sort(
-        (a, b) =>
-          a.data.owner_username.localeCompare(b.data.owner_username) * dir,
+        (a, b) => a.owner_username.localeCompare(b.owner_username) * dir,
       );
     } else if (index === 3) {
-      sorted.files.sort((a, b) => (a.data.fsize - b.data.fsize) * dir);
-      sorted.linkFiles.sort((a, b) => (a.data.fsize - b.data.fsize) * dir);
+      sorted.files.sort((a, b) => (a.fsize - b.fsize) * dir);
+      sorted.linkFiles.sort((a, b) => (a.fsize - b.fsize) * dir);
     }
 
     return sorted;
@@ -345,15 +338,15 @@ export default (props: Props) => {
         <ul ref={listRef} className={styles.fileList}>
           {sortedData.folders.map((r, i) => (
             <GnomeFolderRow
-              key={r.data.path}
+              key={r.path}
               rowIndex={i}
               resource={r}
               name={getFolderName(r, computedPath)}
-              date={r.data.creation_date}
-              owner={r.data.owner_username}
+              date={r.creation_date}
+              owner={r.owner_username}
               size={0}
               computedPath={computedPath}
-              onFolderClick={() => handleFolderClick(r)}
+              onFolderClick={() => onFolderClick(r)}
               onFileClick={() => {}}
               origin={origin}
               username={username}
@@ -362,35 +355,37 @@ export default (props: Props) => {
 
           {sortedData.files.map((r, i) => (
             <GnomeFileRow
-              key={r.data.fname}
+              key={r.fname}
               rowIndex={i}
               resource={r}
               name={getFileName(r)}
-              date={r.data.creation_date}
-              owner={r.data.owner_username}
-              size={r.data.fsize}
+              date={r.creation_date}
+              owner={r.owner_username}
+              size={r.fsize}
               computedPath={computedPath}
               onFolderClick={() => {}}
               onFileClick={() => onFileClick(r)}
               origin={origin}
               username={username}
+              useCart={useCart}
             />
           ))}
 
           {sortedData.linkFiles.map((r, i) => (
             <GnomeLinkRow
-              key={r.data.path}
+              key={r.path}
               rowIndex={i}
               resource={r}
               name={getLinkFileName(r)}
-              date={r.data.creation_date}
-              owner={r.data.owner_username}
-              size={r.data.fsize}
+              date={r.creation_date}
+              owner={r.owner_username}
+              size={r.fsize}
               computedPath={computedPath}
               onFolderClick={() => {}}
               onFileClick={() => onLinkClick(r)}
               origin={origin}
               username={username}
+              useCart={useCart}
             />
           ))}
           {/* Sentinel element for infinite scrolling */}
@@ -428,6 +423,7 @@ export default (props: Props) => {
         origin={origin}
         computedPath={computedPath}
         username={username}
+        useCart={useCart}
       />
     </>
   );
