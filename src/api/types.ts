@@ -67,6 +67,31 @@ export interface Plugin {
   url: string;
 }
 
+export interface PluginParameter {
+  id: number;
+  name: string;
+  type: string;
+  optional: boolean;
+  default: any;
+  flag: string;
+  short_flag: string;
+  action: string;
+  help: string;
+  ui_exposed: boolean;
+}
+
+export interface ComputeEnv {
+  id: number;
+  creation_date: string;
+  modification_date: string;
+  name: string;
+  compute_url: string;
+  compute_auth_url: string;
+  compute_innetwork: boolean;
+  description: string;
+  max_job_exec_seconds: number;
+}
+
 export interface NodeInfo {
   piping_id: number;
   previous_piping_id: number | null;

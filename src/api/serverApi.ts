@@ -7,6 +7,7 @@ import type { PACSqueryCore } from "./pfdcm";
 import { PACSqueryCoreToJSON } from "./pfdcm/generated";
 import type {
   AuthToken,
+  ComputeEnv,
   DownloadToken,
   Feed,
   Link,
@@ -15,6 +16,7 @@ import type {
   PFDCMResult,
   Plugin,
   PluginInstance,
+  PluginParameter,
   UploadPipeline,
   User,
 } from "./types";
@@ -293,4 +295,14 @@ export const queryPACSSeries = (service: string, seriesInstanceUID: string) =>
       SeriesInstanceUID: seriesInstanceUID,
       limit: 1,
     },
+  });
+
+export const getPluginParams = (pluginID: string) =>
+  api<PluginParameter[]>({
+    endpoint: `/plugins/${pluginID}/parameters/`,
+  });
+
+export const getPluginCompEnvs = (pluginID: string) =>
+  api<ComputeEnv[]>({
+    endpoint: `/plugins/${pluginID}/computeresources/`,
   });

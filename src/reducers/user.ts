@@ -6,6 +6,7 @@ import {
   setData,
   type Thunk,
 } from "@chhsiao1981/use-thunk";
+import { state } from "@cornerstonejs/tools";
 import queryString from "query-string";
 import { Cookies } from "react-cookie";
 import { refreshCookie } from "../api/api";
@@ -51,8 +52,6 @@ export const defaultState: State = {
 };
 
 export const init = (): Thunk<State> => {
-  const myID = genUUID();
-
   return async (dispatch, _) => {
     const cookie = new Cookies();
     const username = cookie.get("username") || "";
@@ -88,7 +87,7 @@ export const init = (): Thunk<State> => {
       isLoggedIn,
     });
 
-    dispatch(_init({ myID, state }));
+    dispatch(_init({ state }));
   };
 };
 
