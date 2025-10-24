@@ -8,6 +8,7 @@ import {
 import { STATUS_OK } from "../api/constants";
 import { getPluginCompEnvs, getPluginParams } from "../api/serverApi";
 import type { ComputeEnv, PluginParameter } from "../api/types";
+import { NodeOperation } from "./types";
 
 export const myClass = "chris-ui/plugin";
 
@@ -19,7 +20,12 @@ export interface State extends rState {
 }
 
 export const defaultState: State = {
-  nodeOperations: {},
+  nodeOperations: {
+    [NodeOperation.ChildNode]: true,
+    [NodeOperation.ChildPipeline]: true,
+    [NodeOperation.GraphNode]: false,
+    [NodeOperation.DeleteNode]: true,
+  },
   requiredParams: [],
   optionalParams: [],
   computeEnvs: [],

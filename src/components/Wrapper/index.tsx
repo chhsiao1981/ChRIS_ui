@@ -13,6 +13,7 @@ import {
 import { Page } from "@patternfly/react-core";
 import type * as DoDrawer from "../../reducers/drawer";
 import type * as DoFeed from "../../reducers/feed";
+import type * as DoPlugin from "../../reducers/plugin";
 import * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
 import { OperationsProvider } from "../NewLibrary/context";
@@ -21,6 +22,7 @@ type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
+type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
 
 type Props = {
   children: ReactElement[] | ReactElement;
@@ -30,6 +32,7 @@ type Props = {
   useUser: UseThunk<DoUser.State, TDoUser>;
   useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
   useFeed: UseThunk<DoFeed.State, TDoFeed>;
+  usePlugin: UseThunk<DoPlugin.State, TDoPlugin>;
 };
 
 export default (props: Props) => {

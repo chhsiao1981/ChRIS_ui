@@ -1,28 +1,41 @@
+import {
+  getRootID,
+  getState,
+  type ThunkModuleToFunc,
+  type UseThunk,
+} from "@chhsiao1981/use-thunk";
 import type { PluginInstance } from "@fnndsc/chrisapi";
 import { Button, Modal, ModalVariant } from "@patternfly/react-core";
 import { useMutation } from "@tanstack/react-query";
-import React, { Fragment, useCallback, useContext } from "react";
+import { Fragment, useContext, useEffect } from "react";
 import ChrisAPIClient from "../../api/chrisapiclient";
 import { fetchResource } from "../../api/common";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { getNodeOperations } from "../../store/plugin/pluginSlice";
+import * as DoPlugin from "../../reducers/plugin";
+import { NodeOperation } from "../../reducers/types";
+import { useAppSelector } from "../../store/hooks";
 import { Alert, Form, Tag } from "../Antd";
 import { SpinContainer } from "../Common";
 import Pipelines from "../PipelinesCopy";
 import { PipelineContext, Types } from "../PipelinesCopy/context";
 
+type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
+
 type Props = {
   addNodeLocally: (instance: PluginInstance | PluginInstance[]) => void;
   isStaff: boolean;
+  usePlugin: UseThunk<DoPlugin.State, TDoPlugin>;
 };
+
 export default (props: Props) => {
-  const { addNodeLocally, isStaff } = props;
+  const { addNodeLocally, isStaff, usePlugin } = props;
+  const [classStatePlugin, doPlugin] = usePlugin;
+  const pluginID = getRootID(classStatePlugin);
+  const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
+  const { nodeOperations } = plugin;
+  const childPipeline = nodeOperations[NodeOperation.ChildPipeline] || false;
+
   const { state, dispatch } = useContext(PipelineContext);
   const { pipelineToAdd, selectedPipeline, computeInfo, titleInfo } = state;
-  const reactDispatch = useAppDispatch();
-  const { childPipeline } = useAppSelector(
-    (state) => state.plugin.nodeOperations,
-  );
 
   const { pluginInstances, selectedPlugin } = useAppSelector(
     (state) => state.instance,
@@ -30,15 +43,15 @@ export default (props: Props) => {
 
   const alreadyAvailableInstances = pluginInstances.data;
 
-  const handleToggle = useCallback(() => {
+  const onToggle = () => {
     if (childPipeline) {
       dispatch({
         type: Types.ResetState,
       });
       mutation.reset();
     }
-    reactDispatch(getNodeOperations("childPipeline"));
-  }, [childPipeline, dispatch, reactDispatch]);
+    doPlugin.toggleNodeOperation(pluginID, NodeOperation.ChildPipeline);
+  };
 
   const addPipeline = async () => {
     const id = pipelineToAdd?.data.id;
@@ -89,21 +102,23 @@ export default (props: Props) => {
     mutationFn: () => addPipeline(),
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (mutation.isSuccess) {
       setTimeout(() => {
-        handleToggle();
+        onToggle();
       }, 1000);
     }
-  }, [mutation.isSuccess, handleToggle]);
+  }, [mutation.isSuccess]);
 
-  React.useEffect(() => {
+  /* XXX seems like no such #indicators.
+  useEffect(() => {
     const el = document.querySelector("#indicators");
 
     if (el) {
       el.scrollIntoView({ block: "center", behavior: "smooth" });
     }
-  });
+  }, []);
+  */
 
   const isButtonDisabled = !(
     pipelineToAdd &&
@@ -116,7 +131,7 @@ export default (props: Props) => {
       variant={ModalVariant.large}
       aria-label="My Pipeline Modal"
       isOpen={childPipeline}
-      onClose={handleToggle}
+      onClose={onToggle}
       description="Add a Pipeline to the plugin instance"
       actions={[
         <Button
@@ -127,7 +142,7 @@ export default (props: Props) => {
         >
           Confirm
         </Button>,
-        <Button key="cancel" variant="link" onClick={handleToggle}>
+        <Button key="cancel" variant="link" onClick={onToggle}>
           Cancel
         </Button>,
         <Fragment key="status">

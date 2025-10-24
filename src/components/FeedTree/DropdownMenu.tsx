@@ -1,17 +1,31 @@
+import {
+  getRootID,
+  getState,
+  type ThunkModuleToFunc,
+  type UseThunk,
+} from "@chhsiao1981/use-thunk";
 import type React from "react";
 import type { ReactNode } from "react";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { getNodeOperations } from "../../store/plugin/pluginSlice";
+import * as DoPlugin from "../../reducers/plugin";
+import { NodeOperation } from "../../reducers/types";
+import { useAppSelector } from "../../store/hooks";
 import { Dropdown, type MenuProps } from "../Antd";
 import { AddIcon, DeleteIcon, PatternflyArchiveIcon } from "../Icons";
+
+type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
 
 type Props = {
   onZip: () => void;
   children?: ReactNode;
+  usePlugin: UseThunk<DoPlugin.State, TDoPlugin>;
 };
 export default (props: Props) => {
-  const { onZip, children } = props;
-  const dispatch = useAppDispatch();
+  const { onZip, children, usePlugin } = props;
+  const [classStatePlugin, doPlugin] = usePlugin;
+  const pluginID = getRootID(classStatePlugin);
+  const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
+  const { nodeOperations } = plugin;
+
   const { selectedPlugin } = useAppSelector((state) => {
     return state.instance;
   });
@@ -23,26 +37,27 @@ export default (props: Props) => {
       key: "1",
       label: "Add a Child Node",
       icon: <AddIcon />,
-      disabled: cancelled,
+      disabled: cancelled || !nodeOperations[NodeOperation.ChildNode],
     },
     {
       key: "2",
       label: "Add a Pipeline",
       icon: <AddIcon />,
-      disabled: cancelled,
+      disabled: cancelled || !nodeOperations[NodeOperation.ChildPipeline],
     },
     {
       key: "3",
       label: "Add a Graph Node",
-      disabled: true,
+      disabled: !nodeOperations[NodeOperation.GraphNode],
       icon: <AddIcon />,
     },
     {
       key: "4",
       label: "Delete a Node",
       disabled:
-        selectedPlugin?.data.plugin_type === "fs" &&
-        selectedPlugin?.data.plugin_name === "pl-dircopy",
+        (selectedPlugin?.data.plugin_type === "fs" &&
+          selectedPlugin?.data.plugin_name === "pl-dircopy") ||
+        !nodeOperations[NodeOperation.DeleteNode],
       icon: <DeleteIcon />,
     },
     {
@@ -54,18 +69,18 @@ export default (props: Props) => {
 
   const handleOperations = (e: any) => {
     if (e.key === "1") {
-      dispatch(getNodeOperations("childNode"));
+      doPlugin.toggleNodeOperation(pluginID, NodeOperation.ChildNode);
     }
     if (e.key === "2") {
-      dispatch(getNodeOperations("childPipeline"));
+      doPlugin.toggleNodeOperation(pluginID, NodeOperation.ChildPipeline);
     }
 
     if (e.key === "3") {
-      dispatch(getNodeOperations("graphNode"));
+      doPlugin.toggleNodeOperation(pluginID, NodeOperation.GraphNode);
     }
 
     if (e.key === "4") {
-      dispatch(getNodeOperations("deleteNode"));
+      doPlugin.toggleNodeOperation(pluginID, NodeOperation.DeleteNode);
     }
 
     if (e.key === "5") {
