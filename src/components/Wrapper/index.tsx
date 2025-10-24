@@ -13,7 +13,7 @@ import {
 import { Page } from "@patternfly/react-core";
 import type * as DoDrawer from "../../reducers/drawer";
 import type * as DoFeed from "../../reducers/feed";
-import type * as DoPlugin from "../../reducers/plugin";
+import type * as DoPlugin from "../../reducers/pkg";
 import * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
 import { OperationsProvider } from "../NewLibrary/context";

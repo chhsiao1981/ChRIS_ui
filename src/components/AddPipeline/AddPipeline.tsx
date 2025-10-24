@@ -10,7 +10,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Fragment, useContext, useEffect } from "react";
 import ChrisAPIClient from "../../api/chrisapiclient";
 import { fetchResource } from "../../api/common";
-import * as DoPlugin from "../../reducers/plugin";
+import * as DoPlugin from "../../reducers/pkg";
 import { NodeOperation } from "../../reducers/types";
 import { useAppSelector } from "../../store/hooks";
 import { Alert, Form, Tag } from "../Antd";

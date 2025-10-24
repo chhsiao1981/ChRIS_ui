@@ -17,7 +17,7 @@ import { notification } from "antd";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useCookies } from "react-cookie";
 import { createPackage } from "../../api/serverApi";
-import type { Plugin as PluginType, UploadPipeline } from "../../api/types";
+import type { Pkg as PluginType, UploadPkg } from "../../api/types";
 import type * as DoDrawer from "../../reducers/drawer";
 import type * as DoFeed from "../../reducers/feed";
 import type * as DoUI from "../../reducers/ui";
@@ -132,7 +132,7 @@ export default (props: Props) => {
 
     const pipelineName = `${plugin.name}-${plugin.version}`;
 
-    const pipeline: UploadPipeline = {
+    const pipeline: UploadPkg = {
       name: pipelineName,
       authors: plugin.authors,
       category: plugin.category,

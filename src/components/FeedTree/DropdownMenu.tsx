@@ -6,7 +6,7 @@ import {
 } from "@chhsiao1981/use-thunk";
 import type React from "react";
 import type { ReactNode } from "react";
-import * as DoPlugin from "../../reducers/plugin";
+import * as DoPlugin from "../../reducers/pkg";
 import { NodeOperation } from "../../reducers/types";
 import { useAppSelector } from "../../store/hooks";
 import { Dropdown, type MenuProps } from "../Antd";

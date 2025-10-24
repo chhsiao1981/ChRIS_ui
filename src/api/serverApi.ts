@@ -7,17 +7,17 @@ import type { PACSqueryCore } from "./pfdcm";
 import { PACSqueryCoreToJSON } from "./pfdcm/generated";
 import type {
   AuthToken,
-  ComputeEnv,
+  CompEnv,
   DownloadToken,
   Feed,
   Link,
   NodeInfo,
   PACSSeries,
   PFDCMResult,
-  Plugin,
-  PluginInstance,
-  PluginParameter,
-  UploadPipeline,
+  Pkg,
+  PkgInstance,
+  PkgParameter,
+  UploadPkg,
   User,
 } from "./types";
 
@@ -84,10 +84,26 @@ export const getLinkMap = () =>
     query: { limit: 1 },
   });
 
-export const getDataInstances = (dataID: number) =>
-  api<PluginInstance[]>({
+export const getPkgParams = (pkgID: string) =>
+  api<PkgParameter[]>({
+    endpoint: `/plugins/${pkgID}/parameters/`,
+  });
+
+export const getPkgCompEnvs = (pkgID: string) =>
+  api<CompEnv[]>({
+    endpoint: `/plugins/${pkgID}/computeresources/`,
+  });
+
+export const getPkgInstances = (dataID: number) =>
+  api<PkgInstance[]>({
     endpoint: `/${dataID}/plugininstances/`,
     method: "get",
+  });
+
+export const deletePkgInstance = (dataID: number, pkgInstanceID: number) =>
+  api<null>({
+    endpoint: `/${dataID}/plugininstances/${pkgInstanceID}/`,
+    method: "delete",
   });
 
 export const getData = (dataID: number) =>
@@ -115,7 +131,7 @@ export const updateDataPublic = (dataID: number, isPublic = true) =>
   });
 
 export const searchPrimitivePackagesByName = (packageName: string) =>
-  api<Plugin[]>({
+  api<Pkg[]>({
     endpoint: "/plugins/search/",
     method: "get",
     query: {
@@ -127,7 +143,7 @@ export const createPrimitivePackageInstance = (
   packageID: number,
   theDirs: string[],
 ) =>
-  api<PluginInstance>({
+  api<PkgInstance>({
     endpoint: `/plugins/${packageID}/instances/`,
     method: "post",
     json: {
@@ -187,17 +203,17 @@ export const createDataWithFilepath = async (
     await updateDataPublic(feedID, true);
   }
 
-  const feedResult = await getData(feedID);
+  const dataResult = await getData(feedID);
 
-  return feedResult;
+  return dataResult;
 };
 
-export const createPackage = (pipeline: UploadPipeline) =>
+export const createPackage = (pkg: UploadPkg) =>
   api({
     endpoint: "/pipelines/sourcefiles/",
     method: "post",
     filename: "fname",
-    filetext: YAML.stringify(pipeline),
+    filetext: YAML.stringify(pkg),
   });
 
 export const createDownloadToken = () =>
@@ -295,14 +311,4 @@ export const queryPACSSeries = (service: string, seriesInstanceUID: string) =>
       SeriesInstanceUID: seriesInstanceUID,
       limit: 1,
     },
-  });
-
-export const getPluginParams = (pluginID: string) =>
-  api<PluginParameter[]>({
-    endpoint: `/plugins/${pluginID}/parameters/`,
-  });
-
-export const getPluginCompEnvs = (pluginID: string) =>
-  api<ComputeEnv[]>({
-    endpoint: `/plugins/${pluginID}/computeresources/`,
   });

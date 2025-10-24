@@ -1,6 +1,5 @@
 import {
   init as _init,
-  genUUID,
   type State as rState,
   setData,
   type Thunk,

@@ -6,17 +6,17 @@ import {
   type Thunk,
 } from "@chhsiao1981/use-thunk";
 import { STATUS_OK } from "../api/constants";
-import { getPluginCompEnvs, getPluginParams } from "../api/serverApi";
-import type { ComputeEnv, PluginParameter } from "../api/types";
+import { getPkgCompEnvs, getPkgParams } from "../api/serverApi";
+import type { CompEnv, PkgParameter } from "../api/types";
 import { NodeOperation } from "./types";
 
-export const myClass = "chris-ui/plugin";
+export const myClass = "chris-ui/pkg";
 
 export interface State extends rState {
   nodeOperations: { [key: string]: boolean };
-  requiredParams: PluginParameter[];
-  optionalParams: PluginParameter[];
-  computeEnvs: ComputeEnv[];
+  requiredParams: PkgParameter[];
+  optionalParams: PkgParameter[];
+  computeEnvs: CompEnv[];
 }
 
 export const defaultState: State = {
@@ -39,10 +39,10 @@ export const init = (): Thunk<State> => {
 
 export const fetchParamsAndComputeEnv = (
   myID: string,
-  pluginID: string,
+  pkgID: string,
 ): Thunk<State> => {
   return async (dispatch, _) => {
-    const { status, data: params, errmsg } = await getPluginParams(pluginID);
+    const { status, data: params, errmsg } = await getPkgParams(pkgID);
     if (status !== STATUS_OK) {
       return;
     }
@@ -57,7 +57,7 @@ export const fetchParamsAndComputeEnv = (
       status: status2,
       data: compEnvs,
       errmsg: errmsg2,
-    } = await getPluginCompEnvs(pluginID);
+    } = await getPkgCompEnvs(pkgID);
     if (status2 !== STATUS_OK) {
       return;
     }

@@ -16,11 +16,11 @@ export interface Feed {
   cancelled_jobs: number;
 }
 
-export enum PluginInstanceStatus {
+export enum PkgInstanceStatus {
   SUCCESS = "finishedSuccessfully",
 }
 
-export interface PluginInstance {
+export interface PkgInstance {
   id: number;
   title: string;
   previous_id: number;
@@ -33,11 +33,11 @@ export interface PluginInstance {
   start_date: string; // yyyy-mm-ddTHH:MM:SS.ffffffTZ
   end_date: string; // yyyy-mm-ddTHH:MM:SS.ffffffTZ
   output_path: string;
-  status: PluginInstanceStatus;
+  status: PkgInstanceStatus;
   pipeline_id: number;
 }
 
-export interface Plugin {
+export interface Pkg {
   id: number;
   creation_date: string; // yyyy-mm-ddTHH:MM:SS.ffffffTZ
   name: string;
@@ -67,7 +67,7 @@ export interface Plugin {
   url: string;
 }
 
-export interface PluginParameter {
+export interface PkgParameter {
   id: number;
   name: string;
   type: string;
@@ -80,7 +80,7 @@ export interface PluginParameter {
   ui_exposed: boolean;
 }
 
-export interface ComputeEnv {
+export interface CompEnv {
   id: number;
   creation_date: string;
   modification_date: string;
@@ -109,7 +109,7 @@ export interface Piping {
   previous_id: number;
 }
 
-export interface PipelineDefaultParameters {
+export interface PkgDefaultParameter {
   id: number;
   param_id: number;
   param_name: string;
@@ -123,20 +123,20 @@ export interface PipelineDefaultParameters {
   value: any;
 }
 
-export interface UploadPluginInfo {
+export interface UploadPkgInfo {
   title: string;
   previous: string | null;
   plugin: string;
   plugin_parameter_defaults?: { [key: string | number]: any };
 }
 
-export interface UploadPipeline {
+export interface UploadPkg {
   name: string;
   authors: string;
   category: string;
   description: string;
   locked: false;
-  plugin_tree: UploadPluginInfo[];
+  plugin_tree: UploadPkgInfo[];
 }
 
 export interface PACSSeries {
