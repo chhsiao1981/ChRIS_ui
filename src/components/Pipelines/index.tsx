@@ -8,19 +8,30 @@ import {
   TextInput,
 } from "@patternfly/react-core";
 import SearchIcon from "@patternfly/react-icons/dist/esm/icons/search-icon";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useContext, useState } from "react";
-import { fetchPipelines, fetchResources } from "../../api/common";
+import { fetchResources } from "../../api/common";
 import { Alert, Collapse } from "../Antd";
 import { EmptyStateComponent, SpinContainer } from "../Common";
 import { ThemeContext } from "../DarkTheme/useTheme";
-import { usePaginate } from "../Feeds/usePaginate";
 import "./Pipelines.css";
+import {
+  getRootID,
+  getState,
+  type ThunkModuleToFunc,
+  type UseThunk,
+} from "@chhsiao1981/use-thunk";
 import { DownloadIcon } from "@patternfly/react-icons";
-import { PIPELINEQueryTypes, PipelineContext, Types } from "./context";
+import { error } from "console";
+import { isError } from "util";
+import type { ID } from "../../api/types";
+import * as DoPipeline from "../../reducers/pipeline";
+import { usePaginate } from "../hooks/usePaginate";
+import { PIPELINEQueryTypes, Types } from "./context";
 import PipelinesComponent from "./PipelinesComponent";
-import PipelineUpload from "./PipelineUploadCopy";
+import PipelineUpload from "./PipelineUpload";
 import { useDownloadSource } from "./useDownloadSource";
+
+type TDoPipeline = ThunkModuleToFunc<typeof DoPipeline>;
 
 type LoadingResources = {
   [key: string]: boolean;
@@ -31,140 +42,67 @@ type LoadingResourceError = {
 
 type Props = {
   isStaff: boolean;
+  usePipeline: UseThunk<DoPipeline.State, TDoPipeline>;
 };
 
 export default (props: Props) => {
-  const { isStaff } = props;
-  const queryClient = useQueryClient();
-  const { state, dispatch } = useContext(PipelineContext);
+  const { isStaff, usePipeline } = props;
+
+  const [classStatePipeline, doPipeline] = usePipeline;
+  const statePipelineID = getRootID(classStatePipeline);
+  const pipeline = getState(classStatePipeline) || DoPipeline.defaultState;
+  const { pipelineToAdd, pipelineInfoMap: pipelineMap } = pipeline;
+
   const { isDarkTheme } = useContext(ThemeContext);
   const [loadingResources, setLoadingResources] = useState<LoadingResources>();
   const [resourceError, setResourceError] = useState<LoadingResourceError>();
-  const {
-    filterState: pageState,
-    handlePageSet,
-    handlePerPageSet,
-    handleFilterChange,
-  } = usePaginate();
+  const { pageState, setPage, setPerPage, setSearch } = usePaginate();
   const { perPage, page, search } = pageState;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [dropdownValue, setDropdownValue] = useState<string>(
     PIPELINEQueryTypes.NAME[0],
   );
-  const [activeKeys, setActiveKeys] = useState<string[]>([]);
 
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["pipelines", perPage, page, search, dropdownValue],
-    queryFn: async () => {
-      const fetchedData = await fetchPipelines(
-        perPage,
-        page,
-        search,
-        dropdownValue.toLowerCase(),
-      );
-      return fetchedData;
-    },
-    refetchOnMount: true,
-  });
+  const activeKeys = pipelineToAdd ? [pipelineToAdd.id] : [];
 
   const onToggle = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
-  const fetchPipelinesAgain = () => {
-    queryClient.refetchQueries({
-      queryKey: ["pipelines"],
-    });
+  const onFetchPipelines = () => {
+    doPipeline.fetchPipelines(statePipelineID, page, perPage, search);
   };
 
-  const handlePipelineSelect = async (
-    pipelineId: string,
-    isSelected: boolean,
-  ) => {
+  const onSelectPipeline = (pipelineID: ID, isSelected: boolean) => {
     if (isSelected) {
       // If the pipeline is already selected, deselect it
-      dispatch({
-        type: Types.PipelineToAdd,
-        payload: {
-          pipeline: undefined,
-        },
-      });
+      doPipeline.pipelineToAdd(statePipelineID, undefined);
       // Collapse the accordion panel
-      setActiveKeys([]);
-    } else {
-      // Find the pipeline and select it
-      const pipeline = data?.registeredPipelines.find(
-        (p) => `${p.data.id}` === pipelineId,
-      );
-      if (pipeline) {
-        dispatch({
-          type: Types.PipelineToAdd,
-          payload: {
-            pipeline,
-          },
-        });
-
-        // Expand the accordion panel for this pipeline
-        setActiveKeys([pipelineId]);
-
-        // Always fetch resources
-        try {
-          setLoadingResources((prev) => ({
-            ...prev,
-            [pipeline.data.id]: true,
-          }));
-          const resourceData = await fetchResources(pipeline);
-          dispatch({
-            type: Types.SetPipelines,
-            payload: {
-              pipelineId: pipeline.data.id,
-              ...resourceData,
-            },
-          });
-          setLoadingResources((prev) => ({
-            ...prev,
-            [pipeline.data.id]: false,
-          }));
-        } catch (e) {
-          let error_message =
-            "Failed to fetch the resources for this pipeline...";
-          if (e instanceof Error) {
-            error_message = e.message;
-          }
-          setResourceError((prev) => ({
-            ...prev,
-            [pipeline.data.id]: error_message,
-          }));
-          setLoadingResources((prev) => ({
-            ...prev,
-            [pipeline.data.id]: false,
-          }));
-        }
-      }
+      return;
     }
+
+    // Find the pipeline and select it
+    const pipeline = pipelineMap[pipelineID];
+    if (!pipeline) {
+      return;
+    }
+
+    doPipeline.pipelineToAdd(statePipelineID, pipeline.pipeline);
   };
 
-  const handleChange = async (key: string | string[]) => {
+  const onChange = (key: string | string[]) => {
     // Update activeKeys to control which accordion panels are open
     const selectedKeys = Array.isArray(key) ? key : [key];
 
-    // There should only be one selected item in the accordion
-    if (selectedKeys.length > 0) {
-      const pipelineId = selectedKeys[0];
-      const isSelected =
-        state.pipelineToAdd?.data.id === Number.parseInt(pipelineId);
-      // This will update state and also set activeKeys
-      await handlePipelineSelect(pipelineId, isSelected);
-    } else {
-      // If no keys are selected, deselect any current pipeline
-      dispatch({
-        type: Types.PipelineToAdd,
-        payload: {
-          pipeline: undefined,
-        },
-      });
-      setActiveKeys([]);
+    if (selectedKeys.length === 0) {
+      doPipeline.pipelineToAdd(statePipelineID, undefined);
+      return;
     }
+
+    // There should only be one selected item in the accordion
+    const pipelineID = Number.parseInt(selectedKeys[0]);
+    const isSelected = pipelineToAdd?.id === pipelineID;
+    onSelectPipeline(pipelineID, isSelected);
   };
 
   const dropdownItems = [
@@ -193,7 +131,7 @@ export default (props: Props) => {
   };
 
   const handlePipelineSearch = (search: string) => {
-    handleFilterChange(search, dropdownValue);
+    setSearch(search, dropdownValue);
   };
 
   const updateDropdownValue = (type: string) => {
@@ -248,13 +186,13 @@ export default (props: Props) => {
           itemCount={data?.totalCount ? data.totalCount : 0}
           perPage={pageState.perPage}
           page={pageState.page}
-          onSetPage={handlePageSet}
-          onPerPageSelect={handlePerPageSet}
+          onSetPage={setPage}
+          onPerPageSelect={setPerPage}
         />
       </div>
 
       <PipelineUpload
-        fetchPipelinesAgain={fetchPipelinesAgain}
+        fetchPipelinesAgain={onFetchPipelines}
         isStaff={isStaff}
       />
 
@@ -267,7 +205,7 @@ export default (props: Props) => {
       ) : data?.registeredPipelines && data.registeredPipelines.length > 0 ? (
         <Collapse
           style={{ marginTop: "1em" }}
-          onChange={handleChange}
+          onChange={onChange}
           activeKey={activeKeys}
           items={data.registeredPipelines.map((pipeline) => {
             const { name, id, description } = pipeline.data;
@@ -295,23 +233,21 @@ export default (props: Props) => {
                   <div style={{ display: "flex", gap: "8px" }}>
                     <Button
                       variant={
-                        state.pipelineToAdd?.data.id === id
-                          ? "primary"
-                          : "secondary"
+                        pipelineToAdd?.id === id ? "primary" : "secondary"
                       }
                       size="sm"
                       isDisabled={loadingResources?.[id]}
                       onClick={(e) => {
                         e.stopPropagation();
                         const pipelineId = `${id}`;
-                        const isSelected = state.pipelineToAdd?.data.id === id;
+                        const isSelected = pipelineToAdd?.id === id;
                         // This will handle both selection and accordion expansion
-                        handlePipelineSelect(pipelineId, isSelected);
+                        onSelectPipeline(pipelineId, isSelected);
                       }}
                     >
                       {loadingResources?.[id]
                         ? "Loading resources..."
-                        : state.pipelineToAdd?.data.id === id
+                        : pipelineToAdd?.id === id
                           ? "Selected"
                           : "Select package"}
                     </Button>

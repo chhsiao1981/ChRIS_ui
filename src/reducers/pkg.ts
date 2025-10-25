@@ -7,8 +7,8 @@ import {
 } from "@chhsiao1981/use-thunk";
 import { STATUS_OK } from "../api/constants";
 import { getPkgCompEnvs, getPkgParams } from "../api/serverApi";
-import type { CompEnv, PkgParameter } from "../api/types";
-import { NodeOperation } from "./types";
+import type { ComputeEnv, PkgParameter } from "../api/types";
+import { PkgNodeOperation } from "./types";
 
 export const myClass = "chris-ui/pkg";
 
@@ -16,15 +16,15 @@ export interface State extends rState {
   nodeOperations: { [key: string]: boolean };
   requiredParams: PkgParameter[];
   optionalParams: PkgParameter[];
-  computeEnvs: CompEnv[];
+  computeEnvs: ComputeEnv[];
 }
 
 export const defaultState: State = {
   nodeOperations: {
-    [NodeOperation.ChildNode]: true,
-    [NodeOperation.ChildPipeline]: true,
-    [NodeOperation.GraphNode]: false,
-    [NodeOperation.DeleteNode]: true,
+    [PkgNodeOperation.ChildNode]: true,
+    [PkgNodeOperation.ChildPipeline]: true,
+    [PkgNodeOperation.GraphNode]: false,
+    [PkgNodeOperation.DeleteNode]: true,
   },
   requiredParams: [],
   optionalParams: [],

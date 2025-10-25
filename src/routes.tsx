@@ -33,6 +33,7 @@ import SinglePlugin from "./components/SinglePlugin";
 import * as DoDrawer from "./reducers/drawer";
 import * as DoExplorer from "./reducers/explorer";
 import * as DoFeed from "./reducers/feed";
+import * as DoPipeline from "./reducers/pipeline";
 import * as DoUI from "./reducers/ui";
 import * as DoUser from "./reducers/user";
 
@@ -41,6 +42,7 @@ type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 type TDoExplorer = ThunkModuleToFunc<typeof DoExplorer>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
+type TDoPipeline = ThunkModuleToFunc<typeof DoPipeline>;
 
 interface State {
   selectData?: Series;
@@ -70,8 +72,8 @@ const _ROUTE_TO_SIDEBAR_ITEM: Record<string, string> = {
   pacs: "pacs",
   login: "login",
   signup: "signup",
-  "package/*": "package",
-  "package/:id": "package",
+  "pipeline/*": "pipeline",
+  "pipeline/:id": "pipeline",
   import: "import",
   compose: "compose",
   "niivue/:plinstId": "niivue",
@@ -93,7 +95,10 @@ export default () => {
   const [uiID, _] = useState(genUUID());
 
   const useUI = useThunk<DoUI.State, TDoUI>(DoUI);
-  const [_2, doUI] = useUI;
+  const [classStateUI, doUI] = useUI;
+  const ui = getState(classStateUI, uiID) || DoUI.defaultState;
+  const { sidebarActiveItem } = ui;
+
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, doUser] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
@@ -107,6 +112,9 @@ export default () => {
 
   const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
   const [_5, doFeed] = useExplorer;
+
+  const usePipeline = useThunk<DoPipeline.State, TDoPipeline>(DoPipeline);
+  const [_6, doPipeline] = usePipeline;
 
   console.info("routes: start: route:", route);
 
@@ -149,14 +157,19 @@ export default () => {
     doDrawer.init();
     doExplorer.init();
     doFeed.init();
+    doPipeline.init();
   }, []);
 
   // Update the active sidebar item based on the current route
   useEffect(() => {
     const currentPath = location.pathname;
     const sidebarItem = matchRoute(currentPath);
+    if (sidebarActiveItem === sidebarItem) {
+      return;
+    }
+
     doUI.setSidebarActive(uiID, sidebarItem);
-  }, [location.pathname]);
+  }, [location.pathname, sidebarActiveItem]);
 
   return useRoutes([
     {
@@ -250,7 +263,7 @@ export default () => {
       ),
     },
     {
-      path: "package/:id",
+      path: "pipeline/:id",
       element: (
         <SinglePlugin
           useUI={useUI}
@@ -282,13 +295,14 @@ export default () => {
       element: <Signup useUser={useUser} />,
     },
     {
-      path: "package",
+      path: "pipeline",
       element: (
         <PipelinePage
           useUI={useUI}
           useUser={useUser}
           useDrawer={useDrawer}
           useFeed={useFeed}
+          usePipeline={usePipeline}
         />
       ),
     },

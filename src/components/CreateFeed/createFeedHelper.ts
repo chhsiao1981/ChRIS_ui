@@ -9,13 +9,13 @@ import {
 import {
   createWorkflow,
   getData,
-  searchPrimitivePackagesByName,
-  createPrimitivePackageInstance as serverCreatePluginInstance,
+  searchPkgsByName,
+  createPkgInstance as serverCreatePluginInstance,
   updateDataName,
 } from "../../api/serverApi";
 import type { AddNodeState, InputType } from "../AddNode/types";
 import { unpackParametersIntoObject } from "../AddNode/utils";
-import type { PipelineState } from "../PipelinesCopy/context";
+import type { PipelineState } from "../Pipelines/context";
 import type { ChRISFeed, CreateFeedData } from "./types/feed";
 import { computeWorkflowNodesInfo, getFullFeedName } from "./utils";
 
@@ -24,7 +24,7 @@ const createFeedCore = async (
   fullFeedName: string,
   pipelineState: PipelineState,
 ) => {
-  const searchPluginsResult = await searchPrimitivePackagesByName("pl-dircopy");
+  const searchPluginsResult = await searchPkgsByName("pl-dircopy");
   console.info(
     "createFeedCore: after searchPluginsByName: searchPluginsResult:",
     searchPluginsResult,

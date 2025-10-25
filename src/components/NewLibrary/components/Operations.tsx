@@ -23,7 +23,7 @@ import LayoutSwitch from "./LayoutSwitch";
 import "./Operations.css";
 import { AddNodeProvider } from "../../AddNode/context";
 import { CreateFeedProvider } from "../../CreateFeed/context";
-import { PipelineProvider } from "../../PipelinesCopy/context";
+import { PipelineProvider } from "../../Pipelines/context";
 import CreateAnalysis from "./operations/CreateAnalysis";
 import Delete from "./operations/Delete";
 import Download from "./operations/Download";

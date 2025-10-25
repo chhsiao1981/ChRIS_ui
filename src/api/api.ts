@@ -81,7 +81,9 @@ export const collectionJsonToJson = (theData: any, isLink = false) => {
     return collectionJsonLinkToJson(theData.collection.links);
   }
   const ret = theData.collection.items.map(collectionJsonItemToJson);
-  return typeof theData.collection.total === "undefined" ? ret[0] : ret;
+  return typeof theData.collection.total === "undefined"
+    ? ret[0]
+    : { list: ret, count: theData.collection.total };
 };
 
 export const sanitizeAPIRootURL = (API_ROOT: string) => {
@@ -233,13 +235,6 @@ const fetchCore = async <T>(
           const jsonData = isJson
             ? collectionJsonData
             : collectionJsonToJson(collectionJsonData, isLink);
-
-          console.info(
-            "api.callApi: jsonData:",
-            jsonData,
-            "collectionJsonData:",
-            collectionJsonData,
-          );
 
           const data = jsonData;
 

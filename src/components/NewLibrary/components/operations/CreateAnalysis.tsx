@@ -21,8 +21,8 @@ import Review from "../../../CreateFeed/Review";
 import withSelectionAlert from "../../../CreateFeed/SelectionAlert";
 import { type ChRISFeed, Types } from "../../../CreateFeed/types/feed";
 import { AnalysisIcon } from "../../../Icons";
-import PipelinesCopy from "../../../PipelinesCopy";
-import { PipelineContext } from "../../../PipelinesCopy/context";
+import PipelinesCopy from "../../../Pipelines";
+import { PipelineContext } from "../../../Pipelines/context";
 import OperationButton from "./OperationButton";
 
 type Props = {

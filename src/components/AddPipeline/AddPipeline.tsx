@@ -10,38 +10,43 @@ import { useMutation } from "@tanstack/react-query";
 import { Fragment, useContext, useEffect } from "react";
 import ChrisAPIClient from "../../api/chrisapiclient";
 import { fetchResource } from "../../api/common";
-import * as DoPlugin from "../../reducers/pkg";
-import { NodeOperation } from "../../reducers/types";
-import { useAppSelector } from "../../store/hooks";
+import type { PkgInstance } from "../../api/types";
+import * as DoPkg from "../../reducers/pkg";
+import * as DoPkgInstance from "../../reducers/pkgInstance";
+import { PkgNodeOperation } from "../../reducers/types";
 import { Alert, Form, Tag } from "../Antd";
 import { SpinContainer } from "../Common";
-import Pipelines from "../PipelinesCopy";
-import { PipelineContext, Types } from "../PipelinesCopy/context";
+import Pipelines from "../Pipelines";
+import { PipelineContext, Types } from "../Pipelines/context";
 
-type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
+type TDoPkg = ThunkModuleToFunc<typeof DoPkg>;
+type TDoPkgInstance = ThunkModuleToFunc<typeof DoPkgInstance>;
 
 type Props = {
-  addNodeLocally: (instance: PluginInstance | PluginInstance[]) => void;
+  addNodeLocally: (instance: PkgInstance | PkgInstance[]) => void;
   isStaff: boolean;
-  usePlugin: UseThunk<DoPlugin.State, TDoPlugin>;
+  usePkg: UseThunk<DoPkg.State, TDoPkg>;
+  usePkgInstance: UseThunk<DoPkgInstance.State, TDoPkgInstance>;
 };
 
 export default (props: Props) => {
-  const { addNodeLocally, isStaff, usePlugin } = props;
-  const [classStatePlugin, doPlugin] = usePlugin;
-  const pluginID = getRootID(classStatePlugin);
-  const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
-  const { nodeOperations } = plugin;
-  const childPipeline = nodeOperations[NodeOperation.ChildPipeline] || false;
+  const { addNodeLocally, isStaff, usePkg, usePkgInstance } = props;
+  const [classStatePkg, doPkg] = usePkg;
+  const pkgID = getRootID(classStatePkg);
+  const pkg = getState(classStatePkg) || DoPkg.defaultState;
+  const { nodeOperations } = pkg;
+  const childPipeline = nodeOperations[PkgNodeOperation.ChildPipeline] || false;
+
+  const [classStatePkgInstance, doPkgInstance] = usePkgInstance;
+  const pkgInstanceID = getRootID(classStatePkgInstance);
+  const pkgInstanceState =
+    getState(classStatePkgInstance) || DoPkgInstance.defaultState;
+  const { pkgInstances, selectedPkgInstance } = pkgInstanceState;
 
   const { state, dispatch } = useContext(PipelineContext);
   const { pipelineToAdd, selectedPipeline, computeInfo, titleInfo } = state;
 
-  const { pluginInstances, selectedPlugin } = useAppSelector(
-    (state) => state.instance,
-  );
-
-  const alreadyAvailableInstances = pluginInstances.data;
+  const alreadyAvailableInstances = pkgInstances;
 
   const onToggle = () => {
     if (childPipeline) {
@@ -50,14 +55,14 @@ export default (props: Props) => {
       });
       mutation.reset();
     }
-    doPlugin.toggleNodeOperation(pluginID, NodeOperation.ChildPipeline);
+    doPkg.toggleNodeOperation(pkgID, PkgNodeOperation.ChildPipeline);
   };
 
   const addPipeline = async () => {
     const id = pipelineToAdd?.data.id;
     const resources = selectedPipeline?.[id];
 
-    if (selectedPlugin && resources) {
+    if (selectedPkgInstance && resources) {
       const { parameters } = resources;
       const client = ChrisAPIClient.getClient();
 
@@ -78,7 +83,7 @@ export default (props: Props) => {
         }
 
         const workflow = await client.createWorkflow(id, {
-          previous_plugin_inst_id: selectedPlugin.data.id,
+          previous_plugin_inst_id: selectedPkgInstance.id,
           nodes_info: JSON.stringify(nodes_info),
         });
 

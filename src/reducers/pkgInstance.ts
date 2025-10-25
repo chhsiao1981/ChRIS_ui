@@ -5,13 +5,12 @@ import {
   setData,
   type Thunk,
 } from "@chhsiao1981/use-thunk";
-import { set } from "lodash";
 import { STATUS_OK } from "../api/constants";
 import {
   deletePkgInstance as apiDeletePkgInstance,
   getPkgInstances,
 } from "../api/serverApi";
-import type { PkgInstance } from "../api/types";
+import type { Pipeline, PkgInstance } from "../api/types";
 
 export const myClass = "chris-ui/pkg-instance";
 
@@ -214,6 +213,24 @@ export const setPkgInstancesAndSelectedPkgInstance = (
         pkgInstances: pkgInstances,
       }),
     );
+  };
+};
+
+export const addCompositePkg = (
+  myID: string,
+  selectedCompositePkg: Pipeline,
+): Thunk<State> => {
+  return (dispatch, getClassState) => {
+    const classState = getClassState();
+    const me = getState(classState, myID);
+    if (!me) {
+      return;
+    }
+
+    const { selectedPkgInstance } = me;
+    if (!selectedPkgInstance) {
+      return;
+    }
   };
 };
 

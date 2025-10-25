@@ -11,6 +11,7 @@ import {
   LoginPage,
 } from "@patternfly/react-core";
 import { useMutation } from "@tanstack/react-query";
+import { Alert } from "antd";
 import { type FormEvent, type MouseEvent, useEffect, useState } from "react";
 import { Cookies, useCookies } from "react-cookie";
 import { useNavigate } from "react-router";
@@ -19,9 +20,8 @@ import type * as DoDrawer from "../../reducers/drawer";
 import type * as DoFeed from "../../reducers/feed";
 import type * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
-import { Alert } from "../Antd";
 import { SpinContainer } from "../Common";
-import { useSearchQueryParams } from "../Feeds/usePaginate";
+import { useSearchQueryParams } from "../hooks/useSearchQueryParams";
 import { ExclamationCircleIcon } from "../Icons";
 import Wrapper from "../Wrapper";
 

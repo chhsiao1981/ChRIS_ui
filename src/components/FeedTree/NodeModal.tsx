@@ -3,7 +3,7 @@ import AddNode from "../AddNode/AddNode";
 import { AddNodeProvider } from "../AddNode/context";
 import AddPipeline from "../AddPipeline/AddPipeline";
 import DeleteNode from "../DeleteNode";
-import { PipelineProvider } from "../PipelinesCopy/context";
+import { PipelineProvider } from "../Pipelines/context";
 
 type Props = {
   addNodeLocally: (instance: PluginInstance | PluginInstance[]) => void;

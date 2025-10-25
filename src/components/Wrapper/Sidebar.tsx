@@ -233,13 +233,13 @@ export default (props: Props) => {
                     {renderLink("/pacs", "Query and Retrieve PACS", "pacs")}
                   </NavItem>
                 </NavGroup>
-                <NavGroup key="packages" title="Packages">
+                <NavGroup key="pipeline" title="Pipelines">
                   <NavItem
-                    key="package"
-                    itemId="package"
-                    isActive={sidebarActiveItem === "package"}
+                    key="pipeline"
+                    itemId="pipeline"
+                    isActive={sidebarActiveItem === "pipeline"}
                   >
-                    {renderLink("/package", "Browse Packages", "catalog")}
+                    {renderLink("/pipeline", "Browse Pipelines", "pipeline")}
                   </NavItem>
 
                   <NavExpandable
@@ -258,7 +258,7 @@ export default (props: Props) => {
                       isActive={sidebarActiveItem === "store"}
                       className={classNameImportPackage}
                     >
-                      {renderLink("/import", "Import Package", "store")}
+                      {renderLink("/import", "Import Pipeline", "store")}
                     </NavItem>
                   )}
                   <NavItem
@@ -267,7 +267,7 @@ export default (props: Props) => {
                     isActive={sidebarActiveItem === "compose"}
                     className={classNameComposePackage}
                   >
-                    {renderLink("/compose", "Compose Package", "compose")}
+                    {renderLink("/compose", "Compose Pipeline", "compose")}
                   </NavItem>
                 </NavGroup>
               </NavList>

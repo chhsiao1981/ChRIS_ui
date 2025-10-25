@@ -12,8 +12,8 @@ importers:
         specifier: ^5.5.1
         version: 5.5.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@chhsiao1981/use-thunk':
-        specifier: ^9.0.3
-        version: 9.0.3
+        specifier: ^9.0.5
+        version: 9.0.5
       '@cornerstonejs/core':
         specifier: ^1.86.0
         version: 1.86.1(@babel/preset-env@7.26.0(@babel/core@7.26.0))(autoprefixer@10.4.20(postcss@8.5.1))(webpack@5.97.1)(wslink@2.2.2)
@@ -881,8 +881,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@chhsiao1981/use-thunk@9.0.3':
-    resolution: {integrity: sha512-0yAcJ6l4EKeXjzEhUCpq7mKx3FKJcZCjzvbNkW3U7VKV8NRTfQaDxxOprC4mrzP+lRhOPzCYr0tm7wL51X+a1A==}
+  '@chhsiao1981/use-thunk@9.0.5':
+    resolution: {integrity: sha512-m/soXYwpK2MnX1T/yAiJ2AGe1t12R2NMKkO8RjtovcARLjRGvnv+tLHRLLirpTbAc7T0a62qVkHE0fJWO8c66Q==}
 
   '@cornerstonejs/codec-charls@1.2.3':
     resolution: {integrity: sha512-qKUe6DN0dnGzhhfZLYhH9UZacMcudjxcaLXCrpxJImT/M/PQvZCT2rllu6VGJbWKJWG+dMVV2zmmleZcdJ7/cA==}
@@ -4717,7 +4717,7 @@ snapshots:
   '@biomejs/cli-win32-x64@2.1.4':
     optional: true
 
-  '@chhsiao1981/use-thunk@9.0.3':
+  '@chhsiao1981/use-thunk@9.0.5':
     dependencies:
       react: 18.3.1
       uuid: 11.1.0

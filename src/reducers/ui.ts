@@ -1,5 +1,6 @@
 import {
   init as _init,
+  getState,
   type State as rState,
   setData,
   type Thunk,
@@ -40,7 +41,16 @@ export const setSidebarActive = (
   myID: string,
   activeItem: string,
 ): Thunk<State> => {
-  return async (dispatch, _) => {
+  return async (dispatch, getClassState) => {
+    const classState = getClassState();
+    const me = getState(classState, myID);
+    if (!me) {
+      return;
+    }
+    if (me.sidebarActiveItem === activeItem) {
+      return;
+    }
+
     dispatch(setData(myID, { sidebarActiveItem: activeItem }));
   };
 };

@@ -16,14 +16,14 @@ import {
 import { notification } from "antd";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useCookies } from "react-cookie";
-import { createPackage } from "../../api/serverApi";
-import type { Pkg as PluginType, UploadPkg } from "../../api/types";
+import { createPipeline } from "../../api/serverApi";
+import type { Pkg as PluginType, UploadPipeline } from "../../api/types";
 import type * as DoDrawer from "../../reducers/drawer";
 import type * as DoFeed from "../../reducers/feed";
 import type * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
 import { InfoSection, SpinContainer } from "../Common";
-import { handleInstallPlugin as onInstallPlugin } from "../PipelinesCopy/utils";
+import { handleInstallPlugin as onInstallPlugin } from "../Pipelines/utils";
 import Wrapper from "../Wrapper";
 import postModifyComputeResource from "./hooks/updateComputeResource";
 import { useComputeResources } from "./hooks/useFetchCompute";
@@ -132,7 +132,7 @@ export default (props: Props) => {
 
     const pipelineName = `${plugin.name}-${plugin.version}`;
 
-    const pipeline: UploadPkg = {
+    const pipeline: UploadPipeline = {
       name: pipelineName,
       authors: plugin.authors,
       category: plugin.category,
@@ -147,7 +147,7 @@ export default (props: Props) => {
       ],
     };
 
-    const resultPipeline = await createPackage(pipeline);
+    const resultPipeline = await createPipeline(pipeline);
 
     console.info(
       "NewStore.Store.handleInstall: after createPipeline: resultPipeline:",

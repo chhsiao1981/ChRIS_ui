@@ -7,33 +7,35 @@ import { PageSection } from "@patternfly/react-core";
 import { useEffect } from "react";
 import type * as DoDrawer from "../../reducers/drawer";
 import type * as DoFeed from "../../reducers/feed";
+import type * as DoPipeline from "../../reducers/pipeline";
 import type * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
 import { InfoSection } from "../Common";
-import Pipelines from "../PipelinesCopy";
-import { PipelineProvider } from "../PipelinesCopy/context";
+import Pipelines from "../Pipelines";
 import Wrapper from "../Wrapper";
 
 type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
+type TDoPipeline = ThunkModuleToFunc<typeof DoPipeline>;
 
 type Props = {
   useUI: UseThunk<DoUI.State, TDoUI>;
   useUser: UseThunk<DoUser.State, TDoUser>;
   useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
   useFeed: UseThunk<DoFeed.State, TDoFeed>;
+  usePipeline: UseThunk<DoPipeline.State, TDoPipeline>;
 };
 
 export default (props: Props) => {
-  const { useUI, useUser, useDrawer, useFeed } = props;
+  const { useUI, useUser, useDrawer, useFeed, usePipeline } = props;
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
   const { isStaff } = user;
 
   useEffect(() => {
-    document.title = "Packages Catalog";
+    document.title = "Pipelines";
   }, []);
 
   return (
@@ -42,12 +44,10 @@ export default (props: Props) => {
       useUser={useUser}
       useDrawer={useDrawer}
       useFeed={useFeed}
-      title={<InfoSection title="Packages" />}
+      title={<InfoSection title="Pipelines" />}
     >
       <PageSection>
-        <PipelineProvider>
-          <Pipelines isStaff={isStaff} />
-        </PipelineProvider>
+        <Pipelines isStaff={isStaff} usePipeline={usePipeline} />
       </PageSection>
     </Wrapper>
   );

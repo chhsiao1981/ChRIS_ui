@@ -2,17 +2,21 @@ import type { Pipeline, PluginMeta, Tag } from "@fnndsc/chrisapi";
 import type { EventDataNode } from "rc-tree/lib/interface";
 import ChrisAPIClient from "../../api/chrisapiclient";
 import { fetchResource, fetchResources } from "../../api/common";
-import type { NodeInfo, Piping, PkgDefaultParameter } from "../../api/types";
+import type {
+  PkgNode,
+  PkgNodeDefaultParameter,
+  PkgNodeInfo,
+} from "../../api/types";
 
 import constants from "../../datasets/constants";
 import fetchFolders from "../NewLibrary/utils/fetchFolders";
 import type { ChRISFeed, DataBreadcrumb } from "./types/feed";
 
 export const computeWorkflowNodesInfo = (
-  pipings: Piping[],
-  params: PkgDefaultParameter[],
-): NodeInfo[] => {
-  const theRet = pipings.map((each): NodeInfo => {
+  pipings: PkgNode[],
+  params: PkgNodeDefaultParameter[],
+): PkgNodeInfo[] => {
+  const theRet = pipings.map((each): PkgNodeInfo => {
     return {
       piping_id: each.id,
       previous_piping_id: each.previous_id,

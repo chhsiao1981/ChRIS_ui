@@ -5,7 +5,7 @@ import { ErrorAlert, RenderFlexItem } from "../../components/Common";
 import { AddNodeContext } from "../AddNode/context";
 import { PluginDetails } from "../AddNode/ReviewGrid";
 import { unpackParametersIntoString } from "../AddNode/utils";
-import { PipelineContext } from "../PipelinesCopy/context";
+import { PipelineContext } from "../Pipelines/context";
 import { CreateFeedContext } from "./context";
 import { ChrisFileDetails, LocalFileDetails } from "./HelperComponent";
 

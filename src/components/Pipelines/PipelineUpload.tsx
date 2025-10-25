@@ -7,8 +7,11 @@ import { useEffect, useRef, useState } from "react";
 import { useCookies } from "react-cookie";
 import ChrisAPIClient from "../../api/chrisapiclient";
 import { envOptions } from "../NewStore/hooks/useFetchPlugins";
-import { handleInstallPlugin } from "../PipelinesCopy/utils";
-import { extractPluginInfo, uploadPipelineSourceFile } from "./utils";
+import {
+  extractPluginInfo,
+  handleInstallPlugin,
+  uploadPipelineSourceFile,
+} from "./utils";
 
 interface Notification {
   type: "warning" | "info" | "error" | undefined;

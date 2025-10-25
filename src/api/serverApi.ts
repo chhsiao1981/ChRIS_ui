@@ -5,19 +5,21 @@ import api from "./api";
 import { STATUS_OK } from "./constants";
 import type { PACSqueryCore } from "./pfdcm";
 import { PACSqueryCoreToJSON } from "./pfdcm/generated";
+import { createPkgInstance } from "./serverApi/pkgInstance";
 import type {
   AuthToken,
-  CompEnv,
+  ComputeEnv,
+  Data,
   DownloadToken,
-  Feed,
   Link,
-  NodeInfo,
+  List,
   PACSSeries,
   PFDCMResult,
   Pkg,
   PkgInstance,
+  PkgNodeInfo,
   PkgParameter,
-  UploadPkg,
+  UploadPipeline,
   User,
 } from "./types";
 
@@ -84,36 +86,14 @@ export const getLinkMap = () =>
     query: { limit: 1 },
   });
 
-export const getPkgParams = (pkgID: string) =>
-  api<PkgParameter[]>({
-    endpoint: `/plugins/${pkgID}/parameters/`,
-  });
-
-export const getPkgCompEnvs = (pkgID: string) =>
-  api<CompEnv[]>({
-    endpoint: `/plugins/${pkgID}/computeresources/`,
-  });
-
-export const getPkgInstances = (dataID: number) =>
-  api<PkgInstance[]>({
-    endpoint: `/${dataID}/plugininstances/`,
-    method: "get",
-  });
-
-export const deletePkgInstance = (dataID: number, pkgInstanceID: number) =>
-  api<null>({
-    endpoint: `/${dataID}/plugininstances/${pkgInstanceID}/`,
-    method: "delete",
-  });
-
 export const getData = (dataID: number) =>
-  api<Feed>({
+  api<Data>({
     endpoint: `/${dataID}/`,
     method: "get",
   });
 
 export const updateDataName = (dataID: number, dataName: string) =>
-  api<Feed>({
+  api<Data>({
     endpoint: `/${dataID}/`,
     method: "put",
     json: {
@@ -122,7 +102,7 @@ export const updateDataName = (dataID: number, dataName: string) =>
   });
 
 export const updateDataPublic = (dataID: number, isPublic = true) =>
-  api<Feed>({
+  api<Data>({
     endpoint: `/${dataID}/`,
     method: "put",
     json: {
@@ -130,32 +110,10 @@ export const updateDataPublic = (dataID: number, isPublic = true) =>
     },
   });
 
-export const searchPrimitivePackagesByName = (packageName: string) =>
-  api<Pkg[]>({
-    endpoint: "/plugins/search/",
-    method: "get",
-    query: {
-      name: packageName,
-    },
-  });
-
-export const createPrimitivePackageInstance = (
-  packageID: number,
-  theDirs: string[],
-) =>
-  api<PkgInstance>({
-    endpoint: `/plugins/${packageID}/instances/`,
-    method: "post",
-    json: {
-      previous_id: null,
-      dir: theDirs.join(","),
-    },
-  });
-
 export const createWorkflow = (
   pipelineID: number,
   previousPluginInstanceID: number,
-  nodesInfo: NodeInfo[],
+  nodesInfo: PkgNodeInfo[],
 ) =>
   api({
     endpoint: `/pipelines/${pipelineID}/workflows/`,
@@ -183,9 +141,7 @@ export const createDataWithFilepath = async (
   tags?: string[],
   isPublic: boolean = false,
 ) => {
-  const pluginInstanceResult = await createPrimitivePackageInstance(1, [
-    filepath,
-  ]);
+  const pluginInstanceResult = await createPkgInstance(1, [filepath]);
   if (!pluginInstanceResult.data) {
     return {
       errmsg: pluginInstanceResult.errmsg,
@@ -208,12 +164,12 @@ export const createDataWithFilepath = async (
   return dataResult;
 };
 
-export const createPackage = (pkg: UploadPkg) =>
+export const createPipeline = (pipeline: UploadPipeline) =>
   api({
     endpoint: "/pipelines/sourcefiles/",
     method: "post",
     filename: "fname",
-    filetext: YAML.stringify(pkg),
+    filetext: YAML.stringify(pipeline),
   });
 
 export const createDownloadToken = () =>
@@ -224,91 +180,5 @@ export const createDownloadToken = () =>
       template: {
         data: [],
       },
-    },
-  });
-
-export const getPACSSeriesListByStudyUID = (studyUID: string) =>
-  api<PACSSeries[]>({
-    endpoint: "/pacs/series/search/",
-    method: "get",
-    query: {
-      StudyInstanceUID: studyUID,
-    },
-  });
-
-export const getPACSSeriesListBySeriesUID = (seriesUID: string) =>
-  api<PACSSeries[]>({
-    endpoint: "/pacs/series/search/",
-    method: "get",
-    query: {
-      SeriesInstanceUID: seriesUID,
-    },
-  });
-
-export const queryPFDCMStudies = (service: string, query: PACSqueryCore) => {
-  // @ts-expect-error study-only
-  query.StudyOnly = true;
-
-  return api<PFDCMResult>({
-    endpoint: "/PACS/sync/pypx/",
-    method: "post",
-    json: {
-      PACSdirective: query,
-      PACSservice: { value: service },
-      listenerService: { value: "default" },
-    },
-    apiroot: config.PFDCM_ROOT,
-    isJson: true,
-  });
-};
-
-export const queryPFDCMSeries = (service: string, query: PACSqueryCore) =>
-  api<PFDCMResult>({
-    endpoint: "/PACS/sync/pypx/",
-    method: "post",
-    json: {
-      PACSdirective: query,
-      PACSservice: { value: service },
-      listenerService: { value: "default" },
-    },
-    apiroot: config.PFDCM_ROOT,
-    isJson: true,
-  });
-
-export const getPFDCMServices = () =>
-  api<ReadonlyNonEmptyArray<string>>({
-    endpoint: "/PACSservice/list/",
-    method: "get",
-    apiroot: config.PFDCM_ROOT,
-    isJson: true,
-  });
-
-export const retrievePFDCMPACS = (service: string, query: PACSqueryCore) => {
-  const queryJSON = PACSqueryCoreToJSON(query);
-  // biome-ignore lint/suspicious/noThenProperty: required by PACSqueryCore
-  queryJSON.then = "retrieve";
-  queryJSON.withFeedBack = true;
-
-  return api<PFDCMResult>({
-    endpoint: "/PACS/thread/pypx/",
-    method: "post",
-    json: {
-      PACSdirective: queryJSON,
-      PACSservice: { value: service },
-      listenerService: { value: "default" },
-    },
-    apiroot: config.PFDCM_ROOT,
-    isJson: true,
-  });
-};
-
-export const queryPACSSeries = (service: string, seriesInstanceUID: string) =>
-  api<PACSSeries[]>({
-    endpoint: "/pacs/series/search/",
-    method: "get",
-    query: {
-      pacs_name: service,
-      SeriesInstanceUID: seriesInstanceUID,
-      limit: 1,
     },
   });

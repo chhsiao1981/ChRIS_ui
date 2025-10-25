@@ -6,58 +6,60 @@ import {
 } from "@chhsiao1981/use-thunk";
 import type React from "react";
 import type { ReactNode } from "react";
-import * as DoPlugin from "../../reducers/pkg";
-import { NodeOperation } from "../../reducers/types";
-import { useAppSelector } from "../../store/hooks";
+import * as DoPkg from "../../reducers/pkg";
+import * as DoPkgInstance from "../../reducers/pkgInstance";
+import { PkgNodeOperation } from "../../reducers/types";
 import { Dropdown, type MenuProps } from "../Antd";
 import { AddIcon, DeleteIcon, PatternflyArchiveIcon } from "../Icons";
 
-type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
+type TDoPkg = ThunkModuleToFunc<typeof DoPkg>;
+type TDoPkgInstance = ThunkModuleToFunc<typeof DoPkgInstance>;
 
 type Props = {
   onZip: () => void;
   children?: ReactNode;
-  usePlugin: UseThunk<DoPlugin.State, TDoPlugin>;
+  usePkg: UseThunk<DoPkg.State, TDoPkg>;
+  usePkgInstance: UseThunk<DoPkgInstance.State, TDoPkgInstance>;
 };
 export default (props: Props) => {
-  const { onZip, children, usePlugin } = props;
-  const [classStatePlugin, doPlugin] = usePlugin;
-  const pluginID = getRootID(classStatePlugin);
-  const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
-  const { nodeOperations } = plugin;
+  const { onZip, children, usePkg, usePkgInstance } = props;
+  const [classStatePkg, doPkg] = usePkg;
+  const pkgID = getRootID(classStatePkg);
+  const pkg = getState(classStatePkg) || DoPkg.defaultState;
+  const { nodeOperations } = pkg;
 
-  const { selectedPlugin } = useAppSelector((state) => {
-    return state.instance;
-  });
-  const cancelled =
-    selectedPlugin?.data.status === "cancelled" ||
-    selectedPlugin?.data.status === "finishedWithError";
+  const [classStatePkgInstance, _] = usePkgInstance;
+  const pkgInstanceState =
+    getState(classStatePkgInstance) || DoPkgInstance.defaultState;
+  const { selectedPkgInstance, errmsg } = pkgInstanceState;
+
+  const cancelled = !!errmsg;
   const items: MenuProps["items"] = [
     {
       key: "1",
       label: "Add a Child Node",
       icon: <AddIcon />,
-      disabled: cancelled || !nodeOperations[NodeOperation.ChildNode],
+      disabled: cancelled || !nodeOperations[PkgNodeOperation.ChildNode],
     },
     {
       key: "2",
       label: "Add a Pipeline",
       icon: <AddIcon />,
-      disabled: cancelled || !nodeOperations[NodeOperation.ChildPipeline],
+      disabled: cancelled || !nodeOperations[PkgNodeOperation.ChildPipeline],
     },
     {
       key: "3",
       label: "Add a Graph Node",
-      disabled: !nodeOperations[NodeOperation.GraphNode],
+      disabled: !nodeOperations[PkgNodeOperation.GraphNode],
       icon: <AddIcon />,
     },
     {
       key: "4",
       label: "Delete a Node",
       disabled:
-        (selectedPlugin?.data.plugin_type === "fs" &&
-          selectedPlugin?.data.plugin_name === "pl-dircopy") ||
-        !nodeOperations[NodeOperation.DeleteNode],
+        (selectedPkgInstance?.plugin_type === "fs" &&
+          selectedPkgInstance?.plugin_name === "pl-dircopy") ||
+        !nodeOperations[PkgNodeOperation.DeleteNode],
       icon: <DeleteIcon />,
     },
     {
@@ -69,18 +71,18 @@ export default (props: Props) => {
 
   const handleOperations = (e: any) => {
     if (e.key === "1") {
-      doPlugin.toggleNodeOperation(pluginID, NodeOperation.ChildNode);
+      doPkg.toggleNodeOperation(pkgID, PkgNodeOperation.ChildNode);
     }
     if (e.key === "2") {
-      doPlugin.toggleNodeOperation(pluginID, NodeOperation.ChildPipeline);
+      doPkg.toggleNodeOperation(pkgID, PkgNodeOperation.ChildPipeline);
     }
 
     if (e.key === "3") {
-      doPlugin.toggleNodeOperation(pluginID, NodeOperation.GraphNode);
+      doPkg.toggleNodeOperation(pkgID, PkgNodeOperation.GraphNode);
     }
 
     if (e.key === "4") {
-      doPlugin.toggleNodeOperation(pluginID, NodeOperation.DeleteNode);
+      doPkg.toggleNodeOperation(pkgID, PkgNodeOperation.DeleteNode);
     }
 
     if (e.key === "5") {

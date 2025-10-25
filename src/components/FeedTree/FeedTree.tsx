@@ -28,7 +28,7 @@ import AddPipeline from "../AddPipeline/AddPipeline";
 import { ThemeContext } from "../DarkTheme/useTheme";
 import DeleteNode from "../DeleteNode";
 import { RotateLeft, RotateRight } from "../Icons";
-import { PipelineProvider } from "../PipelinesCopy/context";
+import { PipelineProvider } from "../Pipelines/context";
 import DropdownMenu from "./DropdownMenu";
 import useSize from "./useSize";
 

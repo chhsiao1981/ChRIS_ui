@@ -1,4 +1,4 @@
-import type { Feed, PluginInstance } from "@fnndsc/chrisapi";
+import type { PluginInstance } from "@fnndsc/chrisapi";
 import { Tooltip } from "@patternfly/react-core";
 import { type CSSProperties, useCallback, useEffect, useState } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
@@ -35,9 +35,9 @@ import type * as DoFeed from "../../reducers/feed";
 import { Role } from "../../reducers/types";
 import type * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
+import { useSearchQueryParams } from "../hooks/useSearchQueryParams";
 import CustomTitle from "./CustomTitle";
 import { useFetchFeed } from "./useFetchFeed";
-import { useSearchQueryParams } from "./usePaginate";
 import { usePollAllPluginStatuses } from "./usePolledStatuses";
 import { onMaximize, onMinimize } from "./utilties";
 
