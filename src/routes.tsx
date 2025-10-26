@@ -30,6 +30,7 @@ import {
 } from "./components/Routing/RouterContext";
 import Signup from "./components/Signup";
 import SinglePlugin from "./components/SinglePlugin";
+import * as DoDataTag from "./reducers/dataTag";
 import * as DoDrawer from "./reducers/drawer";
 import * as DoExplorer from "./reducers/explorer";
 import * as DoFeed from "./reducers/feed";
@@ -41,6 +42,7 @@ type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 type TDoExplorer = ThunkModuleToFunc<typeof DoExplorer>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
+type TDoDataTag = ThunkModuleToFunc<typeof DoDataTag>;
 
 interface State {
   selectData?: Series;
@@ -65,23 +67,25 @@ const _ROUTE_TO_SIDEBAR_ITEM: Record<string, string> = {
   "library/*": "lib",
   "data/*": "data",
   "data/:id": "data",
+  "data/tag/*": "data-tag",
+  "data/tag/uploaded": "data-tag-uploaded",
+  "data/tag/pacs": "data-tag-pacs",
   "shared/*": "shared",
   new: "new",
   pacs: "pacs",
   login: "login",
   signup: "signup",
-  "package/*": "package",
-  "package/:id": "package",
+  "pipelines/*": "pipeline",
+  "pipelines/tag/:tag": "pipeline-tag",
+  "pipelines/tag/imported": "pipeline-tag-imported",
+  "pipelines/tag/composite": "pipeline-tag-composite",
+  "pipeline/*": "pipeline",
+  "pipeline/:id": "pipeline",
   import: "import",
   compose: "compose",
-  "niivue/:plinstId": "niivue",
   store: "store",
   "install/*": "install",
   "*": "notFound",
-
-  tag: "tag0",
-  "tag/uploaded": "tag1",
-  "tag/pacs": "tag2",
 };
 
 export default () => {
@@ -90,10 +94,12 @@ export default () => {
   const [route, setRoute] = useState("");
   const navigate = useNavigate();
 
-  const [uiID, _] = useState(genUUID());
+  const [uiID, _] = useState(genUUID);
+  const [dataTagID, _6] = useState(genUUID);
 
   const useUI = useThunk<DoUI.State, TDoUI>(DoUI);
   const [_2, doUI] = useUI;
+
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, doUser] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
@@ -107,6 +113,9 @@ export default () => {
 
   const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
   const [_5, doFeed] = useExplorer;
+
+  const useDataTag = useThunk<DoDataTag.State, TDoDataTag>(DoDataTag);
+  const [_7, doDataTag] = useDataTag;
 
   console.info("routes: start: route:", route);
 
@@ -145,7 +154,8 @@ export default () => {
 
   useEffect(() => {
     doUI.init(uiID);
-    doUser.init();
+    doDataTag.init(dataTagID);
+    doUser.init(dataTagID, doDataTag);
     doDrawer.init();
     doExplorer.init();
     doFeed.init();
@@ -188,6 +198,86 @@ export default () => {
             </OperationsProvider>
           </RouterProvider>
         </PrivateRoute>
+      ),
+    },
+    {
+      path: "data/tag/uploaded",
+      element: (
+        <RouterProvider
+          {...{ actions, state, route, setRoute }}
+          context={MainRouterContext}
+        >
+          <OperationsProvider>
+            <FeedsListView
+              title="Data: uploaded"
+              isShared={false}
+              useUI={useUI}
+              useUser={useUser}
+              useDrawer={useDrawer}
+              useFeed={useFeed}
+            />
+          </OperationsProvider>
+        </RouterProvider>
+      ),
+    },
+    {
+      path: "data/tag/public",
+      element: (
+        <RouterProvider
+          {...{ actions, state, route, setRoute }}
+          context={MainRouterContext}
+        >
+          <OperationsProvider>
+            <FeedsListView
+              title="Data: public"
+              isShared={true}
+              useUI={useUI}
+              useUser={useUser}
+              useDrawer={useDrawer}
+              useFeed={useFeed}
+            />
+          </OperationsProvider>
+        </RouterProvider>
+      ),
+    },
+    {
+      path: "data/tag/pacs",
+      element: (
+        <RouterProvider
+          {...{ actions, state, route, setRoute }}
+          context={MainRouterContext}
+        >
+          <OperationsProvider>
+            <FeedsListView
+              title="Data: pacs"
+              isShared={false}
+              useUI={useUI}
+              useUser={useUser}
+              useDrawer={useDrawer}
+              useFeed={useFeed}
+            />
+          </OperationsProvider>
+        </RouterProvider>
+      ),
+    },
+    {
+      path: "data/tag/:id",
+      element: (
+        <RouterProvider
+          {...{ actions, state, route, setRoute }}
+          context={MainRouterContext}
+        >
+          <OperationsProvider>
+            <FeedsListView
+              title="Data"
+              isShared={false}
+              useUI={useUI}
+              useUser={useUser}
+              useDrawer={useDrawer}
+              useFeed={useFeed}
+            />
+          </OperationsProvider>
+        </RouterProvider>
       ),
     },
     {
@@ -250,7 +340,7 @@ export default () => {
       ),
     },
     {
-      path: "package/:id",
+      path: "pipeline/:id",
       element: (
         <SinglePlugin
           useUI={useUI}
@@ -282,7 +372,40 @@ export default () => {
       element: <Signup useUser={useUser} />,
     },
     {
-      path: "package",
+      path: "pipelines",
+      element: (
+        <PipelinePage
+          useUI={useUI}
+          useUser={useUser}
+          useDrawer={useDrawer}
+          useFeed={useFeed}
+        />
+      ),
+    },
+    {
+      path: "pipelines/tag/imported",
+      element: (
+        <PipelinePage
+          useUI={useUI}
+          useUser={useUser}
+          useDrawer={useDrawer}
+          useFeed={useFeed}
+        />
+      ),
+    },
+    {
+      path: "pipelines/tag/composite",
+      element: (
+        <PipelinePage
+          useUI={useUI}
+          useUser={useUser}
+          useDrawer={useDrawer}
+          useFeed={useFeed}
+        />
+      ),
+    },
+    {
+      path: "pipelines/tag/:id",
       element: (
         <PipelinePage
           useUI={useUI}

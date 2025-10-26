@@ -48,15 +48,15 @@ export default (props: Props) => {
   const ui = getState(classStateUI) || DoUI.defaultState;
   const uiID = getRootID(classStateUI);
   const user = getState(classStateUser) || DoUser.defaultState;
-  const { sidebarActiveItem, isNavOpen, isTagExpanded, isPackageTagExpanded } =
+  const { sidebarActiveItem, isNavOpen, isTagExpanded, isPipelineTagExpanded } =
     ui;
   const { role, username } = user;
 
-  const onTagToggle = (e: FormEvent) => {
+  const onToggleTag = (e: FormEvent) => {
     doUI.setIsTagExpanded(uiID, !isTagExpanded);
   };
-  const onPackageTagToggle = (e: FormEvent) => {
-    doUI.setIsPackageTagExpanded(uiID, !isPackageTagExpanded);
+  const onTogglePipelineTag = (e: FormEvent) => {
+    doUI.setIsPipelineTagExpanded(uiID, !isPipelineTagExpanded);
   };
   const onSelect = (
     _event: React.FormEvent<HTMLInputElement>,
@@ -83,12 +83,16 @@ export default (props: Props) => {
   const renderTag = (
     tag: TagInfo,
     idx: number,
-    onClick: (e: FormEvent) => void,
+    onClickMore: (e: FormEvent) => void,
     prefix: string,
   ) => {
     if (typeof tag.title === "undefined") {
       return (
-        <NavItem key={prefix + "tag-more"} itemId="tag-more" onClick={onClick}>
+        <NavItem
+          key={prefix + "tag-more"}
+          itemId="tag-more"
+          onClick={onClickMore}
+        >
           <span style={{ color: "#aaaaaa" }}>(more)</span>
         </NavItem>
       );
@@ -96,7 +100,7 @@ export default (props: Props) => {
 
     const tagIdx = `tag${idx}`;
 
-    const tagLink = tag.title === "(none)" ? "" : `/${tag.title}`;
+    const tagLink = tag.title === "(none)" ? "" : `${tag.title}`;
 
     return (
       <NavItem
@@ -104,7 +108,7 @@ export default (props: Props) => {
         itemId={tagIdx}
         isActive={sidebarActiveItem === tagIdx}
       >
-        {renderLink(`/${prefix}${tagLink}`, tag.title, tagIdx)}
+        {renderLink(`${prefix}${tagLink}`, tag.title, tagIdx)}
       </NavItem>
     );
   };
@@ -128,21 +132,23 @@ export default (props: Props) => {
 
     return (
       <>
-        {tagList.map((each, idx) => renderTag(each, idx, onTagToggle, "tag"))}
+        {tagList.map((each, idx) =>
+          renderTag(each, idx, onToggleTag, "/data/tag/"),
+        )}
       </>
     );
   };
 
-  const renderPackageTags = () => {
+  const renderPipelineTags = () => {
     const tagList: TagInfo[] = [{ title: "imported" }, { title: "composite" }];
-    if (!isPackageTagExpanded) {
+    if (!isPipelineTagExpanded) {
       tagList.push({});
     }
 
     return (
       <>
         {tagList.map((each, idx) =>
-          renderTag(each, idx, onPackageTagToggle, "packagetag"),
+          renderTag(each, idx, onTogglePipelineTag, "/pipelines/tag/"),
         )}
       </>
     );
@@ -167,9 +173,9 @@ export default (props: Props) => {
     sidebarActiveItem === "uploadData" ? "#ffffff" : "#aaaaaa";
 
   // only the admin can import package.
-  const classNameImportPackage = role === Role.Admin ? undefined : styles.hide;
+  const classNameImportPipeline = role === Role.Admin ? undefined : styles.hide;
   // only the clinician cannot compose package.
-  const classNameComposePackage =
+  const classNameComposePipeline =
     role === Role.Clinician ? styles.hide : undefined;
 
   return (
@@ -233,22 +239,22 @@ export default (props: Props) => {
                     {renderLink("/pacs", "Query and Retrieve PACS", "pacs")}
                   </NavItem>
                 </NavGroup>
-                <NavGroup key="packages" title="Packages">
+                <NavGroup key="packages" title="Pipelines">
                   <NavItem
-                    key="package"
-                    itemId="package"
-                    isActive={sidebarActiveItem === "package"}
+                    key="pipeline"
+                    itemId="pipeline"
+                    isActive={sidebarActiveItem === "pipeline"}
                   >
-                    {renderLink("/package", "Browse Packages", "catalog")}
+                    {renderLink("/pipelines", "Browse Pipelines", "pipeline")}
                   </NavItem>
 
                   <NavExpandable
-                    key="packageTags"
+                    key="pipelineTags"
                     title="Tags"
                     buttonProps={{ className: styles["tags-expand"] }}
                     isExpanded={true}
                   >
-                    {renderPackageTags()}
+                    {renderPipelineTags()}
                   </NavExpandable>
 
                   {!isEmpty(import.meta.env.VITE_CHRIS_STORE_URL) && (
@@ -256,18 +262,18 @@ export default (props: Props) => {
                       key="store"
                       itemId="store"
                       isActive={sidebarActiveItem === "store"}
-                      className={classNameImportPackage}
+                      className={classNameImportPipeline}
                     >
-                      {renderLink("/import", "Import Package", "store")}
+                      {renderLink("/import", "Import Pipeline", "store")}
                     </NavItem>
                   )}
                   <NavItem
                     key="compose"
                     itemId="compose"
                     isActive={sidebarActiveItem === "compose"}
-                    className={classNameComposePackage}
+                    className={classNameComposePipeline}
                   >
-                    {renderLink("/compose", "Compose Package", "compose")}
+                    {renderLink("/compose", "Compose Pipeline", "compose")}
                   </NavItem>
                 </NavGroup>
               </NavList>

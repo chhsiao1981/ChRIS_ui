@@ -1,4 +1,5 @@
 import type { Data } from "./data";
+import type { DataTag } from "./dataTags";
 import type { Datetime } from "./datetime";
 import type { ID } from "./id";
 import type { List } from "./list";
@@ -13,7 +14,7 @@ import type {
   PYPXResult,
   PYPXSeriesData,
 } from "./pacs";
-import type { UploadPipeline } from "./pipeline";
+import type { Pipeline, UploadPipeline } from "./pipeline";
 import type { Pkg } from "./pkg";
 import { type PkgInstance, PkgInstanceStatus } from "./pkgInstance";
 import type {
@@ -41,6 +42,7 @@ export type {
   UploadPkgNodeInfo,
   PkgInstance,
   Pkg,
+  Pipeline,
   UploadPipeline,
   Data,
   DownloadToken,
@@ -48,6 +50,7 @@ export type {
   ID,
   Datetime,
   List,
+  DataTag,
 };
 
 export { PkgInstanceStatus };

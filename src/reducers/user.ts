@@ -1,10 +1,11 @@
 import {
   init as _init,
-  genUUID,
+  type DispatchFuncMap,
   getState,
   type State as rState,
   setData,
   type Thunk,
+  type ThunkModuleToFunc,
 } from "@chhsiao1981/use-thunk";
 import queryString from "query-string";
 import { Cookies } from "react-cookie";
@@ -16,7 +17,10 @@ import {
   getUser,
   getUserID,
 } from "../api/serverApi";
+import type * as DoDataTag from "./dataTag";
 import { Role } from "./types";
+
+type TDoDataTag = ThunkModuleToFunc<typeof DoDataTag>;
 
 export const myClass = "chris-ui/user";
 
@@ -50,9 +54,10 @@ export const defaultState: State = {
   role: Role.Guest,
 };
 
-export const init = (): Thunk<State> => {
-  const myID = genUUID();
-
+export const init = (
+  dataTagID: string,
+  doDataTag: DispatchFuncMap<DoDataTag.State, TDoDataTag>,
+): Thunk<State> => {
   return async (dispatch, _) => {
     const cookie = new Cookies();
     const username = cookie.get("username") || "";
@@ -68,17 +73,6 @@ export const init = (): Thunk<State> => {
       isLoggedIn = !!userID;
     }
 
-    console.info(
-      "user.init: username:",
-      username,
-      "token:",
-      token,
-      "isStaff:",
-      isStaff,
-      "role:",
-      role,
-    );
-
     const state: State = Object.assign({}, defaultState, {
       username,
       token,
@@ -88,7 +82,10 @@ export const init = (): Thunk<State> => {
       isLoggedIn,
     });
 
-    dispatch(_init({ myID, state }));
+    dispatch(_init({ state }));
+    if (isLoggedIn) {
+      doDataTag.ensureTags(dataTagID, username);
+    }
   };
 };
 
