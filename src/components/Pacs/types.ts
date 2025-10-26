@@ -1,6 +1,6 @@
 import type { PACSqueryCore } from "../../api/pfdcm";
-import type { Series, Study } from "../../api/pfdcm/models.ts";
-import type { PACSSeries } from "../../api/types.ts";
+import type { Series, Study } from "../../api/pfdcm/models";
+import type { PACSSeries } from "../../api/types";
 
 export type StudyKey = {
   pacs_name: string;

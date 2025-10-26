@@ -1,10 +1,4 @@
-import { cons } from "fp-ts/lib/ReadonlyNonEmptyArray";
-import React, {
-  type CSSProperties,
-  Fragment,
-  useEffect,
-  useState,
-} from "react";
+import { type CSSProperties, Fragment, useEffect, useState } from "react";
 import { getFileExtension, type IFileBlob } from "../../../api/model";
 
 type Props = {

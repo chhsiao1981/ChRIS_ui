@@ -1,11 +1,10 @@
-// utils/useInfiniteScroll.ts
 import { type RefObject, useEffect } from "react";
 
-interface UseInfiniteScrollOptions {
+type UseInfiniteScrollOptions = {
   fetchNextPage: () => void;
   hasNextPage?: boolean;
   threshold?: number;
-}
+};
 
 /**
  * useInfiniteScroll
@@ -13,10 +12,14 @@ interface UseInfiniteScrollOptions {
  * When the observed element is in view and `hasNextPage` is true,
  * calls `fetchNextPage`.
  */
-export function useInfiniteScroll(
+
+export const useInfiniteScroll = (
   ref: RefObject<HTMLElement>,
-  { fetchNextPage, hasNextPage, threshold = 0.5 }: UseInfiniteScrollOptions,
-) {
+  options: UseInfiniteScrollOptions,
+) => {
+  const { fetchNextPage, hasNextPage, threshold: propsThreshold } = options;
+  const threshold = propsThreshold ?? 0.5;
+
   useEffect(() => {
     if (!ref.current) return;
 
@@ -35,4 +38,4 @@ export function useInfiniteScroll(
       observer.disconnect();
     };
   }, [ref, fetchNextPage, hasNextPage, threshold]);
-}
+};

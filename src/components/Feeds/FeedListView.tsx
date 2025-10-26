@@ -2,6 +2,7 @@ import {
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
+  useThunk,
 } from "@chhsiao1981/use-thunk";
 import type { Feed, FileBrowserFolder } from "@fnndsc/chrisapi";
 import { ChartDonutUtilization } from "@patternfly/react-charts";
@@ -106,14 +107,11 @@ const COLUMN_DEFINITIONS: ColumnDefinition[] = [
 type Props = {
   title: string;
   isShared: boolean;
-  useUI: UseThunk<DoUI.State, TDoUI>;
-  useUser: UseThunk<DoUser.State, TDoUser>;
-  useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
-  useFeed: UseThunk<DoFeed.State, TDoFeed>;
 };
 
 export default (props: Props) => {
-  const { title, isShared, useUI, useUser, useDrawer, useFeed } = props;
+  const { title, isShared } = props;
+  const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
   const { isLoggedIn, username, isInit, isStaff } = user;
@@ -276,13 +274,7 @@ export default (props: Props) => {
   const isMobile = useMediaQuery({ maxWidth: 768 });
 
   return (
-    <Wrapper
-      useUI={useUI}
-      useUser={useUser}
-      useDrawer={useDrawer}
-      useFeed={useFeed}
-      title={TitleComponent}
-    >
+    <Wrapper title={TitleComponent}>
       <PageSection
         stickyOnBreakpoint={{ default: "top" }}
         style={{ paddingTop: "0.25em", paddingBottom: "0" }}

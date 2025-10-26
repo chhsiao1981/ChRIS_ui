@@ -81,9 +81,8 @@ const defaultStateClinician: State = {
 };
 
 export const init = (): Thunk<State> => {
-  const myID = genUUID();
   return (dispatch, _) => {
-    dispatch(_init({ myID, state: defaultState }));
+    dispatch(_init({ state: defaultState }));
   };
 };
 

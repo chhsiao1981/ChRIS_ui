@@ -1,8 +1,7 @@
 import { Select } from "antd";
-import type { ReadonlyNonEmptyArray } from "fp-ts/lib/ReadonlyNonEmptyArray";
 
 type Props = {
-  services: ReadonlyNonEmptyArray<string>;
+  services: string[];
   service: string;
   setService: (service: string) => void;
 };

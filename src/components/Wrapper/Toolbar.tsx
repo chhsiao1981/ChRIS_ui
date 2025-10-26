@@ -2,7 +2,7 @@ import {
   getRootID,
   getState,
   type ThunkModuleToFunc,
-  type UseThunk,
+  useThunk,
 } from "@chhsiao1981/use-thunk";
 import {
   Button,
@@ -20,8 +20,6 @@ import { BarsIcon } from "@patternfly/react-icons"; // Add a tools icon
 import { type ReactElement, useContext, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useNavigate } from "react-router";
-import type * as DoDrawer from "../../reducers/drawer";
-import type * as DoFeed from "../../reducers/feed";
 import { type Role, Roles, StaffRoles } from "../../reducers/types";
 import * as DoUser from "../../reducers/user";
 import { useSignUpAllowed } from "../../store/hooks";
@@ -31,33 +29,23 @@ import CartNotify from "./CartNotify";
 import styles from "./Toolbar.module.css";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
-type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
-type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
 
 type Props = {
   showToolbar: boolean;
   title?: ReactElement;
   token?: string | null;
-
-  useUser: UseThunk<DoUser.State, TDoUser>;
-  useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
-  useFeed: UseThunk<DoFeed.State, TDoFeed>;
 };
 
 export default (props: Props) => {
   const isSmallerScreen = useMediaQuery({ maxWidth: 1224 });
   const { signUpAllowed } = useSignUpAllowed();
-  const {
-    token,
-    title,
-    useUser: [classStateUser, doUser],
-    useDrawer,
-    useFeed,
-  } = props;
+  const { token, title } = props;
 
   const navigate = useNavigate();
   const { isDarkTheme, toggleTheme } = useContext(ThemeContext);
 
+  const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
+  const [classStateUser, doUser] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
   const userID = getRootID(classStateUser);
   const { username, role, isStaff } = user;
@@ -128,9 +116,7 @@ export default (props: Props) => {
         <FlexItem>{title}</FlexItem>
         {/* Center */}
         <FlexItem flex={{ default: "flex_1" }}>
-          {props.showToolbar && !isSmallerScreen && (
-            <FeedDetails useDrawer={useDrawer} useFeed={useFeed} />
-          )}
+          {props.showToolbar && !isSmallerScreen && <FeedDetails />}
         </FlexItem>
 
         {/* Right section */}
@@ -229,7 +215,7 @@ export default (props: Props) => {
         aria-label="Data"
         variant="small"
       >
-        <FeedDetails useDrawer={useDrawer} useFeed={useFeed} />
+        <FeedDetails />
       </Modal>
     </>
   );

@@ -23,6 +23,7 @@ import {
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
+  useThunk,
 } from "@chhsiao1981/use-thunk";
 import { collectionJsonToJson } from "../../api/api";
 import {
@@ -30,10 +31,9 @@ import {
   type PkgInstance as PluginInstanceType,
 } from "../../api/types";
 import * as DoDrawer from "../../reducers/drawer";
-import type * as DoExplorer from "../../reducers/explorer";
-import type * as DoFeed from "../../reducers/feed";
+import * as DoExplorer from "../../reducers/explorer";
+import * as DoFeed from "../../reducers/feed";
 import { Role } from "../../reducers/types";
-import type * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
 import CustomTitle from "./CustomTitle";
 import { useFetchFeed } from "./useFetchFeed";
@@ -41,34 +41,27 @@ import { useSearchQueryParams } from "./usePaginate";
 import { usePollAllPluginStatuses } from "./usePolledStatuses";
 import { onMaximize, onMinimize } from "./utilties";
 
-type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 type TDoExplorer = ThunkModuleToFunc<typeof DoExplorer>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
 
-type Props = {
-  useUI: UseThunk<DoUI.State, TDoUI>;
-  useUser: UseThunk<DoUser.State, TDoUser>;
-  useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
-  useExplorer: UseThunk<DoExplorer.State, TDoExplorer>;
-  useFeed: UseThunk<DoFeed.State, TDoFeed>;
-};
-
-export default (props: Props) => {
-  const { useUI, useUser, useDrawer, useExplorer, useFeed } = props;
-
+export default () => {
+  const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
   const { role, isLoggedIn, isInit, isStaff } = user;
 
+  const useDrawer = useThunk<DoDrawer.State, TDoDrawer>(DoDrawer);
   const [classStateDrawer, doDrawer] = useDrawer;
   const drawerState = getState(classStateDrawer) || DoDrawer.defaultState;
   const drawerID = getRootID(classStateDrawer);
 
+  const useExplorer = useThunk<DoExplorer.State, TDoExplorer>(DoExplorer);
   const [classStateExplorer, doExplorer] = useExplorer;
   const explorerID = getRootID(classStateExplorer);
 
+  const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
   const [classStateFeed, doFeed] = useFeed;
   const feedID = getRootID(classStateFeed);
 
@@ -123,7 +116,7 @@ export default (props: Props) => {
 
     const lastPluginInstance: PluginInstanceType = collectionJsonToJson(
       treeQuery.pluginInstances[treeQuery.pluginInstances.length - 1],
-    );
+    ) as PluginInstanceType;
 
     const isSuccess = lastPluginInstance.status === PkgInstanceStatus.SUCCESS;
 
@@ -196,13 +189,7 @@ export default (props: Props) => {
   }
 
   return (
-    <Wrapper
-      useUI={useUI}
-      useUser={useUser}
-      useDrawer={useDrawer}
-      useFeed={useFeed}
-      title={TitleComponent}
-    >
+    <Wrapper title={TitleComponent}>
       {contextHolder}
       <PanelGroup autoSaveId="conditional" direction="vertical">
         {/* Top Panels: Graph and Node Details */}

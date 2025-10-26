@@ -8,7 +8,6 @@ import {
   type Thunk,
 } from "@chhsiao1981/use-thunk";
 import config from "config";
-import type { ReadonlyNonEmptyArray } from "fp-ts/lib/ReadonlyNonEmptyArray";
 import type { Location } from "react-router";
 import { STATUS_OK, STATUS_OK_CREATE } from "../api/constants";
 import type { SeriesKey } from "../api/lonk";
@@ -56,7 +55,7 @@ export type PacsSeriesMap = { [key: string]: PacsSeriesState };
 
 export interface State extends rState {
   pullRequestMap: PacsPullRequestStateMap;
-  services: ReadonlyNonEmptyArray<string>;
+  services: string[];
   service: string;
   isGetServices: boolean;
 
@@ -88,7 +87,7 @@ export interface State extends rState {
 const studyKeyToStudyMapKey = (studyKey: StudyKey) =>
   studyUIDToStudyMapKey(studyKey.pacs_name, studyKey.StudyInstanceUID);
 
-const defaultServices: ReadonlyNonEmptyArray<string> = ["(none)"];
+const defaultServices: string[] = ["(none)"];
 
 export const defaultState: State = {
   pullRequestMap: {},
@@ -125,7 +124,6 @@ export const init = (myID: string): Thunk<State> => {
   return async (dispatch, _) => {
     dispatch(_init({ myID, state: defaultState }));
     dispatch(getServices(myID));
-    // dispatch(getWsUrl(myID));
   };
 };
 

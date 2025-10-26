@@ -14,7 +14,7 @@ import {
   getRootID,
   getState,
   type ThunkModuleToFunc,
-  type UseThunk,
+  useThunk,
 } from "@chhsiao1981/use-thunk";
 import * as DoUser from "../../reducers/user";
 import { useSignUpAllowed } from "../../store/hooks.ts";
@@ -24,16 +24,13 @@ type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 
 type Status = "idle" | "loading" | "success" | "error";
 
-type Props = {
-  useUser: UseThunk<DoUser.State, TDoUser>;
-};
-
-export default (props: Props) => {
-  const {
-    useUser: [classStateUser, doUser],
-  } = props;
+export default () => {
+  const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
+  const [classStateUser, doUser] = useUser;
   const userID = getRootID(classStateUser);
   const user = getState(classStateUser) || DoUser.defaultState;
+
+  console.info("Login.index: userID:", userID, "user:", user);
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -59,7 +56,7 @@ export default (props: Props) => {
     e: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>,
   ) => {
     e.preventDefault();
-    doUser.login(userID, username, password);
+    doUser.loginLegacy(userID, username, password);
   };
 
   const onChangeUsername = (e: FormEvent<HTMLInputElement>, value: string) => {
@@ -92,7 +89,7 @@ export default (props: Props) => {
       footerListItems={FooterListItems}
       textContent="ChRIS is a general-purpose, open source, distributed data and computation platform that connects a community of researchers, developers, and clinicians together."
       loginTitle="Log in to your account"
-      loginSubtitle="Enter your single sign-on LDAP credentials."
+      loginSubtitle="Enter your credentials."
       signUpForAccountMessage={signUpForAccountMessage}
       forgotCredentials={forgotCredentials}
     >

@@ -1,15 +1,12 @@
 import {
   getState,
   type ThunkModuleToFunc,
-  type UseThunk,
+  useThunk,
 } from "@chhsiao1981/use-thunk";
 import type { FileBrowserFolder } from "@fnndsc/chrisapi";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import type * as DoDrawer from "../../reducers/drawer";
-import type * as DoFeed from "../../reducers/feed";
-import type * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
 import { EmptyStateComponent, InfoSection, SpinContainer } from "../Common";
 import { OperationContext, OperationsProvider } from "../NewLibrary/context";
@@ -20,20 +17,10 @@ import GnomeLibrarySidebar from "./GnomeSidebar";
 import styles from "./gnome.module.css";
 import useFolders from "./utils/hooks/useFolders";
 
-type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
-type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
-type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
 
-type Props = {
-  useUI: UseThunk<DoUI.State, TDoUI>;
-  useUser: UseThunk<DoUser.State, TDoUser>;
-  useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
-  useFeed: UseThunk<DoFeed.State, TDoFeed>;
-};
-
-export default (props: Props) => {
-  const { useUI, useUser, useDrawer, useFeed } = props;
+export default () => {
+  const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
   const { username } = user;
@@ -154,10 +141,6 @@ export default (props: Props) => {
   return (
     <OperationsProvider>
       <Wrapper
-        useUI={useUI}
-        useUser={useUser}
-        useDrawer={useDrawer}
-        useFeed={useFeed}
         title={
           <InfoSection
             title="Library"

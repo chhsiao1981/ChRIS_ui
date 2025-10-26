@@ -2,6 +2,7 @@ import {
   getRootID,
   type ThunkModuleToFunc,
   type UseThunk,
+  useThunk,
 } from "@chhsiao1981/use-thunk";
 import {
   ActionGroup,
@@ -19,7 +20,7 @@ import { EyeIcon, EyeSlashIcon } from "@patternfly/react-icons";
 import { validate } from "email-validator";
 import { type FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
-import type * as DoUser from "../../reducers/user";
+import * as DoUser from "../../reducers/user";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 
@@ -28,7 +29,6 @@ type Validated = {
 };
 
 type Props = {
-  useUser: UseThunk<DoUser.State, TDoUser>;
   isShowPasswordEnabled?: boolean;
   showPasswordAriaLabel?: string;
   hidePasswordAriaLabel?: string;
@@ -36,11 +36,13 @@ type Props = {
 
 export default (props: Props) => {
   const {
-    useUser: [classStateUser, doUser],
     isShowPasswordEnabled: propsIsShowPasswordEnabled,
     showPasswordAriaLabel: propsShowPasswordAriaLabel,
     hidePasswordAriaLabel: propsHidePasswordAriaLabel,
   } = props;
+  const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
+  const [classStateUser, doUser] = useUser;
+
   const userID = getRootID(classStateUser);
 
   const isShowPasswordEnabled =

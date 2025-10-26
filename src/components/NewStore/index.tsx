@@ -1,7 +1,7 @@
 import {
   getState,
   type ThunkModuleToFunc,
-  type UseThunk,
+  useThunk,
 } from "@chhsiao1981/use-thunk";
 import type { ComputeResource, Plugin } from "@fnndsc/chrisapi";
 import {
@@ -17,12 +17,9 @@ import { notification } from "antd";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useCookies } from "react-cookie";
 import { createPkg } from "../../api/serverApi";
-import type { Pkg as PluginType, UploadPipeline } from "../../api/types";
-import type * as DoDrawer from "../../reducers/drawer";
-import type * as DoFeed from "../../reducers/feed";
-import type * as DoUI from "../../reducers/ui";
+import type { Pkg as PkgType, UploadPipeline } from "../../api/types";
 import * as DoUser from "../../reducers/user";
-import { InfoSection, SpinContainer } from "../Common";
+import { SpinContainer } from "../Common";
 import { handleInstallPlugin as onInstallPlugin } from "../PipelinesCopy/utils";
 import Wrapper from "../Wrapper";
 import postModifyComputeResource from "./hooks/updateComputeResource";
@@ -37,28 +34,20 @@ import { useInfiniteScroll } from "./hooks/useInfiniteScroll";
 import PluginCard from "./PluginCard";
 import { StoreConfigModal } from "./StoreConfigModal";
 import StoreToggle from "./StoreToggle";
+import Title from "./Title";
 
-type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
-type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
-type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
-
-type Props = {
-  useUI: UseThunk<DoUI.State, TDoUI>;
-  useUser: UseThunk<DoUser.State, TDoUser>;
-  useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
-  useFeed: UseThunk<DoFeed.State, TDoFeed>;
-};
 
 const DEFAULT_SEARCH_FIELD = "name";
 const COOKIE_NAME = "storeCreds";
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // seconds
 
-export default (props: Props) => {
-  const { useUI, useUser, useDrawer, useFeed } = props;
+export default () => {
+  const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
   const { isStaff, isLoggedIn, token } = user;
+
   const [cookies, setCookie, removeCookie] = useCookies([COOKIE_NAME]);
   const [selectedEnv, setSelectedEnv] = useState<string>("PUBLIC ChRIS");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -115,7 +104,7 @@ export default (props: Props) => {
   ) => {
     const hdr = getAuthHeaderOrPrompt(plugin, resources, false);
     if (!hdr) return;
-    const result: PluginType = await onInstallPlugin(
+    const result: PkgType = await onInstallPlugin(
       hdr,
       // @ts-expect-error
       { name: plugin.name, version: plugin.version, url: plugin.url },
@@ -275,15 +264,7 @@ export default (props: Props) => {
 
   return (
     <>
-      <Wrapper
-        useUI={useUI}
-        useUser={useUser}
-        useDrawer={useDrawer}
-        useFeed={useFeed}
-        title={
-          <InfoSection title="Import Packages" content="Work in Progress" />
-        }
-      >
+      <Wrapper title={<Title />}>
         <Toolbar isSticky id="store-toolbar" clearAllFilters={() => {}}>
           <ToolbarGroup
             variant="filter-group"
