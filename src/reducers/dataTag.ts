@@ -14,10 +14,12 @@ const MUST_HAVE_TAGS = ["uploaded", "pacs"];
 
 type TagMap = { [name: string]: DataTag };
 export interface State extends rState {
+  tags: string[];
   tagMap: TagMap;
 }
 
 export const defaultState: State = {
+  tags: [],
   tagMap: {},
 };
 
@@ -79,6 +81,8 @@ export const fetchTags = (myID: string, username: string): Thunk<State> => {
       return r;
     }, {});
 
-    dispatch(setData(myID, { tagMap }));
+    const tags = Object.keys(tagMap);
+
+    dispatch(setData(myID, { tags, tagMap }));
   };
 };
