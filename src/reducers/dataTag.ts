@@ -1,11 +1,9 @@
 import {
   init as _init,
-  getState,
   type State as rState,
   setData,
   type Thunk,
 } from "@chhsiao1981/use-thunk";
-import tag from "antd/es/tag";
 import { STATUS_OK } from "../api/constants";
 import { createDataTag, getDataTags } from "../api/serverApi";
 import type { DataTag } from "../api/types";
@@ -45,6 +43,12 @@ export const ensureTags = (myID: string, username: string): Thunk<State> => {
         return;
       }
 
+      console.info(
+        "dataTag.ensureTags: to create data tag: username:",
+        username,
+        "tag:",
+        tag,
+      );
       await createDataTag(username, tag);
     }
 
