@@ -12,12 +12,13 @@ export const myClass = "chris-ui/data-tag";
 
 const MUST_HAVE_TAGS = ["uploaded", "pacs"];
 
+type TagMap = { [name: string]: DataTag };
 export interface State extends rState {
-  tags: DataTag[];
+  tagMap: TagMap;
 }
 
 export const defaultState: State = {
-  tags: [],
+  tagMap: {},
 };
 
 export const init = (myID: string): Thunk<State> => {
@@ -37,9 +38,11 @@ export const ensureTags = (myID: string, username: string): Thunk<State> => {
         return;
       }
       if (!data) {
+        dispatch(fetchTags(myID, username));
         return;
       }
       if (data.length !== 0) {
+        dispatch(fetchTags(myID, username));
         return;
       }
 
@@ -66,6 +69,16 @@ export const fetchTags = (myID: string, username: string): Thunk<State> => {
       return;
     }
 
-    dispatch(setData(myID, { tags: newTags }));
+    if (!newTags) {
+      return;
+    }
+
+    const sortedNewTags = newTags.sort((a, b) => b.id - a.id);
+    const tagMap = sortedNewTags.reduce((r: TagMap, each: DataTag) => {
+      r[each.name] = each;
+      return r;
+    }, {});
+
+    dispatch(setData(myID, { tagMap }));
   };
 };
