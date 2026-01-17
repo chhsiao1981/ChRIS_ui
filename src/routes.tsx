@@ -1,5 +1,6 @@
 import {
   genUUID,
+  getRootID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
@@ -102,8 +103,11 @@ export default () => {
 
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, doUser] = useUser;
+  const userID = getRootID(classStateUser);
   const user = getState(classStateUser) || DoUser.defaultState;
   const { isLoggedIn } = user;
+
+  console.info("routes: user:", user, "userID:", userID);
 
   const useDrawer = useThunk<DoDrawer.State, TDoDrawer>(DoDrawer);
   const [_3, doDrawer] = useDrawer;
@@ -365,7 +369,7 @@ export default () => {
     },
     {
       path: "login",
-      element: <Login useUser={useUser} />,
+      element: <Login />,
     },
     {
       path: "signup",

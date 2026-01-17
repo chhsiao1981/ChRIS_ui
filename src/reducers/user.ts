@@ -89,7 +89,7 @@ export const init = (
   };
 };
 
-export const login = (
+export const loginLegacy = (
   myID: string,
   username: string,
   password: string,
