@@ -17,12 +17,9 @@ import "./dashboard.css";
 import {
   getState,
   type ThunkModuleToFunc,
-  type UseThunk,
+  useThunk,
 } from "@chhsiao1981/use-thunk";
 import { useNavigate } from "react-router";
-import type * as DoDrawer from "../../reducers/drawer";
-import type * as DoFeed from "../../reducers/feed";
-import type * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
 import Title from "./Title";
 import {
@@ -31,20 +28,10 @@ import {
   lldDataset,
 } from "./util";
 
-type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
-type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
-type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
 
-type Props = {
-  useUI: UseThunk<DoUI.State, TDoUI>;
-  useUser: UseThunk<DoUser.State, TDoUser>;
-  useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
-  useFeed: UseThunk<DoFeed.State, TDoFeed>;
-};
-
-export default (props: Props) => {
-  const { useUI, useUser, useDrawer, useFeed } = props;
+export default () => {
+  const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
   const { isLoggedIn } = user;
@@ -61,13 +48,7 @@ export default (props: Props) => {
   }, [isLoggedIn]);
 
   return (
-    <Wrapper
-      title={Title}
-      useUI={useUI}
-      useUser={useUser}
-      useDrawer={useDrawer}
-      useFeed={useFeed}
-    >
+    <Wrapper title={Title}>
       <PageSection>
         <Grid hasGutter>
           <GridItem span={12}>

@@ -19,6 +19,7 @@ import {
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
+  useThunk,
 } from "@chhsiao1981/use-thunk";
 import * as DoDrawer from "../../reducers/drawer";
 import * as DoFeed from "../../reducers/feed";
@@ -26,17 +27,13 @@ import * as DoFeed from "../../reducers/feed";
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
 
-type Props = {
-  useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
-  useFeed: UseThunk<DoFeed.State, TDoFeed>;
-};
-
-export default (props: Props) => {
-  const { useDrawer, useFeed } = props;
+export default () => {
+  const useDrawer = useThunk<DoDrawer.State, TDoDrawer>(DoDrawer);
   const [classStateDrawer, doDrawer] = useDrawer;
   const drawerState = getState(classStateDrawer) || DoDrawer.defaultState;
   const drawerID = getRootID(classStateDrawer);
 
+  const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
   const [classStateFeed, _] = useFeed;
   const feedState = getState(classStateFeed) || DoFeed.defaultState;
 
