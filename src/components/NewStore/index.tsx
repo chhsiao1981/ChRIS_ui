@@ -1,7 +1,7 @@
 import {
   getState,
   type ThunkModuleToFunc,
-  type UseThunk,
+  useThunk,
 } from "@chhsiao1981/use-thunk";
 import type { ComputeResource, Plugin } from "@fnndsc/chrisapi";
 import {
@@ -18,9 +18,6 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useCookies } from "react-cookie";
 import { createPkg } from "../../api/serverApi";
 import type { Pkg as PkgType, UploadPipeline } from "../../api/types";
-import type * as DoDrawer from "../../reducers/drawer";
-import type * as DoFeed from "../../reducers/feed";
-import type * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
 import { SpinContainer } from "../Common";
 import { handleInstallPlugin as onInstallPlugin } from "../PipelinesCopy/utils";
@@ -39,25 +36,14 @@ import { StoreConfigModal } from "./StoreConfigModal";
 import StoreToggle from "./StoreToggle";
 import Title from "./Title";
 
-type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
-type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
-type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
-
-type Props = {
-  useUI: UseThunk<DoUI.State, TDoUI>;
-  useUser: UseThunk<DoUser.State, TDoUser>;
-  useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
-  useFeed: UseThunk<DoFeed.State, TDoFeed>;
-};
 
 const DEFAULT_SEARCH_FIELD = "name";
 const COOKIE_NAME = "storeCreds";
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // seconds
 
-export default (props: Props) => {
-  const { useUI, useUser, useDrawer, useFeed } = props;
-
+export default () => {
+  const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
   const { isStaff, isLoggedIn, token } = user;
@@ -278,13 +264,7 @@ export default (props: Props) => {
 
   return (
     <>
-      <Wrapper
-        useUI={useUI}
-        useUser={useUser}
-        useDrawer={useDrawer}
-        useFeed={useFeed}
-        title={<Title />}
-      >
+      <Wrapper title={<Title />}>
         <Toolbar isSticky id="store-toolbar" clearAllFilters={() => {}}>
           <ToolbarGroup
             variant="filter-group"

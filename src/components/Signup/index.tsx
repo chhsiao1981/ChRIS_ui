@@ -1,20 +1,11 @@
-import type { ThunkModuleToFunc, UseThunk } from "@chhsiao1981/use-thunk";
 import { LoginPage } from "@patternfly/react-core";
 import { App, Spin } from "antd";
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import type * as DoUser from "../../reducers/user";
 import { useSignUpAllowed } from "../../store/hooks";
 import SignUpForm from "./SignUpForm";
 
-type TDoUser = ThunkModuleToFunc<typeof DoUser>;
-
-type Props = {
-  useUser: UseThunk<DoUser.State, TDoUser>;
-};
-export default (props: Props) => {
-  const { useUser } = props;
-
+export default () => {
   const { signUpAllowed, isLoading, isError } = useSignUpAllowed();
   const navigate = useNavigate();
 
@@ -70,7 +61,7 @@ export default (props: Props) => {
     );
   } else {
     // If sign-ups are allowed, render the sign-up form
-    content = <SignUpForm useUser={useUser} />;
+    content = <SignUpForm />;
   }
 
   return (

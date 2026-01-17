@@ -115,11 +115,11 @@ export default () => {
   const useExplorer = useThunk<DoExplorer.State, TDoExplorer>(DoExplorer);
   const [_4, doExplorer] = useExplorer;
 
-  const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
-  const [_5, doFeed] = useExplorer;
-
   const useDataTag = useThunk<DoDataTag.State, TDoDataTag>(DoDataTag);
   const [_7, doDataTag] = useDataTag;
+
+  const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
+  const [_8, doFeed] = useFeed;
 
   console.info("routes: start: route:", route);
 
@@ -175,30 +175,18 @@ export default () => {
   return useRoutes([
     {
       path: "/",
-      element: (
-        <Dashboard
-          useUI={useUI}
-          useUser={useUser}
-          useDrawer={useDrawer}
-          useFeed={useFeed}
-        />
-      ),
+      element: <Dashboard />,
     },
     {
       path: "library/*",
       element: (
-        <PrivateRoute useUser={useUser}>
+        <PrivateRoute>
           <RouterProvider
             {...{ actions, state, route, setRoute }}
             context={MainRouterContext}
           >
             <OperationsProvider>
-              <GnomeLibrary
-                useUI={useUI}
-                useUser={useUser}
-                useDrawer={useDrawer}
-                useFeed={useFeed}
-              />
+              <GnomeLibrary />
             </OperationsProvider>
           </RouterProvider>
         </PrivateRoute>
@@ -212,14 +200,7 @@ export default () => {
           context={MainRouterContext}
         >
           <OperationsProvider>
-            <FeedsListView
-              title="Data: uploaded"
-              isShared={false}
-              useUI={useUI}
-              useUser={useUser}
-              useDrawer={useDrawer}
-              useFeed={useFeed}
-            />
+            <FeedsListView title="Data: uploaded" isShared={false} />
           </OperationsProvider>
         </RouterProvider>
       ),
@@ -232,14 +213,7 @@ export default () => {
           context={MainRouterContext}
         >
           <OperationsProvider>
-            <FeedsListView
-              title="Data: public"
-              isShared={true}
-              useUI={useUI}
-              useUser={useUser}
-              useDrawer={useDrawer}
-              useFeed={useFeed}
-            />
+            <FeedsListView title="Data: public" isShared={true} />
           </OperationsProvider>
         </RouterProvider>
       ),
@@ -252,14 +226,7 @@ export default () => {
           context={MainRouterContext}
         >
           <OperationsProvider>
-            <FeedsListView
-              title="Data: pacs"
-              isShared={false}
-              useUI={useUI}
-              useUser={useUser}
-              useDrawer={useDrawer}
-              useFeed={useFeed}
-            />
+            <FeedsListView title="Data: pacs" isShared={false} />
           </OperationsProvider>
         </RouterProvider>
       ),
@@ -272,14 +239,7 @@ export default () => {
           context={MainRouterContext}
         >
           <OperationsProvider>
-            <FeedsListView
-              title="Data"
-              isShared={false}
-              useUI={useUI}
-              useUser={useUser}
-              useDrawer={useDrawer}
-              useFeed={useFeed}
-            />
+            <FeedsListView title="Data" isShared={false} />
           </OperationsProvider>
         </RouterProvider>
       ),
@@ -292,13 +252,7 @@ export default () => {
           context={MainRouterContext}
         >
           <OperationsProvider>
-            <FeedView
-              useUI={useUI}
-              useUser={useUser}
-              useDrawer={useDrawer}
-              useExplorer={useExplorer}
-              useFeed={useFeed}
-            />
+            <FeedView />
           </OperationsProvider>
         </RouterProvider>
       ),
@@ -311,14 +265,7 @@ export default () => {
           context={MainRouterContext}
         >
           <OperationsProvider>
-            <FeedsListView
-              title="My Data"
-              isShared={false}
-              useUI={useUI}
-              useUser={useUser}
-              useDrawer={useDrawer}
-              useFeed={useFeed}
-            />
+            <FeedsListView title="My Data" isShared={false} />
           </OperationsProvider>
         </RouterProvider>
       ),
@@ -331,39 +278,20 @@ export default () => {
           context={MainRouterContext}
         >
           <OperationsProvider>
-            <FeedsListView
-              title="Shared Data"
-              isShared={true}
-              useUI={useUI}
-              useUser={useUser}
-              useDrawer={useDrawer}
-              useFeed={useFeed}
-            />
+            <FeedsListView title="Shared Data" isShared={true} />
           </OperationsProvider>
         </RouterProvider>
       ),
     },
     {
       path: "pipeline/:id",
-      element: (
-        <SinglePlugin
-          useUI={useUI}
-          useUser={useUser}
-          useDrawer={useDrawer}
-          useFeed={useFeed}
-        />
-      ),
+      element: <SinglePlugin />,
     },
     {
       path: "pacs",
       element: (
-        <PrivateRoute useUser={useUser}>
-          <Pacs
-            useUI={useUI}
-            useUser={useUser}
-            useDrawer={useDrawer}
-            useFeed={useFeed}
-          />
+        <PrivateRoute>
+          <Pacs />
         </PrivateRoute>
       ),
     },
@@ -373,95 +301,39 @@ export default () => {
     },
     {
       path: "signup",
-      element: <Signup useUser={useUser} />,
+      element: <Signup />,
     },
     {
       path: "pipelines",
-      element: (
-        <PipelinePage
-          useUI={useUI}
-          useUser={useUser}
-          useDrawer={useDrawer}
-          useFeed={useFeed}
-        />
-      ),
+      element: <PipelinePage />,
     },
     {
       path: "pipelines/tag/imported",
-      element: (
-        <PipelinePage
-          useUI={useUI}
-          useUser={useUser}
-          useDrawer={useDrawer}
-          useFeed={useFeed}
-        />
-      ),
+      element: <PipelinePage />,
     },
     {
       path: "pipelines/tag/composite",
-      element: (
-        <PipelinePage
-          useUI={useUI}
-          useUser={useUser}
-          useDrawer={useDrawer}
-          useFeed={useFeed}
-        />
-      ),
+      element: <PipelinePage />,
     },
     {
       path: "pipelines/tag/:id",
-      element: (
-        <PipelinePage
-          useUI={useUI}
-          useUser={useUser}
-          useDrawer={useDrawer}
-          useFeed={useFeed}
-        />
-      ),
+      element: <PipelinePage />,
     },
     {
       path: "compute",
-      element: (
-        <ComputePage
-          useUI={useUI}
-          useUser={useUser}
-          useDrawer={useDrawer}
-          useFeed={useFeed}
-        />
-      ),
+      element: <ComputePage />,
     },
     {
       path: "import",
-      element: (
-        <Store
-          useUI={useUI}
-          useUser={useUser}
-          useDrawer={useDrawer}
-          useFeed={useFeed}
-        />
-      ),
+      element: <Store />,
     },
     {
       path: "install/*",
-      element: (
-        <PluginInstall
-          useUI={useUI}
-          useUser={useUser}
-          useDrawer={useDrawer}
-          useFeed={useFeed}
-        />
-      ),
+      element: <PluginInstall />,
     },
     {
       path: "*",
-      element: (
-        <NotFound
-          useUI={useUI}
-          useUser={useUser}
-          useDrawer={useDrawer}
-          useFeed={useFeed}
-        />
-      ),
+      element: <NotFound />,
     },
   ]);
 };

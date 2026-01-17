@@ -24,27 +24,14 @@ import "./singlePlugin.css";
 import {
   getState,
   type ThunkModuleToFunc,
-  type UseThunk,
+  useThunk,
 } from "@chhsiao1981/use-thunk";
-import type * as DoDrawer from "../../reducers/drawer";
-import type * as DoFeed from "../../reducers/feed";
-import type * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
 
-type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
-type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
-type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
 
-type Props = {
-  useUI: UseThunk<DoUI.State, TDoUI>;
-  useUser: UseThunk<DoUser.State, TDoUser>;
-  useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
-  useFeed: UseThunk<DoFeed.State, TDoFeed>;
-};
-
-export default (props: Props) => {
-  const { useUI, useUser, useDrawer, useFeed } = props;
+export default () => {
+  const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
   const { isLoggedIn } = user;
@@ -190,12 +177,7 @@ export default (props: Props) => {
   }, [data?.plugins[0], setPluginParameters]);
 
   return (
-    <Wrapper
-      useUI={useUI}
-      useUser={useUser}
-      useDrawer={useDrawer}
-      useFeed={useFeed}
-    >
+    <Wrapper>
       {isLoading || isFetching ? (
         <SpinContainer title="Please wait as resources for this plugin are being fetched..." />
       ) : isError ? (
