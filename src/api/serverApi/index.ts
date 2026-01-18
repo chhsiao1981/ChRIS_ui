@@ -4,6 +4,7 @@ import {
   updateDataName,
   updateDataPublic,
 } from "./data";
+import { createDataTag, getDataTags } from "./dataTag";
 import { createDownloadToken, getLinkMap } from "./misc";
 import {
   getPACSSeriesListBySeriesUID,
@@ -42,4 +43,6 @@ export {
   queryPFDCMSeries,
   queryPFDCMStudies,
   retrievePFDCMPACS,
+  getDataTags,
+  createDataTag,
 };

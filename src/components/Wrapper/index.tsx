@@ -8,37 +8,30 @@ import {
   getRootID,
   getState,
   type ThunkModuleToFunc,
-  type UseThunk,
+  useThunk,
 } from "@chhsiao1981/use-thunk";
 import { Page } from "@patternfly/react-core";
-import type * as DoDrawer from "../../reducers/drawer";
-import type * as DoFeed from "../../reducers/feed";
 import * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
 import { OperationsProvider } from "../NewLibrary/context";
 
-type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
-type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
 
 type Props = {
   children: ReactElement[] | ReactElement;
   title?: ReactElement;
-
-  useUI: UseThunk<DoUI.State, TDoUI>;
-  useUser: UseThunk<DoUser.State, TDoUser>;
-  useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
-  useFeed: UseThunk<DoFeed.State, TDoFeed>;
 };
 
 export default (props: Props) => {
-  const { children, title, useUI, useUser, useDrawer, useFeed } = props;
+  const { children, title } = props;
+  const useUI = useThunk<DoUI.State, TDoUI>(DoUI);
   const [classStateUI, doUI] = useUI;
   const ui = getState(classStateUI) || DoUI.defaultState;
   const uiID = getRootID(classStateUI);
   const { isNavOpen, sidebarActiveItem } = ui;
 
+  const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
   const { isLoggedIn } = user;
@@ -77,11 +70,8 @@ export default (props: Props) => {
       header={
         <Header
           onNavToggle={onNavToggle}
-          useUser={useUser}
           titleComponent={title}
           isNavOpen={isNavOpen}
-          useDrawer={useDrawer}
-          useFeed={useFeed}
         />
       }
       sidebar={sidebar}

@@ -1,7 +1,3 @@
-import {
-  extract as extractFromNonEmpty,
-  type ReadonlyNonEmptyArray,
-} from "fp-ts/ReadonlyNonEmptyArray";
 import type { useSearchParams } from "react-router-dom";
 import { type PacsSeriesState, SeriesPullState } from "../types.ts";
 
@@ -34,9 +30,10 @@ function useBooleanSearchParam(
  * 2. Attempts to select the first value which is not "default" (a useless, legacy pfdcm behavior)
  * 3. Selects the first value
  */
-function getDefaultPacsService(
-  services: ReadonlyNonEmptyArray<string>,
-): string {
+function getDefaultPacsService(services: string[]): string {
+  if (services.length === 0) {
+    return "";
+  }
   if (services.includes("PACSDCM")) {
     return "PACSDCM";
   }
@@ -45,7 +42,7 @@ function getDefaultPacsService(
       return service;
     }
   }
-  return extractFromNonEmpty(services);
+  return services[0];
 }
 
 function isSeriesLoading({

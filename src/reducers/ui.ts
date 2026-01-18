@@ -5,20 +5,21 @@ import {
   type Thunk,
 } from "@chhsiao1981/use-thunk";
 
+// This is actually the sidebar UI.
 export const myClass = "chris-ui/ui";
 
 export interface State extends rState {
   isNavOpen?: boolean;
   sidebarActiveItem?: string;
   isTagExpanded: boolean;
-  isPackageTagExpanded: boolean;
+  isPipelineTagExpanded: boolean;
 }
 
 export const defaultState: State = {
   isNavOpen: true,
   sidebarActiveItem: "overview",
   isTagExpanded: false,
-  isPackageTagExpanded: false,
+  isPipelineTagExpanded: false,
 };
 
 export const init = (myID: string): Thunk<State> => {
@@ -54,7 +55,7 @@ export const setIsTagExpanded = (
   };
 };
 
-export const setIsPackageTagExpanded = (
+export const setIsPipelineTagExpanded = (
   myID: string,
   isPackageTagExpanded: boolean,
 ): Thunk<State> => {

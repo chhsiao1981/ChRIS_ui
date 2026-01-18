@@ -1,7 +1,9 @@
 import {
+  getRootID,
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
+  useThunk,
 } from "@chhsiao1981/use-thunk";
 import {
   Masthead,
@@ -10,15 +12,12 @@ import {
   PageToggleButton,
 } from "@patternfly/react-core";
 import type React from "react";
-import type * as DoDrawer from "../../reducers/drawer";
 import * as DoFeed from "../../reducers/feed";
 import * as DoUser from "../../reducers/user";
-import { useAppSelector } from "../../store/hooks";
 import { BarsIcon } from "../Icons";
 import Toolbar from "./Toolbar";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
-type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
 
 type Props = {
@@ -26,26 +25,20 @@ type Props = {
   titleComponent?: React.ReactElement;
 
   isNavOpen?: boolean;
-
-  useUser: UseThunk<DoUser.State, TDoUser>;
-  useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
-  useFeed: UseThunk<DoFeed.State, TDoFeed>;
 };
 
 export default (props: Props) => {
-  const {
-    useUser,
-    useDrawer,
-    useFeed,
-    onNavToggle,
-    titleComponent,
-    isNavOpen,
-  } = props;
+  const { onNavToggle, titleComponent, isNavOpen } = props;
 
+  const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, _] = useUser;
 
+  const userID = getRootID(classStateUser);
   const user = getState(classStateUser) || DoUser.defaultState;
 
+  console.info("Header: user:", user, "userID:", userID);
+
+  const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
   const [classStateFeed, _2] = useFeed;
   const feed = getState(classStateFeed) || DoFeed.defaultState;
 
@@ -74,9 +67,6 @@ export default (props: Props) => {
           showToolbar={showToolbar}
           token={user.token}
           title={titleComponent}
-          useUser={useUser}
-          useDrawer={useDrawer}
-          useFeed={useFeed}
         />
       </MastheadContent>
     </Masthead>

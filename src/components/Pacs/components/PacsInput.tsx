@@ -1,6 +1,5 @@
 import { DownloadIcon } from "@patternfly/react-icons";
 import { Col, Row, Segmented } from "antd";
-import type { ReadonlyNonEmptyArray } from "fp-ts/ReadonlyNonEmptyArray";
 import { useEffect, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import OperationButton from "../../NewLibrary/components/operations/OperationButton";
@@ -12,7 +11,7 @@ import ServiceDropdown from "./ServiceDropdown";
 import { downloadStudiesToCSV } from "./utils";
 
 export type Props = {
-  services: ReadonlyNonEmptyArray<string>;
+  services: string[];
   service: string;
   studies: PacsStudyState[] | null;
   setService: (service: string) => void;
