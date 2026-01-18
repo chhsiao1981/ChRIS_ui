@@ -3,6 +3,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import { ThemeContextProvider } from "./components/DarkTheme/useTheme.tsx";
+import * as DoCart from "./reducers/cart";
 import * as DoDataTag from "./reducers/dataTag";
 import * as DoDrawer from "./reducers/drawer";
 import * as DoExplorer from "./reducers/explorer";
@@ -32,6 +33,8 @@ registerThunk(DoPacs);
 registerThunk(DoUI);
 // @ts-expect-error registerThunk
 registerThunk(DoUser);
+// @ts-expect-error registerThunk
+registerThunk(DoCart);
 
 enableMapSet();
 const store = setupStore();
