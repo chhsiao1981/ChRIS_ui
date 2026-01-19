@@ -13,3 +13,6 @@
 [submodule "third-party/mipav-to-niivue"]
 	path = third-party/mipav-to-niivue
 	url = git@github.com:chhsiao1981/mipav-to-niivue.git
+[submodule "third-party/chris-backend"]
+	path = third-party/chris-backend
+	url = git@github.com:FNNDSC/chris-backend.git
