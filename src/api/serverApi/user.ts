@@ -1,7 +1,8 @@
 import config from "config";
 import api from "../api";
 import { STATUS_OK } from "../constants";
-import type { AuthToken, User } from "../types";
+import type { AuthToken, User, UserInfo } from "../types";
+import type { UserAuthToken } from "../types/user";
 import { getLinkMap } from "./misc";
 
 export const createUser = (username: string, password: string, email: string) =>
@@ -56,4 +57,22 @@ export const getUserID = async (): Promise<string> => {
 export const getUser = (userID: string) =>
   api<User>({
     endpoint: `/users/${userID}/`,
+  });
+
+/*****
+ * /api/v7
+ *****/
+export const getUserInfo = () =>
+  api<UserInfo>({
+    endpoint: `/users/me`,
+    apiroot: config.API_V7_ROOT,
+    isJson: true,
+  });
+
+export const oidcRedirect = (queryString: string) =>
+  api<UserAuthToken>({
+    endpoint: "/auth/oidc-redirect",
+    queryString,
+    apiroot: config.OIDC_ROOT,
+    isJson: true,
   });

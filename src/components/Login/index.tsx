@@ -1,71 +1,24 @@
 import {
+  Button,
   ListVariant,
-  LoginForm,
   LoginMainFooterBandItem,
   LoginPage,
 } from "@patternfly/react-core";
-import { App } from "antd";
-import { type FormEvent, type MouseEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import ChRIS_Logo from "../../assets/chris-logo.png";
 import ChRIS_Logo_Inline from "../../assets/chris-logo-inline.png";
 import "./Login.css";
-import {
-  getRootID,
-  getState,
-  type ThunkModuleToFunc,
-  useThunk,
-} from "@chhsiao1981/use-thunk";
-import * as DoUser from "../../reducers/user";
+
+import config from "config";
+
+const { OIDC_URL, OIDC_PROMPT } = config;
+
 import { useSignUpAllowed } from "../../store/hooks.ts";
 import FooterListItems from "./FooterListItems.tsx";
 
-type TDoUser = ThunkModuleToFunc<typeof DoUser>;
-
-type Status = "idle" | "loading" | "success" | "error";
-
 export default () => {
-  const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
-  const [classStateUser, doUser] = useUser;
-  const userID = getRootID(classStateUser);
-  const user = getState(classStateUser) || DoUser.defaultState;
-
-  console.info("Login.index: userID:", userID, "user:", user);
-
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [status, setStatus] = useState<Status>("idle");
-
   // Use the custom hook
   const { signUpAllowed } = useSignUpAllowed();
-
-  // Use the message API from Ant Design
-  const { message } = App.useApp();
-
-  useEffect(() => {
-    if (!user.errmsg) {
-      setStatus("success");
-      return;
-    }
-
-    message.error(user.errmsg, 3);
-    setStatus("error");
-  }, [user.errmsg]);
-
-  const onSubmit = (
-    e: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>,
-  ) => {
-    e.preventDefault();
-    doUser.loginLegacy(userID, username, password);
-  };
-
-  const onChangeUsername = (e: FormEvent<HTMLInputElement>, value: string) => {
-    setUsername(value);
-  };
-
-  const onChangePassword = (e: FormEvent<HTMLInputElement>, value: string) => {
-    setPassword(value);
-  };
 
   // Conditionally render the "Sign up" link based on signUpAllowed state
   const signUpForAccountMessage = signUpAllowed ? (
@@ -80,6 +33,15 @@ export default () => {
     </LoginMainFooterBandItem>
   );
 
+  const onClickLegacyLogin = () => {
+    const queryString = window.location.search;
+    window.location.href = `/login-legacy${queryString}`;
+  };
+
+  const onClickOIDCLogin = () => {
+    window.location.href = OIDC_URL;
+  };
+
   return (
     <LoginPage
       className="login pf-background"
@@ -93,17 +55,21 @@ export default () => {
       signUpForAccountMessage={signUpForAccountMessage}
       forgotCredentials={forgotCredentials}
     >
-      <LoginForm
-        usernameLabel="Username"
-        usernameValue={username}
-        onChangeUsername={onChangeUsername}
-        passwordLabel="Password"
-        passwordValue={password}
-        onChangePassword={onChangePassword}
-        onLoginButtonClick={onSubmit}
-        loginButtonLabel="Log in"
-        isLoginButtonDisabled={status === "loading"}
-      />
+      <Button
+        variant="plain"
+        aria-label="Add primary circle variant"
+        onClick={onClickOIDCLogin}
+      >
+        {OIDC_PROMPT}
+      </Button>
+      <br />
+      <Button
+        variant="plain"
+        aria-label="Add primary circle variant"
+        onClick={onClickLegacyLogin}
+      >
+        Username Login
+      </Button>
     </LoginPage>
   );
 };

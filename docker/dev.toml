@@ -1,0 +1,81 @@
+[chris-backend]
+
+auth_secret_key = 'auth-secret-key'
+auth_alg        = 'HS256'
+auth_expire_ts  = 86400
+auth_home_url = 'http://localhost:5174/data' # default: '/'
+auth_cookie_token = 'chris_token'
+
+mongodb_url          = 'mongodb://mongodb:27017/test-dev'
+mongodb_tls          = false
+mongodb_tls_insecure = false
+# mongodb_tls_ca: Optional[str] = None
+# mongodb_tls_cert_key: Optional[str] = None
+# mongodb_tls_cert_key_password: Optional[str] = None
+# mongodb_tls_crl: Optional[str] = None
+mongodb_write_concern   = 'majority'
+mongodb_read_preference = 'primary'
+mongodb_read_concern    = 'majority'
+
+admin_password = 'admin-password'
+
+session_secret_key = 'session-secret-key'
+
+# oidc_wellknown_url = 'http://auth-server:9000/application/o/local-oauth2/.well-known/openid-configuration' # default: None
+oidc_userinfo_url = 'http://auth-server:9000/application/o/userinfo/' # default: None # for chris-backend
+oidc_client_id     = 'PsQPIPZkjaI9skNxZAwKgxDsVqaukfUMZIbhGMpU' # default: None
+oidc_client_secret = 'CMGazVZy70Z7xFddkGPApQgjFx9cfmWXobE8pQZMsh7yJx1asLsUBDB9hWhMmF6Tng9auy6z2Y8iS2v20wEgcC5iOYbUKEsMcixK1g6zhmf0mSRoBX1CyvHjKx06G5uA' # default: None
+oidc_authorize_url = 'http://localhost:9000/application/o/authorize/' # default: None # for browser
+oidc_access_token_url = 'http://auth-server:9000/application/o/token/'  # default: None # for chris-backend
+oidc_jwks_uri = 'http://auth-server:9000/application/o/local-oauth2/jwks/' # default: None # for chris-backend
+oidc_redirect_url = 'http://localhost:5174/api/v7/auth/oidc-redirect'
+# oidc_jwks: Optional[str] = None
+# oidc_admin_group_name: Optional[str] = None
+# oidc_pacs_group_name: Optional[str] = None
+
+cube_root_username        = 'chris'
+cube_url                  = 'http://chris:8000' # default: None
+cube_create_user_password = 'chris-backend-password'
+cube_db_name              = 'chris-dev' # default: None
+cube_db_user              = 'chris' # default: None
+cube_db_password          = 'chris1234' # default: None
+cube_db_host              = 'db' # default: None
+cube_db_port              = 5432 # default: None
+
+[loggers]
+keys = 'root, chris-backend'
+
+disable_existing_loggers = true
+
+[handlers]
+keys = 'console'
+
+[formatters]
+keys = 'generic'
+
+[logger_root]
+level    = 'WARNING'
+handlers = 'console'
+
+[logger_chris-backend]
+level     = 'DEBUG'
+qualname  = 'chris-backend'
+handlers  = 'console'
+propagate = 0
+
+[handler_console]
+class     = 'StreamHandler'
+args      = '(sys.stderr,)'
+level     = 'NOTSET'
+formatter = 'generic'
+
+# following toml format about single-quotes in args
+[handler_file]
+class     = 'FileHandler'
+args      = '''('python.log', 'w')'''
+level     = 'NOTSET'
+formatter = 'generic'
+
+[formatter_generic]
+format  = '%(asctime)s [%(levelname)-5.5s] %(module)s#%(funcName)s@%(lineno)d: %(message)s'
+datefmt = '%Y-%m-%d %H:%M:%S'

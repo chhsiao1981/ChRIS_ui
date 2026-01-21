@@ -1,0 +1,42 @@
+name: chris-ui-dev
+
+include:
+  - "../third-party/chris-backend/docker/docker-compose-dev.yaml"
+
+services:
+  dev:
+    image: chris-ui:dev-env
+    command: "'/srv/ChRIS-ui/node_modules/.bin/vite --host'"
+    ports:
+      - "127.0.0.1:5173:5173"
+    volumes:
+      - "${PWD}:/srv/ChRIS-ui"
+    networks:
+      - local
+    working_dir: /srv/ChRIS-ui
+  chris-backend:
+    image: chris-ui:dev-python-env
+    environment:
+      PATH: /srv/ChRIS-ui/third-party/chris-backend/.venv.docker/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      PYTHON_SHA256: 16ede7bb7cdbfa895d11b0642fa0e523f291e6487194d53cf6d3b338c3a17ea2
+      PYTHON_VERSION: 3.13.11
+      VIRTUAL_ENV: /srv/ChRIS-ui/third-party/chris-backend/.venv.docker
+      VIRTUAL_ENV_PROMPT: chris-backend.docker
+      PS1: '(chris-backend.docker) \\${debian_chroot:+(\\$debian_chroot)}\\\\u@\\\\h:\\\\w\\\\\\$'
+    # command: sleep 86400
+    command: "/bin/bash -c 'fastapi dev third-party/chris-backend/chris_backend/main.py --host 0.0.0.0'"
+    volumes:
+      - "${PWD}:/srv/ChRIS-ui"
+    networks:
+      - local
+    working_dir: /srv/ChRIS-ui
+    ports:
+      - "127.0.0.1:8000:8000"
+  nginx:
+    image: docker.io/nginx:1.29.4-trixie-perl
+    volumes:
+      - "${PWD}/docker/nginx-etc:/etc/nginx/conf.d"
+    networks:
+      - local
+    ports:
+      - "127.0.0.1:5174:5174"

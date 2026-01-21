@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+/node_modules.local
+/node_modules.docker
 /.pnp
 .pnp.js
 /docker_compose.env
@@ -39,3 +41,4 @@ yarn-error.log*
 dist/
 .pnpm-store/
 /config.prod
+/dev.toml
