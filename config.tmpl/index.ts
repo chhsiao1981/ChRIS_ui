@@ -13,5 +13,8 @@ export default {
   ACKEE_SERVER: "",
   ACKEE_DOMAIN_ID: "",
 
-  CUBE_POLL_INTERVAL_MS: ""
+  CUBE_POLL_INTERVAL_MS: "",
+
+  OIDC_URL: "http://localhost:8000/api/v7/auth/oidc",
+  OIDC_PROMPT: "Login Through Authentik"
 }

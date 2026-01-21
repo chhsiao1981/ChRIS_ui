@@ -18,6 +18,7 @@ import FeedsListView from "./components/Feeds/FeedListView";
 import FeedView from "./components/Feeds/FeedView";
 import GnomeLibrary from "./components/GnomeLibrary";
 import Login from "./components/Login";
+import Loginv7 from "./components/Login";
 import { OperationsProvider } from "./components/NewLibrary/context";
 import Store from "./components/NewStore";
 import NotFound from "./components/NotFound";
@@ -297,6 +298,10 @@ export default () => {
     },
     {
       path: "login",
+      element: <Loginv7 />,
+    },
+    {
+      path: "login-username",
       element: <Login />,
     },
     {
