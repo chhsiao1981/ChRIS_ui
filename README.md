@@ -16,82 +16,43 @@ This repository contains the reference UI for ChRIS, allowing users to create an
 ```shell
 git clone https://github.com/FNNDSC/ChRIS_ui.git
 cd ChRIS_ui
+git submodule update --init --recursive
 pnpm install
-pnpm run dev:public
+
+# start chris-backend
+pnpm run chris-backend:up
+
+# in another terminal
+pnpm start
 ```
 
 ### docker-compose
 
-1. setup `docker_compose.env` based on [docker_compose.env.tmpl](https://github.com/FNNDSC/ChRIS_ui/blob/branch-7.0/docker_compose.env.tmpl)
+1. setup `docker_compose.env` based on [docker_compose.env.tmpl](https://github.com/FNNDSC/ChRIS_ui/blob/main/docker_compose.env.tmpl)
 2. `docker compose --env-file docker_compose.env -f docker-compose.yaml up -d`
 
 
 ## Development
 
-There are two modes of development:
-
-- "local": runs the _ChRIS_ backend locally. Requires Docker, and uses more disk space + slower startup time.
-- "public": use the global, public testing server. This is the easier option, especially for non-Linux OS.
-
-<details>
-<summary>
-  <strong>
-    Alternatively, start the backend in development mode (click to expand)
-  </strong>
-</summary>
-
-##### Get the backend running from ChRIS_ultron_backEnd
-
-```bash
-$ git clone https://github.com/FNNDSC/ChRIS_ultron_backEnd.git
-$ cd ChRIS_ultron_backEnd
-$ ./make.sh -U -I -i
-```
-
-##### Tearing down the ChRIS backend
-
-You can later remove all the backend containers and release storage volumes with:
-
-```bash
-$ cd ChRIS_ultron_backEnd
-$ sudo rm -r FS
-$ ./unmake.sh
-```
-
-</details>
-
-If your backend is accessible from a host other than localhost, e.g. you are using a cloud or remote development
-server, run `cp .env .env.development.local` then edit `.env.development.local` with your backend API URL.
-
-### 1. Dependencies
-
-You need Node version 20 or 21.
+### 1. Clone the repository
 
 ```shell
 git clone https://github.com/FNNDSC/ChRIS_ui.git
 cd ChRIS_ui
+git submodule update --init --recursive
 pnpm install
 ```
 
-#### Local Development Dependencies
-
-No extra dependencies are required when using the "public" server.
-
-If you intend on developing with the "local" server, you will need **Docker** and Docker Compose
-to run the backend and helper scripts.
-
-### 2. Run the development server
-
-Either using the "public" server:
+### 2. Run the chris-backend in local
 
 ```shell
-pnpm run dev:public
+pnpm run chris-backend:up
 ```
 
-Or, start a local backend and run the "local" server:
+### 3. Start development (in another terminal)
 
 ```shell
-pnpm run dev:local
+pnpm start
 ```
 
 ## Container Image
