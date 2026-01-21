@@ -50,6 +50,8 @@ export default (props: Props) => {
   const userID = getRootID(classStateUser);
   const { username, role, isStaff } = user;
 
+  console.info("Wrapper.Toolbar: user:", user);
+
   const [dropdownOpen, setIsDropdownOpen] = useState(false);
   const [roleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [trayOpen, setTrayOpen] = useState(false); // State for tray visibility
@@ -166,7 +168,7 @@ export default (props: Props) => {
               </Dropdown>
             </FlexItem>
             <FlexItem>
-              {token ? (
+              {username ? (
                 <Dropdown
                   isPlain
                   onSelect={onDropdownToggle}

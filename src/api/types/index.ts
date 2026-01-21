@@ -23,7 +23,7 @@ import type {
   PkgNodeInfo,
   UploadPkgNodeInfo,
 } from "./pkgNode";
-import type { AuthToken, User } from "./user";
+import type { AuthToken, User, UserInfo } from "./user";
 
 export type {
   PACSSeries,
@@ -36,6 +36,7 @@ export type {
   PYPXSeriesData,
   AuthToken,
   User,
+  UserInfo,
   PkgNode,
   PkgNodeDefaultParameter,
   PkgNodeInfo,

@@ -7,16 +7,20 @@ import {
   type Thunk,
   type ThunkModuleToFunc,
 } from "@chhsiao1981/use-thunk";
+import user from "@fnndsc/chrisapi/dist/types/user";
 import queryString from "query-string";
 import { Cookies } from "react-cookie";
 import { refreshCookie } from "../api/api";
 import { STATUS_OK } from "../api/constants";
 import {
   createUser as apiCreateUser,
+  oidcRedirect as apiOIDCRedirect,
   getAuthToken,
   getUser,
   getUserID,
+  getUserInfo,
 } from "../api/serverApi";
+import type { User } from "../api/types/user";
 import type * as DoDataTag from "./dataTag";
 import { Role } from "./types";
 
@@ -59,33 +63,41 @@ export const init = (
   doDataTag: DispatchFuncMap<DoDataTag.State, TDoDataTag>,
 ): Thunk<State> => {
   return async (dispatch, _) => {
-    const cookie = new Cookies();
-    const username = cookie.get("username") || "";
-    const token = cookie.get(`${username}_token`) || "";
-    const isStaff = cookie.get("isStaff") || false;
-    let role = Role.DefaultRole;
-
-    let isLoggedIn = false;
-
-    if (username) {
-      role = isStaff ? Role.Admin : Role.Researcher;
-      const userID = await getUserID();
-      isLoggedIn = !!userID;
+    const { status, data: user } = await getUserInfo();
+    console.info(
+      "user.init: after getUserInfo: status:",
+      status,
+      "user:",
+      user,
+    );
+    if (status !== 200) {
+      return;
+    }
+    if (!user) {
+      return;
     }
 
     const state: State = Object.assign({}, defaultState, {
-      username,
-      token,
-      isStaff,
-      role,
+      username: user.username,
+      isStaff: user.is_admin || false,
+      role: Role.Researcher,
       isInit: true,
-      isLoggedIn,
+      isLoggedIn: true,
     });
 
+    console.info("user.init: to _init state:", state);
     dispatch(_init({ state }));
-    if (isLoggedIn) {
-      doDataTag.ensureTags(dataTagID, username);
-    }
+    doDataTag.ensureTags(dataTagID, user.username);
+  };
+};
+
+export const oidcRedirect = (
+  myID: string,
+  queryString: string,
+): Thunk<State> => {
+  return async (dispatch, _) => {
+    const ret = await apiOIDCRedirect(queryString);
+    console.info("user.oidcRedirect: ret:", ret);
   };
 };
 
@@ -189,30 +201,16 @@ export const setRole = (myID: string, role: Role): Thunk<State> => {
 };
 
 export const logout = (myID: string): Thunk<State> => {
-  return async (dispatch, getClassState) => {
+  return async (_, getClassState) => {
     const classState = getClassState();
     const state = getState(classState, myID);
     if (!state) {
       return;
     }
 
-    const { username } = state;
-
     const cookie = new Cookies();
-    cookie.remove("username");
-    cookie.remove(`${username}_token`);
-    cookie.remove("isStaff");
+    cookie.remove("chris_token");
     refreshCookie();
-
-    const toUpdate = {
-      username: "",
-      token: "",
-      isLoggedIn: false,
-      isStaff: false,
-      role: Role.DefaultRole,
-    };
-
-    dispatch(setData(myID, toUpdate));
 
     window.location.href = "/";
   };
