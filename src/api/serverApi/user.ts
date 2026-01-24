@@ -2,6 +2,7 @@ import config from "config";
 import api from "../api";
 import { STATUS_OK } from "../constants";
 import type { AuthToken, User } from "../types";
+import type { UserAuthToken } from "../types/user";
 import { getLinkMap } from "./misc";
 
 export const createUser = (username: string, password: string, email: string) =>
@@ -57,3 +58,12 @@ export const getUser = (userID: string) =>
   api<User>({
     endpoint: `/users/${userID}/`,
   });
+
+export const oidcRedirect = (queryString: string) => {
+  api<UserAuthToken>({
+    endpoint: "/auth/oidc-redirect",
+    queryString,
+    apiroot: config.OIDC_ROOT,
+    isJson: true,
+  });
+};

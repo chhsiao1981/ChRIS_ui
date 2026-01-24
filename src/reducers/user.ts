@@ -13,6 +13,7 @@ import { refreshCookie } from "../api/api";
 import { STATUS_OK } from "../api/constants";
 import {
   createUser as apiCreateUser,
+  oidcRedirect as apiOIDCRedirect,
   getAuthToken,
   getUser,
   getUserID,
@@ -86,6 +87,16 @@ export const init = (
     if (isLoggedIn) {
       doDataTag.ensureTags(dataTagID, username);
     }
+  };
+};
+
+export const oidcRedirect = (
+  myID: string,
+  queryString: string,
+): Thunk<State> => {
+  return async (dispatch, _) => {
+    const ret = await apiOIDCRedirect(queryString);
+    console.info("user.oidcRedirect: ret:", ret);
   };
 };
 

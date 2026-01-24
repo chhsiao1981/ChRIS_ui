@@ -1,0 +1,3 @@
+FROM docker.io/python:3.13-slim
+
+RUN apt update && apt install -y postgresql-server-dev-all

@@ -17,7 +17,13 @@ import {
 } from "./pacs";
 import { createPkg, searchPkgsByName } from "./pkg";
 import { createPkgInstance, getPkgInstances } from "./pkgInstance";
-import { createUser, getAuthToken, getUser, getUserID } from "./user";
+import {
+  createUser,
+  getAuthToken,
+  getUser,
+  getUserID,
+  oidcRedirect,
+} from "./user";
 import { createWorkflow } from "./workflow";
 
 export {
@@ -25,6 +31,7 @@ export {
   getAuthToken,
   getUser,
   getUserID,
+  oidcRedirect,
   getPkgInstances,
   createPkgInstance,
   getLinkMap,

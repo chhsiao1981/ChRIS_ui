@@ -13,6 +13,7 @@ export interface ApiParams {
   endpoint: string;
   method?: string;
   query?: Query;
+  queryString?: string;
   params?: Params;
   json?: any;
   headers?: any;
@@ -100,6 +101,7 @@ export default async <T>(apiParams: ApiParams): Promise<ApiResult<T>> => {
   const {
     endpoint,
     query,
+    queryString,
     method = "get",
     params,
     json,
@@ -126,6 +128,10 @@ export default async <T>(apiParams: ApiParams): Promise<ApiResult<T>> => {
 
   if (query) {
     theEndpoint = `${theEndpoint}?${queryToString(query)}`;
+  }
+
+  if (queryString) {
+    theEndpoint = `${theEndpoint}${queryString}`;
   }
 
   // XXX special case for uploading files.
