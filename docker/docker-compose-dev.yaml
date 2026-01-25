@@ -24,10 +24,19 @@ services:
       VIRTUAL_ENV_PROMPT: chris-backend.docker
       PS1: '(chris-backend.docker) \\${debian_chroot:+(\\$debian_chroot)}\\\\u@\\\\h:\\\\w\\\\\\$'
     # command: sleep 86400
-    command: "/bin/bash -c 'fastapi dev third-party/chris-backend/chris_backend/main.py'"
+    command: "/bin/bash -c 'fastapi dev third-party/chris-backend/chris_backend/main.py --host 0.0.0.0'"
     volumes:
       - "${PWD}:/srv/ChRIS-ui"
     networks:
       - local
     working_dir: /srv/ChRIS-ui
-    
+    ports:
+      - "127.0.0.1:8000:8000"
+  nginx:
+    image: docker.io/nginx:1.29.4-trixie-perl
+    volumes:
+      - "${PWD}/docker/nginx-etc:/etc/nginx/conf.d"
+    networks:
+      - local
+    ports:
+      - "127.0.0.1:5174:5174"

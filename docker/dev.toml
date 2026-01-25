@@ -33,7 +33,7 @@ oidc_client_secret = '[client-secret]' # default: None
 # oidc_pacs_group_name: Optional[str] = None
 
 cube_root_username        = 'chris'
-cube_url                  = 'http://chris:8001' # default: None
+cube_url                  = 'http://chris:8000' # default: None
 cube_create_user_password = 'chris-backend-password'
 cube_db_name              = 'chris-dev' # default: None
 cube_db_user              = 'chris' # default: None
