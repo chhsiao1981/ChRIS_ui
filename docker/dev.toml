@@ -21,13 +21,13 @@ admin_password = 'admin-password'
 
 session_secret_key = 'session-secret-key'
 
-oidc_wellknown_url = 'http://auth-server:9000/application/o/local-oauth2/.well-known/openid-configuration' # default: None
-oidc_userinfo_url = 'http://auth-server:9000/application/o/userinfo/' # default: None
-oidc_client_id     = '[client-id]' # default: None
-oidc_client_secret = '[client-secret]' # default: None
-# oidc_authorize_url: Optional[str] = None
-# oidc_access_token_url: Optional[str] = None
-# oidc_jwks_uri: Optional[str] = None
+# oidc_wellknown_url = 'http://auth-server:9000/application/o/local-oauth2/.well-known/openid-configuration' # default: None
+oidc_userinfo_url = 'http://auth-server:9000/application/o/userinfo/' # default: None # for chris-backend
+oidc_client_id     = 'PsQPIPZkjaI9skNxZAwKgxDsVqaukfUMZIbhGMpU' # default: None
+oidc_client_secret = 'CMGazVZy70Z7xFddkGPApQgjFx9cfmWXobE8pQZMsh7yJx1asLsUBDB9hWhMmF6Tng9auy6z2Y8iS2v20wEgcC5iOYbUKEsMcixK1g6zhmf0mSRoBX1CyvHjKx06G5uA' # default: None
+oidc_authorize_url = 'http://localhost:9000/application/o/authorize/' # default: None # for browser
+oidc_access_token_url = 'http://auth-server:9000/application/o/token/'  # default: None # for chris-backend
+oidc_jwks_uri = 'http://auth-server:9000/application/o/local-oauth2/jwks/' # default: None # for chris-backend
 # oidc_jwks: Optional[str] = None
 # oidc_admin_group_name: Optional[str] = None
 # oidc_pacs_group_name: Optional[str] = None
