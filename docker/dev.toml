@@ -3,7 +3,7 @@
 auth_secret_key = 'auth-secret-key'
 auth_alg        = 'HS256'
 auth_expire_ts  = 86400
-auth_home_url = 'http://localhost:5173/data' # default: '/'
+auth_home_url = 'http://localhost:5174/data' # default: '/'
 auth_cookie_token = 'chris-token'
 
 mongodb_url          = 'mongodb://mongodb:27017/test-dev'
@@ -28,6 +28,7 @@ oidc_client_secret = 'CMGazVZy70Z7xFddkGPApQgjFx9cfmWXobE8pQZMsh7yJx1asLsUBDB9hW
 oidc_authorize_url = 'http://localhost:9000/application/o/authorize/' # default: None # for browser
 oidc_access_token_url = 'http://auth-server:9000/application/o/token/'  # default: None # for chris-backend
 oidc_jwks_uri = 'http://auth-server:9000/application/o/local-oauth2/jwks/' # default: None # for chris-backend
+oidc_redirect_url = 'http://localhost:5174/api/v7/auth/oidc-redirect'
 # oidc_jwks: Optional[str] = None
 # oidc_admin_group_name: Optional[str] = None
 # oidc_pacs_group_name: Optional[str] = None

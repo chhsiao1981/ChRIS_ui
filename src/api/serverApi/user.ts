@@ -59,11 +59,10 @@ export const getUser = (userID: string) =>
     endpoint: `/users/${userID}/`,
   });
 
-export const oidcRedirect = (queryString: string) => {
+export const oidcRedirect = (queryString: string) =>
   api<UserAuthToken>({
     endpoint: "/auth/oidc-redirect",
     queryString,
     apiroot: config.OIDC_ROOT,
     isJson: true,
   });
-};
