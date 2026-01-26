@@ -7,6 +7,11 @@ export interface User {
   is_staff: boolean;
 }
 
+export interface UserInfo {
+  username: string;
+  is_admin: boolean;
+}
+
 export interface AuthToken {
   token: string;
 }

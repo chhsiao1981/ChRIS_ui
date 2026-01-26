@@ -7,6 +7,7 @@ import {
   type Thunk,
   type ThunkModuleToFunc,
 } from "@chhsiao1981/use-thunk";
+import user from "@fnndsc/chrisapi/dist/types/user";
 import queryString from "query-string";
 import { Cookies } from "react-cookie";
 import { refreshCookie } from "../api/api";
@@ -17,7 +18,9 @@ import {
   getAuthToken,
   getUser,
   getUserID,
+  getUserInfo,
 } from "../api/serverApi";
+import type { User } from "../api/types/user";
 import type * as DoDataTag from "./dataTag";
 import { Role } from "./types";
 
@@ -60,33 +63,33 @@ export const init = (
   doDataTag: DispatchFuncMap<DoDataTag.State, TDoDataTag>,
 ): Thunk<State> => {
   return async (dispatch, _) => {
-    const cookie = new Cookies();
-    const username = cookie.get("username") || "";
-    const token = cookie.get(`${username}_token`) || "";
-    const isStaff = cookie.get("isStaff") || false;
-    let role = Role.DefaultRole;
+    const role = Role.DefaultRole;
 
-    let isLoggedIn = false;
-
-    if (username) {
-      role = isStaff ? Role.Admin : Role.Researcher;
-      const userID = await getUserID();
-      isLoggedIn = !!userID;
+    const { status, data: user } = await getUserInfo();
+    console.info(
+      "user.init: after getUserInfo: status:",
+      status,
+      "user:",
+      user,
+    );
+    if (status !== 200) {
+      return;
+    }
+    if (!user) {
+      return;
     }
 
     const state: State = Object.assign({}, defaultState, {
-      username,
-      token,
-      isStaff,
+      username: user.username,
+      isStaff: user.is_admin || false,
       role,
       isInit: true,
-      isLoggedIn,
+      isLoggedIn: true,
     });
 
+    console.info("user.init: to _init state:", state);
     dispatch(_init({ state }));
-    if (isLoggedIn) {
-      doDataTag.ensureTags(dataTagID, username);
-    }
+    doDataTag.ensureTags(dataTagID, user.username);
   };
 };
 

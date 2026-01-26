@@ -22,6 +22,7 @@ import {
   getAuthToken,
   getUser,
   getUserID,
+  getUserInfo,
   oidcRedirect,
 } from "./user";
 import { createWorkflow } from "./workflow";
@@ -31,6 +32,7 @@ export {
   getAuthToken,
   getUser,
   getUserID,
+  getUserInfo,
   oidcRedirect,
   getPkgInstances,
   createPkgInstance,
