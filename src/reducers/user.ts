@@ -63,8 +63,6 @@ export const init = (
   doDataTag: DispatchFuncMap<DoDataTag.State, TDoDataTag>,
 ): Thunk<State> => {
   return async (dispatch, _) => {
-    const role = Role.DefaultRole;
-
     const { status, data: user } = await getUserInfo();
     console.info(
       "user.init: after getUserInfo: status:",
@@ -82,7 +80,7 @@ export const init = (
     const state: State = Object.assign({}, defaultState, {
       username: user.username,
       isStaff: user.is_admin || false,
-      role,
+      role: Role.Researcher,
       isInit: true,
       isLoggedIn: true,
     });
