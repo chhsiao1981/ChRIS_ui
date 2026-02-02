@@ -159,6 +159,11 @@ export default () => {
   };
 
   useEffect(() => {
+    // No need to set thunks when doing login.
+    if (location.pathname.startsWith("/login")) {
+      return;
+    }
+
     doUI.init(uiID);
     doDataTag.init(dataTagID);
     doUser.init(dataTagID, doDataTag);
@@ -306,7 +311,7 @@ export default () => {
       element: <Login />,
     },
     {
-      path: "login-username",
+      path: "login-legacy",
       element: <LoginLegacy />,
     },
     {

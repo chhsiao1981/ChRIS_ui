@@ -87,6 +87,10 @@ export const init = (
 
     console.info("user.init: to _init state:", state);
     dispatch(_init({ state }));
+
+    if (!user.username) {
+      return;
+    }
     doDataTag.ensureTags(dataTagID, user.username);
   };
 };

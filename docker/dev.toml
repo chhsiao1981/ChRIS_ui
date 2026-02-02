@@ -6,7 +6,7 @@ auth_expire_ts  = 86400
 auth_home_url = 'http://localhost:5174/data' # default: '/'
 auth_cookie_token = 'chris_token'
 
-mongodb_url          = 'mongodb://mongodb:27017/test-dev'
+mongodb_url          = 'mongodb://mongodb:27017/chris-ui-dev'
 mongodb_tls          = false
 mongodb_tls_insecure = false
 # mongodb_tls_ca: Optional[str] = None
@@ -41,6 +41,10 @@ cube_db_user              = 'chris' # default: None
 cube_db_password          = 'chris1234' # default: None
 cube_db_host              = 'db' # default: None
 cube_db_port              = 5432 # default: None
+
+pfdcm_url = 'http://pfdcm:4005' # default: None
+
+nats_address = 'nats://nats:4222' # default: None
 
 [loggers]
 keys = 'root, chris-backend'
