@@ -1,35 +1,23 @@
-import type {
-  DispatchFuncMap,
-  ThunkModuleToFunc,
+import {
+  getRootID,
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
 } from "@chhsiao1981/use-thunk";
 import { Empty, Flex, Spin, Typography } from "antd";
 import type { CSSProperties } from "react";
 import type { PACSqueryCore } from "../../api/pfdcm";
-import type * as DoPacs from "../../reducers/pacs";
-import PacsInput, {
-  type Props as PacsInputProps,
-} from "./components/PacsInput.tsx";
-import PacsStudiesView, {
-  type Props as PacsStudiesViewProps,
-} from "./components/PacsStudiesView.tsx";
+import * as DoPacs from "../../reducers/pacs";
+import PacsInput from "./components/PacsInput.tsx";
+import PacsStudiesView from "./components/PacsStudiesView.tsx";
 import type { PacsState } from "./types.ts";
 
 type TDoPacs = ThunkModuleToFunc<typeof DoPacs>;
 
-type Props = Pick<PacsInputProps, "services" | "onSubmit"> &
-  Pick<PacsStudiesViewProps, "expandedStudyUids"> & {
-    onRetrieve: (service: string, query: PACSqueryCore) => void;
-    onStudyExpand: (
-      service: string,
-      StudyInstanceUIDs: ReadonlyArray<string>,
-    ) => void;
-    state: PacsState;
-    isLoadingStudies?: boolean;
-
-    pacsID: string;
-    pacs: DoPacs.State;
-    doPacs: DispatchFuncMap<DoPacs.State, TDoPacs>;
-  };
+type Props = {
+  state: PacsState;
+  isLoadingStudies?: boolean;
+};
 
 /**
  * PACS Query and Retrieve view component.
@@ -39,30 +27,31 @@ type Props = Pick<PacsInputProps, "services" | "onSubmit"> &
  */
 export default (props: Props) => {
   const {
-    state: { preferences, studies },
-    services,
-    onSubmit,
-    onRetrieve,
-    expandedStudyUids,
-    onStudyExpand,
+    state: { preferences },
     isLoadingStudies,
-
-    pacsID,
-    pacs,
-    doPacs,
   } = props;
 
-  const service = pacs.service;
+  const [classStatePacs, doPacs] = useThunk<DoPacs.State, TDoPacs>(DoPacs);
+  const pacsID = getRootID(classStatePacs);
+  const pacs = getState(classStatePacs) ?? DoPacs.defaultState;
+  const { studies, services, service, expandedStudyUids } = pacs;
 
   const setService = (service: string) => {
     doPacs.setService(pacsID, service);
   };
 
-  const curriedOnRetrieve = (query: PACSqueryCore) =>
-    onRetrieve(service, query);
+  const onSubmit = (service: string, prompt: string, value: string) => {
+    doPacs.queryPacsStudies(pacsID, service, prompt, value);
+  };
 
-  const curriedOnStudyExpand = (StudyInstanceUIDS: ReadonlyArray<string>) =>
-    onStudyExpand(service, StudyInstanceUIDS);
+  const onRetrieve = (query: PACSqueryCore) => {
+    doPacs.expandStudies(pacsID, service, query, studies);
+    doPacs.retrievePACS(pacsID, service, query);
+  };
+
+  const onStudyExpand = (StudyInstanceUIDs: ReadonlyArray<string>) => {
+    doPacs.onStudyExpand(pacsID, service, StudyInstanceUIDs);
+  };
 
   // CSS
   const pacsStudiesViewStyle: CSSProperties = {
@@ -89,6 +78,8 @@ export default (props: Props) => {
     zIndex: 100,
   };
 
+  console.info("PacsView: studyList:", studyList);
+
   // return
   return (
     <>
@@ -111,9 +102,9 @@ export default (props: Props) => {
           <PacsStudiesView
             preferences={preferences}
             studies={studyList}
-            onRetrieve={curriedOnRetrieve}
+            onRetrieve={onRetrieve}
             expandedStudyUids={expandedStudyUids}
-            onStudyExpand={curriedOnStudyExpand}
+            onStudyExpand={onStudyExpand}
           />
         </div>
       </div>

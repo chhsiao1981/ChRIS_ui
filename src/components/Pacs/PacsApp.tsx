@@ -16,7 +16,6 @@ import { useEffect, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { sanitizeAPIRootURL } from "../../api/api.ts";
 import type { Lonk, LonkMessageData } from "../../api/lonk/types.ts";
-import type { PACSqueryCore } from "../../api/pfdcm/index.ts";
 import * as DoPacs from "../../reducers/pacs";
 import ErrorScreen from "./components/ErrorScreen.tsx";
 import PacsLoadingScreen from "./components/PacsLoadingScreen.tsx";
@@ -75,18 +74,16 @@ export default () => {
   // ========================================
   // CLIENTS AND MISC
   // ========================================
-  const [statePacs, doPacs] = useThunk<DoPacs.State, TDoPacs>(DoPacs);
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [classStatePacs, doPacs] = useThunk<DoPacs.State, TDoPacs>(DoPacs);
+  const [searchParams, _setSearchParams] = useSearchParams();
   const location = useLocation();
   const [pacsID, _] = useState(genUUID());
 
-  const pacs = getState(statePacs, pacsID) ?? DoPacs.defaultState;
+  const pacs = getState(classStatePacs, pacsID) ?? DoPacs.defaultState;
 
   const {
-    expandedStudyUids,
     expandedSeries,
     studies,
-    services,
     service,
     isGetServices,
     isLoadingStudies,
@@ -100,9 +97,9 @@ export default () => {
   /**
    * Indicates a fatal error with the WebSocket.
    */
-  const [wsError, setWsError] = useState("");
+  const [wsError, _setWsError] = useState("");
   // TODO create a settings component for changing preferences
-  const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
+  const [preferences, _setPreferences] = useState(DEFAULT_PREFERENCES);
 
   // ========================================
   // COMBINED STATE OF EVERYTHING
@@ -116,35 +113,16 @@ export default () => {
   const error = wsError || pacs.errmsg;
 
   // ========================================
-  // CALLBACKS
-  // ========================================
-
-  // EXPANDED STUDIES AND SERIES STATE
-  const onStudyExpand = (
-    pacs_name: string,
-    StudyInstanceUIDs: ReadonlyArray<string>,
-  ) => {
-    doPacs.onStudyExpand(pacsID, pacs_name, StudyInstanceUIDs);
-  };
-
-  // Fetch studies from PFDCM.
-  const onSubmit = (service: string, prompt: string, value: string) => {
-    doPacs.queryPacsStudies(pacsID, service, prompt, value);
-  };
-
-  // PACS RETRIEVAL
-  const onRetrieve = (service: string, query: PACSqueryCore) => {
-    doPacs.expandStudies(pacsID, service, query, studies);
-    doPacs.retrievePACS(pacsID, service, query);
-  };
-
-  // ========================================
   // EFFECTS
   // ========================================
 
   // init
+  // biome-ignore lint/correctness/useExhaustiveDependencies: useEffect
   useEffect(() => {
-    doPacs.init(pacsID);
+    const thePacs = getState(classStatePacs, pacsID);
+    if (!thePacs) {
+      doPacs.init(pacsID);
+    }
 
     doPacs.updateServiceQueryBySearchParams(pacsID, location, searchParams);
   }, [
@@ -182,7 +160,6 @@ export default () => {
   ]);
 
   // Subscribe to all expanded series
-  console.info("PacsApp: isExpandedAllDone:", isExpandedAllDone, "pacs:", pacs);
   useEffect(() => {
     if (wsError) {
       return;
@@ -244,18 +221,7 @@ export default () => {
         <ErrorScreen>{error}</ErrorScreen>
       </PageSection>
       <PageSection className={classPacsView}>
-        <PacsView
-          state={state}
-          services={services}
-          onSubmit={onSubmit}
-          onRetrieve={onRetrieve}
-          expandedStudyUids={expandedStudyUids}
-          onStudyExpand={onStudyExpand}
-          isLoadingStudies={isLoadingStudies}
-          pacsID={pacsID}
-          pacs={pacs}
-          doPacs={doPacs}
-        />
+        <PacsView state={state} isLoadingStudies={isLoadingStudies} />
       </PageSection>
       <PageSection className={classPacsLoadingScreen}>
         <PacsLoadingScreen />

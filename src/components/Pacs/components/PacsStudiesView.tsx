@@ -19,13 +19,10 @@ type Props = {
   onStudyExpand?: (StudyInstanceUIDs: ReadonlyArray<string>) => void;
 };
 
-const PacsStudiesView: React.FC<Props> = ({
-  studies,
-  onRetrieve,
-  expandedStudyUids,
-  onStudyExpand,
-  preferences,
-}) => {
+export default (props: Props) => {
+  const { studies, onRetrieve, expandedStudyUids, onStudyExpand, preferences } =
+    props;
+
   useEffect(() => {
     // Automatically expand first study if there is only one study
     if (studies.length === 1 && expandedStudyUids?.length === 0) {
@@ -115,6 +112,3 @@ const PacsStudiesView: React.FC<Props> = ({
     </SeriesSelectionProvider>
   );
 };
-
-export type { Props };
-export default PacsStudiesView;

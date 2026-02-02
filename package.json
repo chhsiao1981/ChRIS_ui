@@ -9,7 +9,7 @@
     "dev:00-docker-node-env": "docker build -t chris-ui:dev-env -f ./docker/Dockerfile.dev .",
     "dev:01-docker-switch-docker": "mkdir -p node_modules.docker && rm -f node_modules && ln -s node_modules.docker node_modules && mkdir -p .pnpm-store.docker && rm -f .pnpm-store && ln -s .pnpm-store.docker .pnpm-store",
     "dev:02-docker-switch-local": "mkdir -p node_modules.local && rm -f node_modules && ln -s node_modules.local node_modules && mkdir -p .pnpm-store.local && rm -f .pnpm-store && ln -s .pnpm-store.local .pnpm-store",
-    "dev:03-docker-node-modules": "pnpm run dev:01-docker-switch-docker && docker run -v ${PWD}:/srv/ChRIS-ui -w /srv/ChRIS-ui chris-ui:dev-env 'echo PWD: ${PWD} && pnpm install && cp -R config.tmpl node_modules/config'",
+    "dev:03-docker-node-modules": "docker run -v ${PWD}:/srv/ChRIS-ui -w /srv/ChRIS-ui chris-ui:dev-env 'echo PWD: ${PWD} && pnpm install && cp -R config.tmpl node_modules/config && mv node_modules node_modules.docker && pnpm run dev:01-docker-switch-docker'",
     "dev:04-local-node-modules": "pnpm run dev:02-docker-switch-local && pnpm install && cp -R config.tmpl node_modules/config",
     "dev:05-docker-python-env": "docker build -t chris-ui:dev-python-env -f ./docker/Dockerfile.dev.python .",
     "dev:06-docker-python-venv": "docker run -v ${PWD}:/srv/ChRIS-ui -w /srv/ChRIS-ui/third-party/chris-backend chris-ui:dev-python-env /bin/bash -c 'rm -rf .venv.docker && pip install virtualenv && virtualenv --prompt=chris-backend.docker .venv.docker && source .venv.docker/bin/activate && pip install -e .'",

@@ -608,6 +608,7 @@ const processSeriesMap = (
 ) => {
   const toUpdateSeriesMap = studyData.reduce(
     (r: PacsSeriesMap, eachStudyData) => {
+      // biome-ignore lint/suspicious/useIterableCallbackReturn: map to setup r
       eachStudyData.series.map((each) => {
         const {
           info: { RetrieveAETitle: pacsName, SeriesInstanceUID: seriesUID },
@@ -685,6 +686,7 @@ const postprocessExpandedStudies = (
     const key = studyKeyToStudyMapKey(each);
     return !expandedStudySet.has(key);
   });
+  // biome-ignore lint/suspicious/useIterableCallbackReturn: map to setup expandedStudySet
   filteredExpandedStudies.map((each) => {
     const key = studyKeyToStudyMapKey(each);
     expandedStudySet.add(key);
@@ -698,7 +700,12 @@ const postprocessExpandedStudies = (
 
   const expandedSeries = expandedStudies.flatMap((studyKey) => {
     const studyMapKey = studyKeyToStudyMapKey(studyKey);
-    return studyMap[studyMapKey].series.map(
+    const study = studyMap[studyMapKey];
+    if (!study) {
+      return [];
+    }
+    const series = study.series || [];
+    return series.map(
       (each): SeriesKey => ({
         pacs_name: each.info.RetrieveAETitle,
         SeriesInstanceUID: each.info.SeriesInstanceUID,
@@ -867,6 +874,7 @@ export const retrievePACS = (
       myStudyMap2,
       mySeriesMap2,
     );
+    // biome-ignore lint/suspicious/useIterableCallbackReturn: map to setup pullState
     toUpdateSeries.map((each) => {
       each.pullState = SeriesPullState.PULLING;
     });
