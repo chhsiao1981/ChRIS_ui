@@ -1,18 +1,16 @@
 import {
   init as _init,
-  type DispatchFuncMap,
   getState,
   type State as rState,
   setData,
   type Thunk,
-  type ThunkModuleToFunc,
 } from "@chhsiao1981/use-thunk";
-import { FolderOpenAltIcon } from "@patternfly/react-icons";
-import { select } from "d3-selection";
-import { fold } from "fp-ts/lib/Option";
-import _, { values } from "lodash";
 import type { Data } from "../api/types";
-import Download from "../components/NewLibrary/components/operations/Download";
+import type {
+  FileBrowserFolder,
+  FileBrowserFolderFile,
+  FileBrowserFolderLinkFile,
+} from "../api/types/fileBrowser";
 import type { SelectionPayload } from "../store/cart/types";
 import {
   type DownloadStatus,
@@ -24,7 +22,7 @@ import {
   type FolderUploadObject,
 } from "./types";
 
-export const myClass = "chris-ui/user";
+export const myClass = "chris-ui/cart";
 
 export interface State extends rState {
   currentLayout: string;
@@ -61,10 +59,41 @@ export const switchLibraryLayout = (
   };
 };
 
-export const startUpload = (myID: string): Thunk<State> => {
+export const startUpload = (
+  myID: string,
+  files: File[],
+  isFolder: boolean,
+  currentPath: string,
+  createFeed?: boolean,
+  nameForFeed?: string,
+): Thunk<State> => {
   return (dispatch, _) => {
     dispatch(setData(myID, { openCart: true }));
   };
+};
+
+export const startDownload = (
+  myID: string,
+  paths: SelectionPayload[],
+  username: string,
+): Thunk<State> => {
+  return (dispatch, _) => {};
+};
+
+export const cancelUpload = (
+  myID: string,
+  theType: string,
+  theID: string,
+): Thunk<State> => {
+  return (dispatch, _) => {};
+};
+
+export const startAnonymize = (
+  myID: string,
+  paths: SelectionPayload[],
+  username: string,
+): Thunk<State> => {
+  return (dispatch, _) => {};
 };
 
 export const setSelectedPaths = (
@@ -128,7 +157,7 @@ export const clearAllPaths = (myID: string): Thunk<State> => {
 
 export const clearDownloadStatus = (
   myID: string,
-  theID: number,
+  theID: string,
   theType: string,
 ): Thunk<State> => {
   return (dispatch, getClassState) => {
@@ -140,12 +169,14 @@ export const clearDownloadStatus = (
     const { folderDownloadStatus, fileDownloadStatus } = me;
     if (theType === "folder") {
       const newFolderDownloadStatus = Object.assign({}, folderDownloadStatus);
+      // @ts-expect-error unsure theID is number or string
       delete newFolderDownloadStatus[theID];
       dispatch(
         setData(myID, { folderDownloadStatus: newFolderDownloadStatus }),
       );
     } else if (theType === "file") {
       const newFileDownloadStatus = Object.assign({}, fileDownloadStatus);
+      // @ts-expect-error unsure theID is number or string
       delete newFileDownloadStatus[theID];
       dispatch(setData(myID, { fileDownloadStatus: newFileDownloadStatus }));
     }
@@ -354,7 +385,7 @@ export const removeSelectedPayload = (
 
 export const clearUploadState = (
   myID: string,
-  theID: number,
+  theID: string,
   theType: string,
 ): Thunk<State> => {
   return (dispatch, getClassState) => {
@@ -432,5 +463,86 @@ export const clearCartOnLogout = (myID: string): Thunk<State> => {
       fileUploadStatus: {},
     };
     dispatch(setData(myID, toUpdate));
+  };
+};
+
+// downloadSaga
+const setStatus = (
+  myID: string,
+  theType: string,
+  theID: number,
+  step: DownloadTypes,
+  filename: string,
+  error?: string,
+  feed?: Data,
+): Thunk<State> => {
+  return (dispatch, _) => {
+    if (theType === "file") {
+      dispatch(setFileDownloadStatus(myID, theID, step, filename, error));
+    } else {
+      dispatch(
+        setFolderDownloadStatus(myID, theID, step, filename, error, feed),
+      );
+    }
+  };
+};
+
+export const createFeed = (
+  myID: string,
+  path: string[],
+  feedname: string,
+  invalidateFunc?: () => void,
+): Thunk<State> => {
+  return (dispatch, _) => {};
+};
+
+const downloadFolder = (
+  myID: string,
+  payload:
+    | FileBrowserFolder
+    | FileBrowserFolderFile
+    | FileBrowserFolderLinkFile,
+  username: string,
+  pipelineType: string,
+): Thunk<State> => {
+  return (dispatch, _) => {};
+};
+
+const downloadEach = (
+  myID: string,
+  path: SelectionPayload,
+  username: string,
+  pipelineType: string,
+): Thunk<State> => {
+  return (dispatch, _) => {};
+};
+
+const download = (
+  myID: string,
+  theType: string,
+  payload?: any,
+  meta?: any,
+  error?: any,
+): Thunk<State> => {
+  return (dispatch, _) => {
+    const { paths, username } = payload;
+    for (const path of paths) {
+      dispatch(downloadEach(myID, path, username, "Download Pipeline"));
+    }
+  };
+};
+
+const anonymize = (
+  myID: string,
+  theType: string,
+  payload?: any,
+  meta?: any,
+  error?: any,
+): Thunk<State> => {
+  return (dispatch, _) => {
+    const { paths, username } = payload;
+    for (const path of paths) {
+      dispatch(downloadEach(myID, path, username, "Anonymize Pipeline"));
+    }
   };
 };

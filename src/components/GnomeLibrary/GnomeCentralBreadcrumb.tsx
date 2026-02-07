@@ -1,3 +1,4 @@
+import { type ThunkModuleToFunc, useThunk } from "@chhsiao1981/use-thunk";
 import type { FileBrowserFolderList } from "@fnndsc/chrisapi";
 import {
   Breadcrumb,
@@ -22,6 +23,7 @@ import {
   useRef,
   useState,
 } from "react";
+import * as DoCart from "../../reducers/cart";
 import { AddModal } from "../NewLibrary/components/Operations";
 import type { OriginState } from "../NewLibrary/context";
 import {
@@ -29,6 +31,8 @@ import {
   useFolderOperations,
 } from "../NewLibrary/utils/useOperations";
 import styles from "./gnome.module.css";
+
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 // XXX for webkitdirectory in InputHTMLAttributes
 declare module "react" {
@@ -48,6 +52,8 @@ type Props = {
 
 export default (props: Props) => {
   const { username, path, onPathChange, origin, foldersList } = props;
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditing, setEditing] = useState(false);
 
@@ -72,7 +78,14 @@ export default (props: Props) => {
     handleModalSubmitMutation,
     contextHolder,
     setModalState,
-  } = useFolderOperations(username, origin, path || "", foldersList, false);
+  } = useFolderOperations(
+    username,
+    origin,
+    useCart,
+    path || "",
+    foldersList,
+    false,
+  );
 
   useEffect(() => {
     if (!isEditing) {

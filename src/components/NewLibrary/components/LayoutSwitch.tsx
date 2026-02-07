@@ -1,17 +1,29 @@
 import {
+  getRootID,
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
+import {
   ToggleGroup,
   ToggleGroupItem,
   type ToggleGroupItemProps,
 } from "@patternfly/react-core";
-import { switchLibraryLayout } from "../../../store/cart/cartSlice";
-import { useAppDispatch, useAppSelector } from "../../../store/hooks";
+import * as DoCart from "../../../reducers/cart";
 import { BarsIcon, GripVerticalIcon } from "../../Icons";
 
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+
 const LayoutSwitch = () => {
-  const currentLayout = useAppSelector((state) => state.cart.currentLayout);
-  const dispatch = useAppDispatch();
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
+  const [classStateCart, doCart] = useCart;
+  const cartID = getRootID(classStateCart);
+  const cart = getState(classStateCart) || DoCart.defaultState;
+
+  const { currentLayout } = cart;
+
   const handleChange: ToggleGroupItemProps["onChange"] = (event) => {
-    dispatch(switchLibraryLayout(event.currentTarget.id));
+    doCart.switchLibraryLayout(cartID, event.currentTarget.id);
   };
   return (
     <ToggleGroup>

@@ -1,17 +1,26 @@
+import {
+  getRootID,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { useState } from "react";
 import ChrisAPIClient from "../../../api/chrisapiclient";
-import { clearSelectedPaths } from "../../../store/cart/cartSlice";
+import * as DoCart from "../../../reducers/cart";
 import type { SelectionPayload } from "../../../store/cart/types";
-import { useAppDispatch } from "../../../store/hooks.ts";
 import { type OriginState, useOperationsContext } from "../context";
+
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type DeletionErrors = { path: string; message: string }[];
 
 const useDeletePayload = (origin: OriginState, api: any) => {
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
+  const [classStateCart, doCart] = useCart;
+  const cartID = getRootID(classStateCart);
+
   const { handleOrigin, invalidateQueries } = useOperationsContext();
-  const dispatch = useAppDispatch();
   const [notificationKey, setNotificationKey] = useState<string | null>(null);
 
   const handleDelete = async (paths: SelectionPayload[]) => {
@@ -45,7 +54,8 @@ const useDeletePayload = (origin: OriginState, api: any) => {
       }),
     );
 
-    successfulPaths.forEach((path) => dispatch(clearSelectedPaths(path)));
+    // biome-ignore lint/suspicious/useIterableCallbackReturn: no return in doCart.clearSelectedPaths
+    successfulPaths.forEach((path) => doCart.clearSelectedPaths(cartID, path));
     return errors.length > 0 ? errors : null;
   };
 
