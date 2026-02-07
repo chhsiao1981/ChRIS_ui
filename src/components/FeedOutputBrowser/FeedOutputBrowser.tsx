@@ -2,6 +2,7 @@ import type { PluginInstance } from "@fnndsc/chrisapi";
 import { Alert } from "../Antd";
 import "./FeedOutputBrowser.css";
 import type { ThunkModuleToFunc, UseThunk } from "@chhsiao1981/use-thunk";
+import type * as DoCart from "../../reducers/cart";
 import type * as DoDrawer from "../../reducers/drawer";
 import type * as DoExplorer from "../../reducers/explorer";
 import type * as DoFeed from "../../reducers/feed";
@@ -15,6 +16,7 @@ type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 type TDoExplorer = ThunkModuleToFunc<typeof DoExplorer>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type Props = {
   handlePluginSelect: (node: PluginInstance) => void;
@@ -24,10 +26,11 @@ type Props = {
   useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
   useExplorer: UseThunk<DoExplorer.State, TDoExplorer>;
   useFeed: UseThunk<DoFeed.State, TDoFeed>;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 export default (props: Props) => {
-  const { useUser, useDrawer, useExplorer, useFeed, statuses } = props;
+  const { useUser, useDrawer, useExplorer, useFeed, useCart, statuses } = props;
   const {
     selected,
     pluginFilesPayload,
@@ -69,6 +72,7 @@ export default (props: Props) => {
         useDrawer={useDrawer}
         useExplorer={useExplorer}
         useFeed={useFeed}
+        useCart={useCart}
       />
       {!isHideError && <Alert type="error" description={error?.message} />}
       <EmptyStateLoader title="" isHide={isHideEmptyStateLoader} />

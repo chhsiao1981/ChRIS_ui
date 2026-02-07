@@ -33,6 +33,7 @@ import {
 } from "./components/Routing/RouterContext";
 import Signup from "./components/Signup";
 import SinglePlugin from "./components/SinglePlugin";
+import * as DoCart from "./reducers/cart";
 import * as DoDataTag from "./reducers/dataTag";
 import * as DoDrawer from "./reducers/drawer";
 import * as DoExplorer from "./reducers/explorer";
@@ -46,6 +47,7 @@ type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 type TDoExplorer = ThunkModuleToFunc<typeof DoExplorer>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
 type TDoDataTag = ThunkModuleToFunc<typeof DoDataTag>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 interface State {
   selectData?: Series;
@@ -123,6 +125,9 @@ export default () => {
   const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
   const [_8, doFeed] = useFeed;
 
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
+  const [_9, doCart] = useCart;
+
   console.info("routes: start: route:", route);
 
   const actions: Actions = {
@@ -170,6 +175,7 @@ export default () => {
     doDrawer.init();
     doExplorer.init();
     doFeed.init();
+    doCart.init();
   }, []);
 
   // Update the active sidebar item based on the current route

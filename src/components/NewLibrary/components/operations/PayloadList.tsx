@@ -1,23 +1,32 @@
+import {
+  getRootID,
+  type ThunkModuleToFunc,
+  type UseThunk,
+} from "@chhsiao1981/use-thunk";
 import { Chip, ChipGroup } from "@patternfly/react-core";
 import { getFileName } from "../../../../api/common";
-import { removeSelectedPayload } from "../../../../store/cart/cartSlice";
+import type * as DoCart from "../../../../reducers/cart";
 import type { SelectionPayload } from "../../../../store/cart/types";
-import type { AppDispatch } from "../../../../store/configureStore";
+
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type Props = {
   selectedPaths: SelectionPayload[];
-  dispatch: AppDispatch;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 export default (props: Props) => {
-  const { selectedPaths, dispatch } = props;
+  const { selectedPaths, useCart } = props;
+
+  const [classStateCart, doCart] = useCart;
+  const cartID = getRootID(classStateCart);
 
   return (
     <ChipGroup>
       {selectedPaths.map((selection) => (
         <Chip
           key={selection.path}
-          onClick={() => dispatch(removeSelectedPayload(selection))}
+          onClick={() => doCart.removeSelectedPayload(cartID, selection)}
         >
           {getFileName(selection.path)}
         </Chip>

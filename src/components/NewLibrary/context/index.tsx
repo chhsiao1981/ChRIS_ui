@@ -1,7 +1,13 @@
+import {
+  getRootID,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import { useQueryClient } from "@tanstack/react-query";
-import { createContext, useContext, useRef } from "react";
-import { useDispatch } from "react-redux";
-import { clearAllPaths } from "../../../store/cart/cartSlice";
+import { createContext, type ReactElement, useContext, useRef } from "react";
+import * as DoCart from "../../../reducers/cart";
+
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 export enum OperationContext {
   LIBRARY = "library",
@@ -33,14 +39,18 @@ export const useOperationsContext = () => {
   return context;
 };
 
-export const OperationsProvider: React.FC<
-  React.PropsWithChildren<{
-    children: React.ReactElement;
-  }>
-> = ({ children }) => {
+type Props = {
+  children: ReactElement;
+};
+
+export const OperationsProvider = (props: Props) => {
+  const { children } = props;
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
+  const [classStateCart, doCart] = useCart;
+  const cartID = getRootID(classStateCart);
+
   const queryClient = useQueryClient();
   const originRef = useRef<OriginState>();
-  const dispatch = useDispatch();
 
   const handleOrigin = (newOrigin: OriginState) => {
     originRef.current = newOrigin;
@@ -53,7 +63,7 @@ export const OperationsProvider: React.FC<
 
     if (!type) return;
 
-    dispatch(clearAllPaths());
+    doCart.clearAllPaths(cartID);
 
     switch (type) {
       case OperationContext.LIBRARY:

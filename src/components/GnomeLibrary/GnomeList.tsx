@@ -1,7 +1,9 @@
 import {
+  getRootID,
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
+  useThunk,
 } from "@chhsiao1981/use-thunk";
 import {
   FileBrowserFolder,
@@ -22,12 +24,8 @@ import { format } from "date-fns";
 import type React from "react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import * as DoCart from "../../reducers/cart";
 import * as DoUser from "../../reducers/user";
-import {
-  clearSelectedPaths,
-  setSelectedPaths,
-} from "../../store/cart/cartSlice";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { formatBytes } from "../Feeds/utilties";
 import {
   getFileName,
@@ -42,6 +40,8 @@ import GnomeBulkActionBar from "./GnomeActionBar";
 import { GnomeContextMenu } from "./GnomeContextMenu";
 import styles from "./gnome.module.css";
 import { useInfiniteScroll } from "./utils/hooks/useInfiniteScroll";
+
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type RowProps = {
   rowIndex: number;
@@ -83,8 +83,12 @@ export const GnomeBaseRow = (props: RowProps) => {
   } = props;
 
   // Redux dispatch for selection management
-  const dispatch = useAppDispatch();
-  const selectedPaths = useAppSelector((state) => state.cart.selectedPaths);
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
+  const [classStateCart, doCart] = useCart;
+  const cartID = getRootID(classStateCart);
+  const cart = getState(classStateCart) || DoCart.defaultState;
+  const { selectedPaths } = cart;
+
   const { isNewResource, scrollToNewResource } = useNewResourceHighlight(date);
   const isSelected = selectedPaths.some((payload) => {
     if (type === "folder" || type === "link") {
@@ -103,11 +107,13 @@ export const GnomeBaseRow = (props: RowProps) => {
 
   const toggleSelection = () => {
     if (isSelected) {
-      dispatch(clearSelectedPaths(pathForCart));
+      doCart.clearSelectedPaths(cartID, pathForCart);
     } else {
-      dispatch(
-        setSelectedPaths({ path: pathForCart, type, payload: resource }),
-      );
+      doCart.setSelectedPaths(cartID, {
+        path: pathForCart,
+        type,
+        payload: resource,
+      });
     }
   };
 
@@ -136,9 +142,11 @@ export const GnomeBaseRow = (props: RowProps) => {
 
     // Select the item that was right-clicked if not already selected
     if (!isSelected) {
-      dispatch(
-        setSelectedPaths({ path: pathForCart, type, payload: resource }),
-      );
+      doCart.setSelectedPaths(cartID, {
+        path: pathForCart,
+        type,
+        payload: resource,
+      });
     }
   };
 

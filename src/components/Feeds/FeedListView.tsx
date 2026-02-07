@@ -33,9 +33,7 @@ import type React from "react";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useNavigate } from "react-router";
-import type * as DoDrawer from "../../reducers/drawer";
-import type * as DoFeed from "../../reducers/feed";
-import type * as DoUI from "../../reducers/ui";
+import * as DoCart from "../../reducers/cart";
 import * as DoUser from "../../reducers/user";
 import { useAppSelector } from "../../store/hooks";
 import { Typography } from "../Antd";
@@ -56,10 +54,8 @@ import {
   type PluginInstanceDetails,
 } from "./utilties";
 
-type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
-type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
-type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 const { Paragraph } = Typography;
 
@@ -116,6 +112,8 @@ export default (props: Props) => {
   const user = getState(classStateUser) || DoUser.defaultState;
   const { isLoggedIn, username, isInit, isStaff } = user;
   const theType = isShared ? "public" : "private";
+
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
 
   const navigate = useNavigate();
   const { feedCount, loadingFeedState, feedsToDisplay, searchFolderData } =
@@ -295,6 +293,7 @@ export default (props: Props) => {
           <Operations
             username={username}
             isStaff={isStaff}
+            useCart={useCart}
             origin={{
               type: OperationContext.FEEDS,
               additionalKeys: [perPage, page, theType, search, searchType],

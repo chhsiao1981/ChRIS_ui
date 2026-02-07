@@ -1,9 +1,11 @@
+import { type ThunkModuleToFunc, useThunk } from "@chhsiao1981/use-thunk";
 import type { FileBrowserFolderList } from "@fnndsc/chrisapi";
 import type { DefaultError } from "@tanstack/react-query";
 import { Alert, Dropdown, type MenuProps } from "antd";
 import { useCallback, useRef, useState } from "react";
 import { matchPath } from "react-router";
 import { useLocation } from "react-router-dom";
+import * as DoCart from "../../reducers/cart";
 import {
   AnalysisIcon,
   DeleteIcon,
@@ -17,6 +19,8 @@ import { AddModal } from "../NewLibrary/components/Operations";
 import type { OriginState } from "../NewLibrary/context";
 import { useFolderOperations } from "../NewLibrary/utils/useOperations";
 
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+
 type Props = {
   children: React.ReactNode;
   username: string;
@@ -27,6 +31,8 @@ type Props = {
 
 export const GnomeContextMenu = (props: Props) => {
   const { children, username, origin, computedPath, folderList } = props;
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
+
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -46,6 +52,7 @@ export const GnomeContextMenu = (props: Props) => {
   } = useFolderOperations(
     username,
     origin,
+    useCart,
     computedPath,
     folderList,
     isFeedsTable,

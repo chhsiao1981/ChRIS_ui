@@ -8,6 +8,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { debounce } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import type * as DoCart from "../../reducers/cart";
 import type * as DoDrawer from "../../reducers/drawer";
 import type * as DoFeed from "../../reducers/feed";
 import type * as DoUI from "../../reducers/ui";
@@ -28,19 +29,22 @@ type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type Props = {
   useUI: UseThunk<DoUI.State, TDoUI>;
   useUser: UseThunk<DoUser.State, TDoUser>;
   useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
   useFeed: UseThunk<DoFeed.State, TDoFeed>;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 export default (props: Props) => {
-  const { useUI, useUser, useDrawer, useFeed } = props;
+  const { useUI, useUser, useDrawer, useFeed, useCart } = props;
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
   const { username, isStaff } = user;
+
   const [api, contextHolder] = notification.useNotification();
   const { pathname } = window.location;
   const navigate = useNavigate();
@@ -135,13 +139,7 @@ export default (props: Props) => {
   );
 
   return (
-    <Wrapper
-      useUI={useUI}
-      useUser={useUser}
-      useDrawer={useDrawer}
-      useFeed={useFeed}
-      title={TitleComponent}
-    >
+    <Wrapper title={TitleComponent}>
       {contextHolder}
       <PageSection
         stickyOnBreakpoint={{
@@ -152,6 +150,7 @@ export default (props: Props) => {
         <Operations
           username={username}
           isStaff={isStaff}
+          useCart={useCart}
           origin={{
             type: OperationContext.LIBRARY,
             additionalKeys: [computedPath],

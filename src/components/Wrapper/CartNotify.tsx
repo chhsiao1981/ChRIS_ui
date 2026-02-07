@@ -1,20 +1,30 @@
+import {
+  getRootID,
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import { Button } from "@patternfly/react-core";
 import { isEmpty } from "lodash";
 import { useEffect, useState } from "react";
-import { setToggleCart } from "../../store/cart/cartSlice";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import * as DoCart from "../../reducers/cart";
 import { Badge } from "../Antd";
 import { BrainIcon } from "../Icons";
 
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+
 const CartNotify = () => {
-  const dispatch = useAppDispatch();
-  const state = useAppSelector((state) => state.cart);
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
+  const [classStateCart, doCart] = useCart;
+  const cartID = getRootID(classStateCart);
+  const cart = getState(classStateCart) || DoCart.defaultState;
+
   const {
     fileDownloadStatus,
     fileUploadStatus,
     folderDownloadStatus,
     folderUploadStatus,
-  } = state;
+  } = cart;
 
   const [showNotification, setShowNotification] = useState(false);
 
@@ -38,7 +48,7 @@ const CartNotify = () => {
       <Button
         variant="tertiary"
         icon={<BrainIcon />}
-        onClick={() => dispatch(setToggleCart())}
+        onClick={() => doCart.setToggleCart(cartID)}
       />
     </Badge>
   );

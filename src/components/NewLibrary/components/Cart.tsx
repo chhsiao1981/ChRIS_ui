@@ -3,21 +3,12 @@ import { isEmpty } from "lodash";
 import { Link } from "react-router-dom";
 import { getFileName } from "../../../api/common";
 import {
-  cancelUpload,
-  clearCart,
-  clearDownloadStatus,
-  clearUploadState,
-  setToggleCart,
-} from "../../../store/cart/cartSlice";
-import {
   DownloadTypes,
   type FileUpload,
   type FileUploadObject,
   type FolderUpload,
   type FolderUploadObject,
 } from "../../../store/cart/types";
-import type { AppDispatch } from "../../../store/configureStore";
-import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { Drawer, List, Popconfirm, Space } from "../../Antd";
 import { DotsIndicator, EmptyStateComponent } from "../../Common";
 import { CheckCircleIcon, CloseIcon, FileIcon, FolderIcon } from "../../Icons";
@@ -28,16 +19,31 @@ import {
   TitleNameClipped,
 } from "../utils/longpress";
 import "./Cart.css";
+import {
+  getRootID,
+  getState,
+  type ThunkModuleToFunc,
+  type UseThunk,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
+import * as DoCart from "../../../reducers/cart";
+
+//import Status from "../../NodeDetails/Status";
+
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 const Cart = () => {
-  const dispatch = useAppDispatch();
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
+  const [classStateCart, doCart] = useCart;
+  const cartID = getRootID(classStateCart);
+  const cart = getState(classStateCart) || DoCart.defaultState;
   const {
     openCart,
     fileUploadStatus,
     folderUploadStatus,
     fileDownloadStatus,
     folderDownloadStatus,
-  } = useAppSelector((state) => state.cart);
+  } = cart;
 
   return (
     <Drawer
@@ -45,7 +51,7 @@ const Cart = () => {
       title={<>Notification Panel</>}
       open={openCart}
       onClose={() => {
-        dispatch(setToggleCart());
+        doCart.setToggleCart(cartID);
       }}
       extra={
         <Space>
@@ -55,7 +61,7 @@ const Cart = () => {
             onClick={() => {
               // Implement clear cart logic here
               // This version of cart only clears out finished operations
-              dispatch(clearCart());
+              doCart.clearCart(cartID);
             }}
           >
             Clear Notifications
@@ -74,14 +80,7 @@ const Cart = () => {
               actions={[
                 <Status key={`status-${id}`} currentStatus={status} />,
                 <Button
-                  onClick={() => {
-                    dispatch(
-                      clearDownloadStatus({
-                        path: id,
-                        type: "file",
-                      }),
-                    );
-                  }}
+                  onClick={() => doCart.clearDownloadStatus(cartID, id, "file")}
                   variant="secondary"
                   size="sm"
                   key={`a-${id}`}
@@ -95,7 +94,7 @@ const Cart = () => {
                 title={
                   <TitleNameClipped
                     name={
-                      status.fileName ? getFileName(status.fileName) : "N/A"
+                      status.filename ? getFileName(status.filename) : "N/A"
                     }
                     value={40}
                   />
@@ -116,12 +115,7 @@ const Cart = () => {
             const buttonText = isInProgress ? "Cancel" : "Clear";
 
             const handleAction = () => {
-              dispatch(
-                clearDownloadStatus({
-                  path: id,
-                  type: "folder",
-                }),
-              );
+              doCart.clearDownloadStatus(cartID, id, "folder");
             };
 
             const ActionButton = (
@@ -143,10 +137,10 @@ const Cart = () => {
                     {" "}
                     You can download it from here:{" "}
                     <Link
-                      to={`feeds/${status.feed.data.id}?type=${status.feed.data.public ? "public" : "private"}`} // Adjust this route as needed
+                      to={`feeds/${status.feed.id}?type=${status.feed.public ? "public" : "private"}`} // Adjust this route as needed
                       onClick={(e) => e.stopPropagation()} // Prevent Popconfirm from closing when clicking the link
                     >
-                      {status.feed.data.name}
+                      {status.feed.name}
                     </Link>
                   </>
                 )}
@@ -180,7 +174,7 @@ const Cart = () => {
                   title={
                     <TitleNameClipped
                       name={
-                        status.fileName ? getFileName(status.fileName) : "N/A"
+                        status.filename ? getFileName(status.filename) : "N/A"
                       }
                       value={30}
                     />
@@ -197,12 +191,12 @@ const Cart = () => {
       <UploadList
         uploadStatus={fileUploadStatus}
         type="file"
-        dispatch={dispatch}
+        useCart={useCart}
       />
       <UploadList
         uploadStatus={folderUploadStatus}
         type="folder"
-        dispatch={dispatch}
+        useCart={useCart}
       />
 
       {isEmpty(folderUploadStatus) &&
@@ -251,23 +245,18 @@ type UploadStatusProp = FileUpload | FolderUpload;
 interface UploadListProps {
   uploadStatus: UploadStatusProp;
   type: "file" | "folder";
-  dispatch: AppDispatch;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 }
 const UploadList: React.FC<UploadListProps> = ({
   uploadStatus,
   type,
-  dispatch,
+  useCart,
 }) => (
   <List
     className="operation-cart"
     dataSource={Object.entries(uploadStatus)}
     renderItem={([name, status]) => (
-      <UploadStatus
-        status={status}
-        type={type}
-        name={name}
-        dispatch={dispatch}
-      />
+      <UploadStatus status={status} type={type} name={name} useCart={useCart} />
     )}
   />
 );
@@ -276,15 +265,14 @@ interface UploadStatusProps {
   status: FileUploadObject | FolderUploadObject;
   type: "file" | "folder";
   name: string;
-  dispatch: AppDispatch;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 }
 
-const UploadStatus: React.FC<UploadStatusProps> = ({
-  status,
-  type,
-  name,
-  dispatch,
-}) => {
+const UploadStatus: React.FC<UploadStatusProps> = (props) => {
+  const { status, type, name, useCart } = props;
+  const [classStateCart, doCart] = useCart;
+  const cartID = getRootID(classStateCart);
+
   const isError =
     status.currentStep.includes("Cancelled") ||
     status.currentStep.startsWith("Error");
@@ -298,9 +286,9 @@ const UploadStatus: React.FC<UploadStatusProps> = ({
 
   const handleAction = () => {
     if (status.currentStep === "Uploading...") {
-      dispatch(cancelUpload({ type, id: name }));
+      doCart.cancelUpload(cartID, type, name);
     } else {
-      dispatch(clearUploadState({ type, id: name }));
+      doCart.clearUploadState(cartID, name, type);
     }
   };
 

@@ -1,52 +1,58 @@
+import {
+  getRootID,
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import { Tooltip } from "@patternfly/react-core";
 import { useRef, useState } from "react";
-import {
-  clearAllPaths,
-  clearSelectedPaths,
-  setSelectedPaths,
-} from "../../../store/cart/cartSlice";
+import * as DoCart from "../../../reducers/cart";
 import type { PayloadTypes } from "../../../store/cart/types";
-import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 
-export function elipses(str: string, len: number) {
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+
+export const elipses = (str: string, len: number) => {
   if (str.length <= len) return str;
   return `${str.slice(0, len - 3)}...`;
-}
+};
 
-export default function useGnomeLongPress() {
-  const dispatch = useAppDispatch();
+export default () => {
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
+  const [classStateCart, doCart] = useCart;
+  const cartID = getRootID(classStateCart);
+  const cart = getState(classStateCart) || DoCart.defaultState;
+  const { selectedPaths } = cart;
+
   const [action, setAction] = useState<string>();
-  const state = useAppSelector((state) => state.cart);
   const timerRef = useRef<ReturnType<typeof window.setTimeout>>();
   const isLongPress = useRef<boolean>();
-  const { selectedPaths } = state;
 
-  function startPressTimer() {
+  const startPressTimer = () => {
     isLongPress.current = false;
-    //@ts-ignore
+    //@ts-expect-error
     timerRef.current = window.setTimeout(() => {
       isLongPress.current = true;
       setAction("longpress");
     }, 600);
-  }
+  };
 
-  function clearPressTimer() {
+  const clearPressTimer = () => {
     clearTimeout(timerRef.current);
-  }
+  };
 
-  function selectFolder(pathForCart: string, type: string, payload: any) {
-    dispatch(setSelectedPaths({ path: pathForCart, type, payload }));
-  }
+  const selectFolder = (pathForCart: string, type: string, payload: any) => {
+    doCart.setSelectedPaths(cartID, { path: pathForCart, type, payload });
+  };
 
-  function deselectFolder(pathForCart: string) {
-    dispatch(clearSelectedPaths(pathForCart));
-  }
+  const deselectFolder = (pathForCart: string) => {
+    doCart.clearSelectedPaths(cartID, pathForCart);
+  };
 
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clickCount = useRef(0);
 
   // Common logic for handling contextmenu events
-  function handleContextMenu(
+  const handleContextMenu = (
     e:
       | React.MouseEvent
       | React.TouchEvent
@@ -55,17 +61,17 @@ export default function useGnomeLongPress() {
     payload: PayloadTypes,
     pathForCart: string,
     type: string,
-  ) {
+  ) => {
     e.preventDefault();
 
     // Clear existing selections unless Ctrl is pressed (for multi-select)
     if (!e.ctrlKey) {
-      dispatch(clearAllPaths());
+      doCart.clearAllPaths(cartID);
     }
 
     // Always select the item that was right-clicked
     selectFolder(pathForCart, type, payload);
-  }
+  };
 
   // Common logic for handling Ctrl+Click
   function handleCtrlClick(
@@ -221,7 +227,7 @@ export default function useGnomeLongPress() {
       handleOnClick,
     },
   };
-}
+};
 
 export function getBackgroundRowColor(
   isSelected: boolean,

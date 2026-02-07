@@ -21,6 +21,7 @@ import {
 import { Table, Tbody, Th, Thead, Tr } from "@patternfly/react-table";
 import { type CSSProperties, useEffect, useMemo, useRef } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import type * as DoCart from "../../reducers/cart";
 import * as DoDrawer from "../../reducers/drawer";
 import * as DoExplorer from "../../reducers/explorer";
 import * as DoFeed from "../../reducers/feed";
@@ -51,6 +52,7 @@ type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoExplorer = ThunkModuleToFunc<typeof DoExplorer>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 const previewAnimation = [{ opacity: "0.0" }, { opacity: "1.0" }];
 
@@ -80,6 +82,7 @@ type Props = {
   useUser: UseThunk<DoUser.State, TDoUser>;
   useExplorer: UseThunk<DoExplorer.State, TDoExplorer>;
   useFeed: UseThunk<DoFeed.State, TDoFeed>;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 export default (props: Props) => {
@@ -98,6 +101,7 @@ export default (props: Props) => {
     useUser,
     useExplorer,
     useFeed,
+    useCart,
   } = props;
 
   const [classStateUser, _] = useUser;
@@ -257,6 +261,7 @@ export default (props: Props) => {
                         backgroundColor: "inherit",
                       },
                     }}
+                    useCart={useCart}
                     origin={origin}
                     computedPath={additionalKey}
                     folderList={folderList}

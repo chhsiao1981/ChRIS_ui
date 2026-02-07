@@ -21,6 +21,8 @@ import type { OriginState } from "../context";
 import { type ModalState, useFolderOperations } from "../utils/useOperations";
 import LayoutSwitch from "./LayoutSwitch";
 import "./Operations.css";
+import type { ThunkModuleToFunc, UseThunk } from "@chhsiao1981/use-thunk";
+import type * as DoCart from "../../../reducers/cart";
 import { AddNodeProvider } from "../../AddNode/context";
 import { CreateFeedProvider } from "../../CreateFeed/context";
 import { PipelineProvider } from "../../PipelinesCopy/context";
@@ -32,6 +34,8 @@ import PayloadList from "./operations/PayloadList";
 import Rename from "./operations/Rename";
 import Share from "./operations/Share";
 import UploadData from "./operations/UploadData";
+
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 export type AdditionalValues = {
   share: {
@@ -51,6 +55,7 @@ type Props = {
   customClassName?: {
     [key: string]: string;
   };
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 export default (props: Props) => {
@@ -62,6 +67,7 @@ export default (props: Props) => {
     folderList,
     customStyle,
     customClassName,
+    useCart,
   } = props;
   const location = useLocation();
   const dispatch = useAppDispatch();
@@ -82,6 +88,7 @@ export default (props: Props) => {
   } = useFolderOperations(
     username,
     origin,
+    useCart,
     computedPath,
     folderList,
     isFeedsTable,
@@ -151,7 +158,7 @@ export default (props: Props) => {
         </ToolbarItem>
 
         <ToolbarItem>
-          <PayloadList selectedPaths={selectedPaths} dispatch={dispatch} />
+          <PayloadList selectedPaths={selectedPaths} useCart={useCart} />
         </ToolbarItem>
       </Fragment>
     ),
@@ -199,7 +206,6 @@ export default (props: Props) => {
         ref={folderInputRef}
         type="file"
         hidden
-        //@ts-ignore
         webkitdirectory=""
         directory=""
         onChange={(e) => {
