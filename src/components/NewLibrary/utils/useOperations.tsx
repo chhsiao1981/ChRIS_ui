@@ -1,3 +1,9 @@
+import {
+  getRootID,
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import type {
   FileBrowserFolder,
   FileBrowserFolderFile,
@@ -8,17 +14,9 @@ import { useMutation } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import ChrisAPIClient from "../../../api/chrisapiclient";
 import { getFileName } from "../../../api/common";
-import {
-  clearAllPaths,
-  clearSelectedPaths,
-  setToggleCart,
-  startAnonymize,
-  startDownload,
-  startUpload,
-} from "../../../store/cart/cartSlice";
+import * as DoCart from "../../../reducers/cart";
 import { createFeed as createFeedSaga } from "../../../store/cart/downloadSaga";
 import type { SelectionPayload } from "../../../store/cart/types";
-import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { notification } from "../../Antd";
 import { getFolderName } from "../components/FolderCard";
 import type { AdditionalValues } from "../components/Operations";
@@ -26,6 +24,8 @@ import { type OriginState, useOperationsContext } from "../context";
 import useDeletePayload from "../utils/useDeletePayload";
 import { fetchFeedForPath } from "./longpress";
 import useFeedOperations from "./useFeedOperations";
+
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 export interface ModalState {
   type: string;
@@ -80,10 +80,13 @@ export const useFolderOperations = (
 ) => {
   const { handleOrigin, invalidateQueries } = useOperationsContext();
 
-  // perform operations on selected paths
-  const { selectedPaths } = useAppSelector((state) => state.cart);
-  const dispatch = useAppDispatch();
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
+  const [classStateCart, doCart] = useCart;
+  const cartID = getRootID(classStateCart);
+  const cart = getState(classStateCart) || DoCart.defaultState;
+  const { selectedPaths } = cart;
 
+  // perform operations on selected paths
   const [modalState, setModalState] = useState<ModalState>({
     isOpen: false,
     type: "folder",
@@ -147,17 +150,16 @@ export const useFolderOperations = (
     // Otherwise, use the current `computedPath`.
     */
     // Dispatch startUpload through the store
-    dispatch(
-      startUpload({
-        files,
-        isFolder,
-        currentPath: uploadPath as string,
-        //when this function is called in the store, the page resets
-        invalidateFunc: invalidateQueries,
-        createFeed,
-        nameForFeed: name,
-      }),
+    doCart.startUpload(
+      cartID,
+      files,
+      isFolder,
+      uploadPath as string,
+      //when this function is called in the store, the page resets
+      createFeed,
+      name,
     );
+
     // Reset input after uploading
     resetInputField(isFolder ? folderInputRef : fileInputRef);
   };
@@ -287,7 +289,7 @@ export const useFolderOperations = (
     switch (type) {
       case "folder":
         await (payload as FileBrowserFolder).put({
-          //@ts-ignore
+          //@ts-expect-error
           path: newPath,
         });
         break;
@@ -304,7 +306,7 @@ export const useFolderOperations = (
       default:
         throw new Error(`Unsupported type: ${type}`);
     }
-    dispatch(clearSelectedPaths(oldPath));
+    doCart.clearSelectedPaths(cartID, oldPath);
   };
 
   const handleRenameError = (error: any): void => {
@@ -384,13 +386,13 @@ export const useFolderOperations = (
       showSuccessNotification(modalState.type, modalState.additionalProps);
 
       // Clear selected paths after success
-      dispatch(clearAllPaths());
+      doCart.clearAllPaths(cartID);
     },
   });
 
   // Function to clear all selections
   const clearAllSelections = () => {
-    dispatch(clearAllPaths());
+    doCart.clearAllPaths(cartID);
   };
 
   // Handle operations
@@ -414,14 +416,14 @@ export const useFolderOperations = (
       },
       download: () => {
         handleOrigin(origin);
-        dispatch(setToggleCart());
-        dispatch(startDownload({ paths: selectedPaths, username: username }));
+        doCart.setToggleCart(cartID);
+        doCart.startDownload(cartID, selectedPaths, username);
         invalidateQueries();
       },
       anonymize: () => {
         handleOrigin(origin);
-        dispatch(setToggleCart());
-        dispatch(startAnonymize({ paths: selectedPaths, username }));
+        doCart.setToggleCart(cartID);
+        doCart.startAnonymize(cartID, selectedPaths, username);
       },
       delete: () => deleteMutation.mutate(selectedPaths),
       newFolder: () => setModalState({ isOpen: true, type: "folder" }),

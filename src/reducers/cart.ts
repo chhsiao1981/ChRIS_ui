@@ -1,18 +1,11 @@
 import {
   init as _init,
-  type DispatchFuncMap,
   getState,
   type State as rState,
   setData,
   type Thunk,
-  type ThunkModuleToFunc,
 } from "@chhsiao1981/use-thunk";
-import { FolderOpenAltIcon } from "@patternfly/react-icons";
-import { select } from "d3-selection";
-import { fold } from "fp-ts/lib/Option";
-import _, { values } from "lodash";
 import type { Data } from "../api/types";
-import Download from "../components/NewLibrary/components/operations/Download";
 import type { SelectionPayload } from "../store/cart/types";
 import {
   type DownloadStatus,
@@ -61,10 +54,33 @@ export const switchLibraryLayout = (
   };
 };
 
-export const startUpload = (myID: string): Thunk<State> => {
+export const startUpload = (
+  myID: string,
+  files: File[],
+  isFolder: boolean,
+  currentPath: string,
+  createFeed?: boolean,
+  nameForFeed?: string,
+): Thunk<State> => {
   return (dispatch, _) => {
     dispatch(setData(myID, { openCart: true }));
   };
+};
+
+export const startDownload = (
+  myID: string,
+  paths: SelectionPayload[],
+  username: string,
+): Thunk<State> => {
+  return (dispatch, _) => {};
+};
+
+export const startAnonymize = (
+  myID: string,
+  paths: SelectionPayload[],
+  username: string,
+): Thunk<State> => {
+  return (dispatch, _) => {};
 };
 
 export const setSelectedPaths = (

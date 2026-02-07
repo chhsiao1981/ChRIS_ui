@@ -1,3 +1,9 @@
+import {
+  getRootID,
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import type {
   Feed,
   FileBrowserFolder,
@@ -8,62 +14,62 @@ import { Button, Tooltip } from "@patternfly/react-core";
 import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import { value } from "../../../../node_modules.docker/happy-dom/cjs/PropertySymbol";
 import ChrisAPIClient from "../../../api/chrisapiclient";
-import {
-  clearAllPaths,
-  clearSelectedPaths,
-  setSelectedPaths,
-  setToggleCart,
-} from "../../../store/cart/cartSlice";
+import * as DoCart from "../../../reducers/cart";
 import type { PayloadTypes } from "../../../store/cart/types";
-import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { FolderIcon } from "../../Icons";
 
-export function elipses(str: string, len: number) {
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+
+export const elipses = (str: string, len: number) => {
   if (str.length <= len) return str;
   return `${str.slice(0, len - 3)}...`;
-}
+};
 
-export default function useLongPress() {
-  const dispatch = useAppDispatch();
+export default () => {
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
+  const [classStateCart, doCart] = useCart;
+  const cartID = getRootID(classStateCart);
+  const cart = getState(classStateCart) || DoCart.defaultState;
+
   const [action, setAction] = useState<string>();
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false); // Track menu state
-  const state = useAppSelector((state) => state.cart);
   const timerRef = useRef<ReturnType<typeof window.setTimeout>>();
   const isLongPress = useRef<boolean>();
-  const { selectedPaths } = state;
+  const { selectedPaths } = cart;
 
-  function startPressTimer() {
+  const startPressTimer = () => {
     isLongPress.current = false;
-    //@ts-ignore
+    //@ts-expect-error
     timerRef.current = window.setTimeout(() => {
       isLongPress.current = true;
       setAction("longpress");
     }, 600);
-  }
+  };
 
-  function clearPressTimer() {
+  const clearPressTimer = () => {
     clearTimeout(timerRef.current);
-  }
+  };
 
-  function selectFolder(pathForCart: string, type: string, payload: any) {
-    dispatch(setSelectedPaths({ path: pathForCart, type, payload }));
-  }
+  const selectFolder = (pathForCart: string, type: string, payload: any) => {
+    doCart.setSelectedPaths(cartID, { path: pathForCart, type, payload });
+  };
 
-  function deselectFolder(pathForCart: string) {
-    dispatch(clearSelectedPaths(pathForCart));
-  }
+  const deselectFolder = (pathForCart: string) => {
+    doCart.clearSelectedPaths(cartID, pathForCart);
+  };
 
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clickCount = useRef(0);
 
-  function handleOnClick(
+  const handleOnClick = (
     e: React.MouseEvent | React.TouchEvent | React.KeyboardEvent,
     payload: PayloadTypes,
     pathForCart: string,
     type: string,
     optionalCallback?: () => void,
-  ) {
+  ) => {
     const isExist = selectedPaths.some((item) => item.path === pathForCart);
 
     clickCount.current += 1;
@@ -85,7 +91,7 @@ export default function useLongPress() {
           e.preventDefault(); // Prevent the default context menu from appearing
           // First deselect all other items (unless holding Ctrl)
           if (!e.ctrlKey) {
-            dispatch(clearAllPaths());
+            doCart.clearAllPaths(cartID);
           }
           // Always select the item that was right-clicked
           selectFolder(pathForCart, type, payload);
@@ -112,7 +118,7 @@ export default function useLongPress() {
       clickCount.current = 0;
     }, 300); // Adjust this delay as needed
     // Handle Ctrl + Click for selection
-  }
+  };
 
   const handleCheckboxChange = (
     e: React.FormEvent<HTMLInputElement>,
@@ -134,22 +140,22 @@ export default function useLongPress() {
     }
   };
 
-  function handleOnMouseDown() {
+  const handleOnMouseDown = () => {
     startPressTimer();
-  }
+  };
 
-  function handleOnMouseUp() {
+  const handleOnMouseUp = () => {
     clearPressTimer();
-  }
+  };
 
-  function handleOnTouchStart() {
+  const handleOnTouchStart = () => {
     startPressTimer();
-  }
+  };
 
-  function handleOnTouchEnd() {
+  const handleOnTouchEnd = () => {
     if (action === "longpress") return;
     clearPressTimer();
-  }
+  };
 
   return {
     action,
@@ -163,27 +169,27 @@ export default function useLongPress() {
       isMenuOpen,
     },
   };
-}
+};
 
-export function getBackgroundRowColor(
+export const getBackgroundRowColor = (
   isSelected: boolean,
   isDarkTheme: boolean,
-) {
+) => {
   const backgroundColor = isDarkTheme ? "#002952" : "#E7F1FA";
 
   const backgroundRow = "inherit";
   const selectedBgRow = isSelected ? backgroundColor : backgroundRow;
 
   return selectedBgRow;
-}
+};
 
-export function TitleNameClipped({
+export const TitleNameClipped = ({
   name,
   value,
 }: {
   name: string;
   value: number;
-}) {
+}) => {
   const clippedName = elipses(name, value);
 
   return (
@@ -191,32 +197,36 @@ export function TitleNameClipped({
       <span>{clippedName}</span>
     </Tooltip>
   );
-}
+};
 
-export function ShowInFolder({
+export const ShowInFolder = ({
   path,
   isError,
 }: {
   path: string;
   isError: boolean;
-}) {
+}) => {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
+  const [classStateCart, doCart] = useCart;
+  const cartID = getRootID(classStateCart);
+
+  const onClick = () => {
+    navigate(`/library/${path}`);
+    // Close the cart once the user wants to navigate away
+    doCart.setToggleCart(cartID);
+  };
   return (
     <Tooltip content={"Show in Folder"}>
       <Button
         isDisabled={isError}
-        onClick={() => {
-          navigate(`/library/${path}`);
-          // Close the cart once the user wants to navigate away
-          dispatch(setToggleCart());
-        }}
+        onClick={onClick}
         variant="link"
         icon={<FolderIcon />}
       />
     </Tooltip>
   );
-}
+};
 
 export const fetchFeedForPath = async (path: string): Promise<Feed | null> => {
   const feedMatches = path.match(/feed_(\d+)/);
@@ -250,7 +260,7 @@ export const useAssociatedFeed = (folderPath: string) => {
   });
 };
 
-export function formatBytesWithPadding(bytes: number): string {
+export const formatBytesWithPadding = (bytes: number): string => {
   if (bytes === 0) return "  0.00 B ";
   const k = 1024;
   const dm = 2; // Decimal places
@@ -258,4 +268,4 @@ export function formatBytesWithPadding(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   const formattedNumber = (bytes / k ** i).toFixed(dm).padStart(6, " ");
   return `${formattedNumber} ${sizes[i]}`;
-}
+};
