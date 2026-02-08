@@ -14,7 +14,6 @@ import { Button, Tooltip } from "@patternfly/react-core";
 import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { value } from "../../../../node_modules.docker/happy-dom/cjs/PropertySymbol";
 import ChrisAPIClient from "../../../api/chrisapiclient";
 import * as DoCart from "../../../reducers/cart";
 import type { PayloadTypes } from "../../../store/cart/types";

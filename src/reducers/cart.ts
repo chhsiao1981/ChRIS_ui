@@ -75,6 +75,14 @@ export const startDownload = (
   return (dispatch, _) => {};
 };
 
+export const cancelUpload = (
+  myID: string,
+  theType: string,
+  theID: string,
+): Thunk<State> => {
+  return (dispatch, _) => {};
+};
+
 export const startAnonymize = (
   myID: string,
   paths: SelectionPayload[],
@@ -144,7 +152,7 @@ export const clearAllPaths = (myID: string): Thunk<State> => {
 
 export const clearDownloadStatus = (
   myID: string,
-  theID: number,
+  theID: string,
   theType: string,
 ): Thunk<State> => {
   return (dispatch, getClassState) => {
@@ -370,7 +378,7 @@ export const removeSelectedPayload = (
 
 export const clearUploadState = (
   myID: string,
-  theID: number,
+  theID: string,
   theType: string,
 ): Thunk<State> => {
   return (dispatch, getClassState) => {
