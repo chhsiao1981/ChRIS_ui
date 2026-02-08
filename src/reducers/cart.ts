@@ -458,3 +458,24 @@ export const clearCartOnLogout = (myID: string): Thunk<State> => {
     dispatch(setData(myID, toUpdate));
   };
 };
+
+// downloadSaga
+const setStatus = (
+  myID: string,
+  theType: string,
+  theID: number,
+  step: DownloadTypes,
+  filename: string,
+  error?: string,
+  feed?: Data,
+): Thunk<State> => {
+  return (dispatch, _) => {
+    if (theType === "file") {
+      dispatch(setFileDownloadStatus(myID, theID, step, filename, error));
+    } else {
+      dispatch(
+        setFolderDownloadStatus(myID, theID, step, filename, error, feed),
+      );
+    }
+  };
+};
