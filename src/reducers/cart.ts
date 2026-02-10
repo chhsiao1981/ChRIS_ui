@@ -6,6 +6,11 @@ import {
   type Thunk,
 } from "@chhsiao1981/use-thunk";
 import type { Data } from "../api/types";
+import type {
+  FileBrowserFolder,
+  FileBrowserFolderFile,
+  FileBrowserFolderLinkFile,
+} from "../api/types/fileBrowser";
 import type { SelectionPayload } from "../store/cart/types";
 import {
   type DownloadStatus,
@@ -476,6 +481,66 @@ const setStatus = (
       dispatch(
         setFolderDownloadStatus(myID, theID, step, filename, error, feed),
       );
+    }
+  };
+};
+
+export const createFeed = (
+  myID: string,
+  path: string[],
+  feedname: string,
+  invalidateFunc?: () => void,
+): Thunk<State> => {
+  return (dispatch, _) => {};
+};
+
+const downloadFolder = (
+  myID: string,
+  payload:
+    | FileBrowserFolder
+    | FileBrowserFolderFile
+    | FileBrowserFolderLinkFile,
+  username: string,
+  pipelineType: string,
+): Thunk<State> => {
+  return (dispatch, _) => {};
+};
+
+const downloadEach = (
+  myID: string,
+  path: SelectionPayload,
+  username: string,
+  pipelineType: string,
+): Thunk<State> => {
+  return (dispatch, _) => {};
+};
+
+const download = (
+  myID: string,
+  theType: string,
+  payload?: any,
+  meta?: any,
+  error?: any,
+): Thunk<State> => {
+  return (dispatch, _) => {
+    const { paths, username } = payload;
+    for (const path of paths) {
+      dispatch(downloadEach(myID, path, username, "Download Pipeline"));
+    }
+  };
+};
+
+const anonymize = (
+  myID: string,
+  theType: string,
+  payload?: any,
+  meta?: any,
+  error?: any,
+): Thunk<State> => {
+  return (dispatch, _) => {
+    const { paths, username } = payload;
+    for (const path of paths) {
+      dispatch(downloadEach(myID, path, username, "Anonymize Pipeline"));
     }
   };
 };

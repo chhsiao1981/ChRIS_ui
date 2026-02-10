@@ -126,7 +126,7 @@ export default () => {
   const [_8, doFeed] = useFeed;
 
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
-  const [_8, doCart] = useCart;
+  const [_9, doCart] = useCart;
 
   console.info("routes: start: route:", route);
 
