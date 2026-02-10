@@ -1,6 +1,8 @@
+import { type ThunkModuleToFunc, useThunk } from "@chhsiao1981/use-thunk";
 import type { FileBrowserFolderList } from "@fnndsc/chrisapi";
 import type { DefaultError } from "@tanstack/react-query";
 import { matchPath } from "react-router";
+import * as DoCart from "../../../reducers/cart";
 import { Alert, Dropdown, type MenuProps } from "../../Antd";
 import {
   AnalysisIcon,
@@ -15,6 +17,8 @@ import type { OriginState } from "../context";
 import { useFolderOperations } from "../utils/useOperations";
 import { AddModal } from "./Operations";
 
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+
 type Props = {
   children: React.ReactElement;
   computedPath?: string;
@@ -25,6 +29,8 @@ type Props = {
 
 export const FolderContextMenu = (props: Props) => {
   const { children, username, origin, folderList, computedPath } = props;
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
+
   const isFeedsTable =
     matchPath({ path: "/feeds", end: true }, location.pathname) !== null; // This checks if the path matches and returns true or false
   const {
@@ -38,6 +44,7 @@ export const FolderContextMenu = (props: Props) => {
   } = useFolderOperations(
     username,
     origin,
+    useCart,
     computedPath,
     folderList,
     isFeedsTable,

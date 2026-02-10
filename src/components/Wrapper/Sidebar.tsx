@@ -19,6 +19,7 @@ import { isEmpty } from "lodash";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import brandImg from "../../assets/logo_chris_dashboard.png";
+import type * as DoCart from "../../reducers/cart";
 import { Role } from "../../reducers/types";
 import * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
@@ -30,10 +31,12 @@ import styles from "./Sidebar.module.css";
 
 type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type Props = {
   useUI: UseThunk<DoUI.State, TDoUI>;
   useUser: UseThunk<DoUser.State, TDoUser>;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 type TagInfo = {
@@ -42,7 +45,7 @@ type TagInfo = {
 
 export default (props: Props) => {
   const queryClient = useQueryClient();
-  const { useUI, useUser } = props;
+  const { useUI, useUser, useCart } = props;
   const [classStateUI, doUI] = useUI;
   const [classStateUser, _2] = useUser;
   const ui = getState(classStateUI) || DoUI.defaultState;
@@ -167,7 +170,14 @@ export default (props: Props) => {
     handleModalSubmitMutation,
     handleOperations,
     setModalState,
-  } = useFolderOperations(username, origin, undefined, undefined, true);
+  } = useFolderOperations(
+    username,
+    origin,
+    useCart,
+    undefined,
+    undefined,
+    true,
+  );
 
   const uploadDataColor =
     sidebarActiveItem === "uploadData" ? "#ffffff" : "#aaaaaa";
@@ -310,7 +320,6 @@ export default (props: Props) => {
               ref={folderInputRef}
               type="file"
               hidden
-              //@ts-ignore
               webkitdirectory=""
               directory=""
               onChange={(e) => {

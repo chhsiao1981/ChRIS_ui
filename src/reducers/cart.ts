@@ -22,7 +22,7 @@ import {
   type FolderUploadObject,
 } from "./types";
 
-export const myClass = "chris-ui/user";
+export const myClass = "chris-ui/cart";
 
 export interface State extends rState {
   currentLayout: string;
@@ -169,12 +169,14 @@ export const clearDownloadStatus = (
     const { folderDownloadStatus, fileDownloadStatus } = me;
     if (theType === "folder") {
       const newFolderDownloadStatus = Object.assign({}, folderDownloadStatus);
+      // @ts-expect-error unsure theID is number or string
       delete newFolderDownloadStatus[theID];
       dispatch(
         setData(myID, { folderDownloadStatus: newFolderDownloadStatus }),
       );
     } else if (theType === "file") {
       const newFileDownloadStatus = Object.assign({}, fileDownloadStatus);
+      // @ts-expect-error unsure theID is number or string
       delete newFileDownloadStatus[theID];
       dispatch(setData(myID, { fileDownloadStatus: newFileDownloadStatus }));
     }

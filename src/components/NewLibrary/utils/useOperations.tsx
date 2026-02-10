@@ -2,6 +2,7 @@ import {
   getRootID,
   getState,
   type ThunkModuleToFunc,
+  type UseThunk,
   useThunk,
 } from "@chhsiao1981/use-thunk";
 import type {
@@ -74,13 +75,13 @@ const getOperationName = (
 export const useFolderOperations = (
   username: string,
   origin: OriginState,
+  useCart: UseThunk<DoCart.State, TDoCart>,
   computedPath?: string,
   folderList?: FileBrowserFolderList,
   createFeed?: boolean,
 ) => {
   const { handleOrigin, invalidateQueries } = useOperationsContext();
 
-  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
   const [classStateCart, doCart] = useCart;
   const cartID = getRootID(classStateCart);
   const cart = getState(classStateCart) || DoCart.defaultState;

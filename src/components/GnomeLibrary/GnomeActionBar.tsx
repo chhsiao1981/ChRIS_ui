@@ -58,7 +58,14 @@ const GnomeBulkActionBar = (props: Props) => {
   const [isSelectionPopoverOpen, setIsSelectionPopoverOpen] = useState(false);
 
   const { modalState, handleModalSubmitMutation, handleOperations } =
-    useFolderOperations(username, origin, computedPath, folderList, false);
+    useFolderOperations(
+      username,
+      origin,
+      useCart,
+      computedPath,
+      folderList,
+      false,
+    );
 
   useEffect(() => {
     const checkWidth = () => {
