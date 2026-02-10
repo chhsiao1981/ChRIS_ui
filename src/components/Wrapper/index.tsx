@@ -11,12 +11,14 @@ import {
   useThunk,
 } from "@chhsiao1981/use-thunk";
 import { Page } from "@patternfly/react-core";
+import * as DoCart from "../../reducers/cart";
 import * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
 import { OperationsProvider } from "../NewLibrary/context";
 
 type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type Props = {
   children: ReactElement[] | ReactElement;
@@ -35,6 +37,8 @@ export default (props: Props) => {
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
   const { isLoggedIn } = user;
+
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
 
   const niivueActive = sidebarActiveItem === "niivue";
 
@@ -58,7 +62,7 @@ export default (props: Props) => {
 
   const sidebar = isLoggedIn ? (
     <OperationsProvider>
-      <Sidebar useUI={useUI} useUser={useUser} />
+      <Sidebar useUI={useUI} useUser={useUser} useCart={useCart} />
     </OperationsProvider>
   ) : (
     <AnonSidebar isNavOpen={isNavOpen} sidebarActiveItem={sidebarActiveItem} />

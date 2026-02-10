@@ -22,7 +22,6 @@ import {
   getRootID,
   getState,
   type ThunkModuleToFunc,
-  type UseThunk,
   useThunk,
 } from "@chhsiao1981/use-thunk";
 import { collectionJsonToJson } from "../../api/api";
@@ -30,6 +29,7 @@ import {
   PkgInstanceStatus,
   type PkgInstance as PluginInstanceType,
 } from "../../api/types";
+import * as DoCart from "../../reducers/cart";
 import * as DoDrawer from "../../reducers/drawer";
 import * as DoExplorer from "../../reducers/explorer";
 import * as DoFeed from "../../reducers/feed";
@@ -45,6 +45,7 @@ type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 type TDoExplorer = ThunkModuleToFunc<typeof DoExplorer>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 export default () => {
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
@@ -64,6 +65,8 @@ export default () => {
   const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
   const [classStateFeed, doFeed] = useFeed;
   const feedID = getRootID(classStateFeed);
+
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
 
   const [currentLayout, setCurrentLayout] = useState(false);
   const dispatch = useAppDispatch();
@@ -282,6 +285,7 @@ export default () => {
             useDrawer={useDrawer}
             useExplorer={useExplorer}
             useFeed={useFeed}
+            useCart={useCart}
           />
         </Panel>
       </PanelGroup>
