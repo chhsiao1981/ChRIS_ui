@@ -1,9 +1,12 @@
-import type { PluginInstance } from "@fnndsc/chrisapi";
 import { Button, Modal, ModalVariant } from "@patternfly/react-core";
 import { useMutation } from "@tanstack/react-query";
 import React, { Fragment, useCallback, useContext } from "react";
-import ChrisAPIClient from "../../api/chrisapiclient";
-import { fetchResource } from "../../api/common";
+import {
+  computeWorkflowNodesInfo,
+  createWorkflow,
+  getWorkflowPluginInstances,
+} from "../../api/serverApi";
+import type { PluginInstance } from "../../api/types";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { getNodeOperations } from "../../store/plugin/pluginSlice";
 import { Alert, Form, Tag } from "../Antd";
@@ -41,15 +44,17 @@ export default (props: Props) => {
   }, [childPipeline, dispatch, reactDispatch]);
 
   const addPipeline = async () => {
-    const id = pipelineToAdd?.data.id;
+    if (!pipelineToAdd) {
+      return;
+    }
+    const id = pipelineToAdd.id;
     const resources = selectedPipeline?.[id];
 
     if (selectedPlugin && resources) {
       const { parameters } = resources;
-      const client = ChrisAPIClient.getClient();
 
       try {
-        const nodes_info = client.computeWorkflowNodesInfo(parameters.data);
+        const nodes_info = computeWorkflowNodesInfo(parameters);
         for (const node of nodes_info) {
           const activeNode = computeInfo?.[id][node.piping_id];
           const titleSet = titleInfo?.[id][node.piping_id];
@@ -64,20 +69,23 @@ export default (props: Props) => {
           }
         }
 
-        const workflow = await client.createWorkflow(id, {
-          previous_plugin_inst_id: selectedPlugin.data.id,
-          nodes_info: JSON.stringify(nodes_info),
-        });
+        const {
+          status,
+          data: workflow,
+          errmsg,
+        } = await createWorkflow(id, selectedPlugin.data.id, nodes_info);
+        if (!workflow) {
+          return;
+        }
 
-        const fn = workflow.getPluginInstances;
-        const boundFn = fn.bind(workflow);
-        const params = { limit: 100, offset: 0 };
-        const { resource: instanceItems } = await fetchResource<PluginInstance>(
-          params,
-          boundFn,
-        );
-        if (instanceItems && alreadyAvailableInstances) {
-          addNodeLocally(instanceItems.reverse());
+        const {
+          status: status2,
+          data,
+          errmsg: errmsg2,
+        } = await getWorkflowPluginInstances(workflow.id, 0, 100);
+        const instances = data || [];
+        if (instances && alreadyAvailableInstances) {
+          addNodeLocally(instances.reverse());
         }
       } catch (e: any) {
         if (e instanceof Error) throw new Error(e.message);
@@ -107,7 +115,7 @@ export default (props: Props) => {
 
   const isButtonDisabled = !(
     pipelineToAdd &&
-    computeInfo?.[pipelineToAdd.data.id] &&
+    computeInfo?.[pipelineToAdd.id] &&
     !mutation.isPending
   );
 
@@ -148,7 +156,7 @@ export default (props: Props) => {
                     });
                   }}
                 >
-                  {state.pipelineToAdd.data.name}
+                  {state.pipelineToAdd.name}
                 </Tag>
               </Form.Item>
             </div>

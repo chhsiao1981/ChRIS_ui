@@ -1,15 +1,15 @@
 import api, { type ApiResult } from "../api";
-import type { Data } from "../types";
-import { createPkgInstance } from "./pkgInstance";
+import type { Feed, ID } from "../types";
+import { createPluginInstance } from "./pluginInstance";
 
-export const getData = (dataID: number) =>
-  api<Data>({
+export const getFeed = (dataID: ID) =>
+  api<Feed>({
     endpoint: `/${dataID}/`,
     method: "get",
   });
 
-export const updateDataName = (dataID: number, dataName: string) =>
-  api<Data>({
+export const updateFeedName = (dataID: ID, dataName: string) =>
+  api<Feed>({
     endpoint: `/${dataID}/`,
     method: "put",
     json: {
@@ -17,8 +17,8 @@ export const updateDataName = (dataID: number, dataName: string) =>
     },
   });
 
-export const updateDataPublic = (dataID: number, isPublic = true) =>
-  api<Data>({
+export const updateFeedPublic = (dataID: ID, isPublic = true) =>
+  api<Feed>({
     endpoint: `/${dataID}/`,
     method: "put",
     json: {
@@ -26,14 +26,14 @@ export const updateDataPublic = (dataID: number, isPublic = true) =>
     },
   });
 
-export const createDataWithFilepath = async (
+export const createFeedWithFilepath = async (
   filepath: string,
   theName: string,
   // biome-ignore lint/correctness/noUnusedFunctionParameters: not using tags for now.
   tags?: string[],
   isPublic: boolean = false,
-): Promise<ApiResult<Data>> => {
-  const { status, data, errmsg } = await createPkgInstance(1, [filepath]);
+): Promise<ApiResult<Feed>> => {
+  const { status, data, errmsg } = await createPluginInstance(1, [filepath]);
   if (!data) {
     return {
       errmsg,
@@ -43,13 +43,13 @@ export const createDataWithFilepath = async (
 
   const { feed_id: dataID } = data;
 
-  await updateDataName(dataID, theName);
+  await updateFeedName(dataID, theName);
 
   if (isPublic) {
-    await updateDataPublic(dataID, true);
+    await updateFeedPublic(dataID, true);
   }
 
-  const dataResult = await getData(dataID);
+  const dataResult = await getFeed(dataID);
 
   return dataResult;
 };

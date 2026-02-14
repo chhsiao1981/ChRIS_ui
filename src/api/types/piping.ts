@@ -1,7 +1,8 @@
 import type { ID } from "./id";
+import type { PluginDefaultParameter } from "./plugin";
 
 // legacy: piping
-export interface PkgNode {
+export interface Piping {
   id: ID;
   pipeline_id: ID;
   plugin_id: ID;
@@ -11,15 +12,16 @@ export interface PkgNode {
   previous_id: ID | null;
 }
 
-export interface PkgNodeInfo {
+export interface PipingInfo {
   piping_id: ID;
   previous_piping_id: ID | null;
   compute_resource_name: string;
   title: string;
+  plugin_parameter_defaults?: PluginDefaultParameter[];
 }
 
 // legacy: pipeline-default-parameter
-export interface PkgNodeDefaultParameter {
+export interface PipingDefaultParameter {
   id: ID;
   param_id: ID;
   param_name: string;
@@ -33,7 +35,7 @@ export interface PkgNodeDefaultParameter {
   value: any;
 }
 
-export interface UploadPkgNodeInfo {
+export interface UploadPipingInfo {
   title: string;
   previous: string | null;
   plugin: string;

@@ -1,8 +1,16 @@
 import api from "../api";
-import type { DataTag } from "../types";
+import type { Tag } from "../types";
 
-export const getDataTags = (username = "", name = "") => {
-  const query: any = {};
+export const getTags = (
+  username = "",
+  name = "",
+  offset: number = 0,
+  limit: number = 30,
+) => {
+  const query: any = {
+    offset,
+    limit,
+  };
   if (username) {
     query.owner_username = username;
   }
@@ -10,15 +18,15 @@ export const getDataTags = (username = "", name = "") => {
     query.name = name;
   }
 
-  return api<DataTag[]>({
+  return api<Tag[]>({
     endpoint: `/tags/search/`,
     method: "get",
     query,
   });
 };
 
-export const createDataTag = (username: string, name: string, color = "gray") =>
-  api<DataTag[]>({
+export const createTag = (username: string, name: string, color = "gray") =>
+  api<Tag[]>({
     endpoint: `/tags/`,
     method: "post",
     json: {

@@ -1,10 +1,9 @@
 import {
-  createDataWithFilepath,
-  getData,
-  updateDataName,
-  updateDataPublic,
-} from "./data";
-import { createDataTag, getDataTags } from "./dataTag";
+  createFeedWithFilepath,
+  getFeed,
+  updateFeedName,
+  updateFeedPublic,
+} from "./feed";
 import { createDownloadToken, getLinkMap } from "./misc";
 import {
   getPACSSeriesListBySeriesUID,
@@ -15,8 +14,14 @@ import {
   queryPFDCMStudies,
   retrievePFDCMPACS,
 } from "./pacs";
-import { createPkg, searchPkgsByName } from "./pkg";
-import { createPkgInstance, getPkgInstances } from "./pkgInstance";
+import { createPipeline, getPipelines } from "./pipeline";
+import { searchPluginsByName } from "./plugin";
+import {
+  createPluginInstance,
+  getPluginInstances,
+  getWorkflowPluginInstances,
+} from "./pluginInstance";
+import { createTag, getTags } from "./tag";
 import {
   createUser,
   getAuthToken,
@@ -25,7 +30,7 @@ import {
   getUserInfo,
   oidcRedirect,
 } from "./user";
-import { createWorkflow } from "./workflow";
+import { computeWorkflowNodesInfo, createWorkflow } from "./workflow";
 
 export {
   createUser,
@@ -34,16 +39,19 @@ export {
   getUserID,
   getUserInfo,
   oidcRedirect,
-  getPkgInstances,
-  createPkgInstance,
+  getPluginInstances,
+  getWorkflowPluginInstances,
+  createPluginInstance,
   getLinkMap,
-  getData,
-  updateDataName,
-  updateDataPublic,
-  createDataWithFilepath,
-  searchPkgsByName,
-  createPkg,
+  getFeed,
+  updateFeedName,
+  updateFeedPublic,
+  createFeedWithFilepath,
+  searchPluginsByName,
+  createPipeline,
+  getPipelines,
   createWorkflow,
+  computeWorkflowNodesInfo,
   createDownloadToken,
   getPACSSeriesListBySeriesUID,
   getPACSSeriesListByStudyUID,
@@ -52,6 +60,6 @@ export {
   queryPFDCMSeries,
   queryPFDCMStudies,
   retrievePFDCMPACS,
-  getDataTags,
-  createDataTag,
+  getTags,
+  createTag,
 };

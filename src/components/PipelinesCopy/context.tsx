@@ -1,15 +1,15 @@
+import { createContext, useReducer } from "react";
 import type {
   ComputeResource,
   Pipeline,
-  PipelinePipingDefaultParameterList,
+  Piping,
+  PipingDefaultParameter,
   Plugin,
-  PluginPiping,
-} from "@fnndsc/chrisapi";
-import { createContext, useReducer } from "react";
+} from "../../api/types";
 
 export type PerPipelinePayload = {
-  parameters: PipelinePipingDefaultParameterList;
-  pluginPipings: PluginPiping[];
+  parameters: PipingDefaultParameter[];
+  pluginPipings: Piping[];
   pipelinePlugins: Plugin[];
 };
 
@@ -194,7 +194,7 @@ export const pipelineReducer = (
 
       for (const id in newComputeInfo) {
         const envs = newComputeInfo[id].computeEnvs;
-        const isValuePresent = envs.some((env) => env.data.name === compute);
+        const isValuePresent = envs.some((env) => env.name === compute);
 
         if (isValuePresent) {
           newComputeInfo[id].currentlySelected = compute;

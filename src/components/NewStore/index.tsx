@@ -16,8 +16,8 @@ import {
 import { notification } from "antd";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useCookies } from "react-cookie";
-import { createPkg } from "../../api/serverApi";
-import type { Pkg as PkgType, UploadPipeline } from "../../api/types";
+import { createPipeline } from "../../api/serverApi";
+import type { Plugin as PkgType, UploadPipeline } from "../../api/types";
 import * as DoUser from "../../reducers/user";
 import { SpinContainer } from "../Common";
 import { handleInstallPlugin as onInstallPlugin } from "../PipelinesCopy/utils";
@@ -136,7 +136,7 @@ export default () => {
       ],
     };
 
-    const resultPipeline = await createPkg(pipeline);
+    const resultPipeline = await createPipeline(pipeline);
 
     console.info(
       "NewStore.Store.handleInstall: after createPipeline: resultPipeline:",

@@ -1,11 +1,11 @@
 // -------------------- 1) Imports --------------------
 
-import type { Feed } from "@fnndsc/chrisapi";
 import { Button, Modal, ModalVariant, Spinner } from "@patternfly/react-core";
 import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Fragment, useEffect, useState } from "react";
 import ChrisAPIClient from "../../api/chrisapiclient";
+import type { Feed } from "../../api/types";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { getNodeOperations } from "../../store/plugin/pluginSlice";
 import { getSelectedPlugin } from "../../store/pluginInstance/pluginInstanceSlice";
@@ -91,7 +91,7 @@ export default function DeleteNode({
 
       // 6) Refetch your instance list
       await queryClient.refetchQueries({
-        queryKey: ["instanceList", feed?.data.id],
+        queryKey: ["instanceList", feed?.id],
         exact: true,
       });
 

@@ -1,15 +1,19 @@
 import type {
   ComputeResource,
-  Feed,
-  Pipeline,
   PipelineList,
-  PipelinePipingDefaultParameterList,
-  Plugin,
-  PluginPiping,
+  PipelinePipingDefaultParameterList as PipingDefaultParameterList,
 } from "@fnndsc/chrisapi";
 import axios, { type AxiosProgressEvent } from "axios";
 import { quote } from "shlex";
 import ChrisAPIClient from "./chrisapiclient";
+import type {
+  Feed,
+  FileBrowserFolderFile,
+  Pipeline,
+  Piping,
+  PipingDefaultParameter,
+  Plugin,
+} from "./types";
 
 export function elipses(str: string, len: number) {
   if (str.length <= len) return str;
@@ -171,8 +175,8 @@ interface FetchParams {
 }
 
 interface FetchResourcesResult {
-  parameters: PipelinePipingDefaultParameterList;
-  pluginPipings: PluginPiping[];
+  parameters: PipingDefaultParameterList;
+  pluginPipings: Piping[];
   pipelinePlugins: Plugin[];
 }
 
@@ -185,7 +189,7 @@ export async function fetchResources(
     const boundGetPluginPipings =
       pipelineInstance.getPluginPipings.bind(pipelineInstance);
     const [pluginPipings, pipelinePlugins, parameters] = await Promise.all([
-      fetchResource<PluginPiping>(params, boundGetPluginPipings),
+      fetchResource<Piping>(params, boundGetPluginPipings),
       fetchResource<Plugin>(params, boundGetPlugins),
       pipelineInstance.getDefaultParameters({ limit: 1000 }),
     ]);
@@ -496,4 +500,8 @@ export function customQuote(value: string) {
 
 export const getFileName = (name: string) => {
   return name.split("/").slice(-1).join("");
+};
+
+export const getFileHref = (file: FileBrowserFolderFile) => {
+  return "";
 };

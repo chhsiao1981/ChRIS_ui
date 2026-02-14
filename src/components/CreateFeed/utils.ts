@@ -1,22 +1,23 @@
-import type { Pipeline, PluginMeta, Tag } from "@fnndsc/chrisapi";
 import type { EventDataNode } from "rc-tree/lib/interface";
 import ChrisAPIClient from "../../api/chrisapiclient";
-import { fetchResource, fetchResources } from "../../api/common";
+import { fetchResource } from "../../api/common";
+import { createPipeline, getTags } from "../../api/serverApi";
 import type {
-  PkgNode,
-  PkgNodeDefaultParameter,
-  PkgNodeInfo,
+  Piping,
+  PipingDefaultParameter,
+  PipingInfo,
+  PluginMeta,
+  Tag,
 } from "../../api/types";
-
 import constants from "../../datasets/constants";
 import fetchFolders from "../NewLibrary/utils/fetchFolders";
 import type { ChRISFeed, DataBreadcrumb } from "./types/feed";
 
 export const computeWorkflowNodesInfo = (
-  pipings: PkgNode[],
-  params: PkgNodeDefaultParameter[],
-): PkgNodeInfo[] => {
-  const theRet = pipings.map((each): PkgNodeInfo => {
+  pipings: Piping[],
+  params: PipingDefaultParameter[],
+): PipingInfo[] => {
+  const theRet = pipings.map((each): PipingInfo => {
     return {
       piping_id: each.id,
       previous_piping_id: each.previous_id,
@@ -99,16 +100,11 @@ export const displayFeedName = (analysisName: string, prefix = ""): string => {
   return `${thePrefix}${constants.ANALYSIS_CONCAT_CHAR}${constants.ANALYSIS_CONCAT_PHRASE}${constants.ANALYSIS_CONCAT_CHAR}${fitAnalyistNameList.join(constants.ANALYSIS_CONCAT_CHAR)}`;
 };
 
-export const fetchTagList = async () => {
-  const client = ChrisAPIClient.getClient();
-  const params = {
-    limit: 30,
-    offset: 0,
-  };
-  const fn = client.getTags;
-  const boundFn = fn.bind(client);
-  const { resource } = await fetchResource<Tag>(params, boundFn);
-  return resource;
+export const fetchTagList = async (username: string) => {
+  const { status, data, errmsg } = await getTags(username);
+  const tags = data || [];
+
+  return tags;
 };
 
 export const getPlugins = async (
@@ -211,22 +207,10 @@ export const generateTreeNodes = async (
 };
 
 export const generatePipelineWithData = async (data: any) => {
-  const client = ChrisAPIClient.getClient();
-  const pipelineInstance: Pipeline = await client.createPipeline(data);
-  try {
-    const resources = await fetchResources(pipelineInstance);
-    return {
-      resources,
-      pipelineInstance,
-    };
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(error.message);
-    }
-    throw new Error(
-      "Unhandled error. Please reach out to @devbabymri.org to report this error",
-    );
-  }
+  const { status, data: pipelineInstance, errmsg } = await createPipeline(data);
+  return {
+    pipelineInstance,
+  };
 };
 
 /**

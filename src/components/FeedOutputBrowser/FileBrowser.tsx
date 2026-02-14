@@ -5,12 +5,6 @@ import {
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
 import {
-  FileBrowserFolder,
-  FileBrowserFolderFile,
-  type FileBrowserFolderLinkFile,
-  type PluginInstance,
-} from "@fnndsc/chrisapi";
-import {
   Breadcrumb,
   BreadcrumbItem,
   Button,
@@ -21,6 +15,12 @@ import {
 import { Table, Tbody, Th, Thead, Tr } from "@patternfly/react-table";
 import { type CSSProperties, useEffect, useMemo, useRef } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import type {
+  FileBrowserFolder,
+  FileBrowserFolderFile,
+  FileBrowserFolderLinkFile,
+  PluginInstance,
+} from "../../api/types";
 import type * as DoCart from "../../reducers/cart";
 import * as DoDrawer from "../../reducers/drawer";
 import * as DoExplorer from "../../reducers/explorer";
@@ -129,7 +129,7 @@ export default (props: Props) => {
   const { subFoldersMap, linkFilesMap, filesMap, folderList } =
     pluginFilesPayload;
   const breadcrumb = useMemo(() => additionalKey.split("/"), [additionalKey]);
-  const currentPath = `home/${username}/feeds/feed_${feed?.data.id}/${selected?.data.plugin_name}_${selected?.data.id}/data`;
+  const currentPath = `home/${username}/feeds/feed_${feed?.data.id}/${selected?.plugin_name}_${selected?.id}/data`;
   const noFiles = useMemo(
     () =>
       filesMap?.length === 0 &&

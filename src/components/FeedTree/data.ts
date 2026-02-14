@@ -1,15 +1,15 @@
+import { getPluginInstanceParameters } from "../../api/serverApi/pluginInstance";
 import type {
-  PipelinePipingDefaultParameterList,
+  ID,
+  Piping,
+  PipingDefaultParameter,
   PluginInstance,
-  PluginParameter,
-  PluginPiping,
-} from "@fnndsc/chrisapi";
-import { fetchResource } from "../../api/common";
+} from "../../api/types";
 
 export interface Datum {
-  id?: number;
+  id?: ID;
   name?: string;
-  parentId?: number;
+  parentId?: ID;
   item?: PluginInstance;
   children: Datum[];
 }
@@ -31,17 +31,17 @@ export interface Separation {
 export const getFeedTree = (items: PluginInstance[]) => {
   const tree: TreeNodeDatum[] = [];
 
-  const mappedArr = new Map<number, TreeNodeDatum>();
-  const childrenMap = new Map<number, TreeNodeDatum[]>();
+  const mappedArr = new Map<ID, TreeNodeDatum>();
+  const childrenMap = new Map<ID, TreeNodeDatum[]>();
 
   items.forEach((item) => {
-    const id = item.data.id;
+    const id = item.id;
     const previous_id: number | null =
-      item.data.previous_id !== undefined ? item.data.previous_id : null;
+      item.previous_id !== undefined ? item.previous_id : null;
     const node: TreeNodeDatum = {
       id: id,
-      name: item.data.title || item.data.plugin_name,
-      parentId: item.data.previous_id,
+      name: item.title || item.plugin_name,
+      parentId: item.previous_id,
       item: item,
       children: [],
     };
@@ -75,24 +75,22 @@ export const getTsNodes = async (items: PluginInstance[]) => {
   const parentIds: {
     [key: string]: number[];
   } = {};
-  const params = {
-    limit: 20,
-    offset: 0,
-  };
+  const offset = 0;
+  const limit = 20;
   for (let i = 0; i < items.length; i++) {
     const instance = items[i];
-    if (instance.data.plugin_type === "ts") {
-      const fn = instance.getParameters;
-      const boundFn = fn.bind(instance);
-      const { resource: parameters } = await fetchResource<PluginParameter>(
-        params,
-        boundFn,
+    if (instance.plugin_type === "ts") {
+      const { status, data, errmsg } = await getPluginInstanceParameters(
+        instance.id,
+        offset,
+        limit,
       );
+      const parameters = data || [];
       const filteredParameters = parameters.filter(
-        (param) => param.data.param_name === "plugininstances",
+        (param) => param.param_name === "plugininstances",
       );
       if (filteredParameters[0]) {
-        parentIds[instance.data.id] = filteredParameters[0].data.value
+        parentIds[instance.id] = filteredParameters[0].value
           .split(",")
           .map(Number);
       }
@@ -102,8 +100,8 @@ export const getTsNodes = async (items: PluginInstance[]) => {
 };
 
 export const getTsNodesWithPipings = async (
-  items: PluginPiping[],
-  pluginParameters?: PipelinePipingDefaultParameterList,
+  items: Piping[],
+  pluginParameters?: PipingDefaultParameter[],
 ) => {
   const parentIds: {
     [key: string]: number[];
@@ -112,11 +110,11 @@ export const getTsNodesWithPipings = async (
   for (let i = 0; i < items.length; i++) {
     const instance = items[i];
 
-    if (instance.data.plugin_name === "pl-topologicalcopy") {
-      //@ts-ignore
+    if (instance.plugin_name === "pl-topologicalcopy") {
+      //@ts-expect-error
       pluginParameters.data
         .filter((param: any) => {
-          return param.plugin_piping_id === instance.data.id;
+          return param.plugin_piping_id === instance.id;
         })
         .forEach((param: any) => {
           if (param.param_name === "plugininstances") {

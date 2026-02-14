@@ -1,7 +1,7 @@
-import type { PluginInstance } from "@fnndsc/chrisapi";
 import type { HierarchyPointNode } from "d3-hierarchy";
 import { select } from "d3-selection";
 import { Fragment, useCallback, useContext, useEffect, useRef } from "react";
+import type { PluginInstance } from "../../api/types";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 
 import { ThemeContext } from "../DarkTheme/useTheme";
@@ -92,7 +92,7 @@ export default (props: Props) => {
       id={`text_${data.id}`}
     >
       <text ref={textRef} className="label__title">
-        {data.item?.data?.title || data.item?.data?.plugin_name}
+        {data.item?.title || data.item?.plugin_name}
       </text>
     </g>
   );

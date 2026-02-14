@@ -16,3 +16,6 @@
 [submodule "third-party/chris-backend"]
 	path = third-party/chris-backend
 	url = git@github.com:FNNDSC/chris-backend.git
+[submodule "third-party/chrisapi"]
+	path = third-party/chrisapi
+	url = git@github.com:FNNDSC/fnndsc.git

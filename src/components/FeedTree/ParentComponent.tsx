@@ -1,8 +1,7 @@
 // usePaginatedTreeQuery.ts
 
-import type { Feed, PluginInstance } from "@fnndsc/chrisapi";
 import { useCallback, useEffect, useMemo } from "react";
-import { collectionJsonToJson } from "../../api/api";
+import type { Feed, PluginInstance } from "../../api/types";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { getSelectedPlugin } from "../../store/pluginInstance/pluginInstanceSlice";
 import { SpinContainer } from "../Common";
@@ -10,7 +9,7 @@ import type { PaginatedTreeQueryReturn } from "../Feeds/usePaginatedTreeQuery";
 import type { TreeNodeDatum } from "./data";
 import FeedTree from "./FeedTree";
 
-interface ParentComponentProps {
+type Props = {
   changeLayout: () => void;
   currentLayout: boolean;
   treeQuery: PaginatedTreeQueryReturn;
@@ -19,16 +18,12 @@ interface ParentComponentProps {
   };
   feed?: Feed;
   isStaff: boolean;
-}
+};
 
-const ParentComponent: React.FC<ParentComponentProps> = ({
-  changeLayout,
-  currentLayout,
-  treeQuery,
-  statuses,
-  feed,
-  isStaff,
-}) => {
+export default (props: Props) => {
+  const { changeLayout, currentLayout, treeQuery, statuses, feed, isStaff } =
+    props;
+
   const {
     error,
     rootNode,
@@ -52,10 +47,8 @@ const ParentComponent: React.FC<ParentComponentProps> = ({
       if (r === null) {
         return x;
       }
-      const rJson = collectionJsonToJson(r);
-      const xJson = collectionJsonToJson(x);
 
-      return rJson.id <= xJson.id ? x : r;
+      return r.id <= x.id ? x : r;
     },
     null,
   );
@@ -164,5 +157,3 @@ const ParentComponent: React.FC<ParentComponentProps> = ({
     </>
   );
 };
-
-export default ParentComponent;

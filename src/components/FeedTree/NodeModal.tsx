@@ -1,4 +1,4 @@
-import type { PluginInstance } from "@fnndsc/chrisapi";
+import type { PluginInstance } from "../../api/types";
 import AddNode from "../AddNode/AddNode";
 import { AddNodeProvider } from "../AddNode/context";
 import AddPipeline from "../AddPipeline/AddPipeline";

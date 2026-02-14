@@ -1,5 +1,5 @@
 import {
-  createDataWithFilepath,
+  createFeedWithFilepath,
   getPACSSeriesListBySeriesUID,
 } from "../../api/serverApi";
 
@@ -33,7 +33,7 @@ export const createFeedWithPACSSeries = async (series: PACSSeries) => {
   const theName = `PACS-${patientID}-${studyDateStr}-${studyDescription}-${seriesDescription}`;
 
   const tags = ["pacs"];
-  return await createDataWithFilepath(thePath, theName, tags);
+  return await createFeedWithFilepath(thePath, theName, tags);
 };
 
 export const errorCodeIs4xx = (e: { code: number }) => {

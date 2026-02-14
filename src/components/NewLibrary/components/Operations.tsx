@@ -1,4 +1,3 @@
-import type { FileBrowserFolderList } from "@fnndsc/chrisapi";
 import {
   ActionGroup,
   Button,
@@ -15,6 +14,7 @@ import {
 import type { DefaultError } from "@tanstack/react-query";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router";
+import type { FileBrowserFolder } from "../../../api/types/fileBrowser";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { Alert as AntdAlert } from "../../Antd";
 import type { OriginState } from "../context";
@@ -48,7 +48,7 @@ type Props = {
   isStaff: boolean;
   origin: OriginState;
   computedPath?: string;
-  folderList?: FileBrowserFolderList;
+  folderList?: FileBrowserFolder[];
   customStyle?: {
     [key: string]: React.CSSProperties;
   };

@@ -1,10 +1,13 @@
-import type { Plugin, PluginParameter } from "@fnndsc/chrisapi";
 import {
   createAsyncThunk,
   createSlice,
   type PayloadAction,
 } from "@reduxjs/toolkit";
-import { fetchResource } from "../../api/common";
+import {
+  getPluginComputeResources,
+  getPluginParameters,
+} from "../../api/serverApi/plugin";
+import type { Plugin, PluginParameter } from "../../api/types";
 
 // Define the initial state
 export interface IPluginState {
@@ -40,25 +43,29 @@ export const fetchParamsAndComputeEnv = createAsyncThunk(
   "plugin/fetchParamsAndComputeEnv",
   async (plugin: Plugin, { rejectWithValue }) => {
     try {
-      const fn = plugin.getPluginParameters;
-      const boundFn = fn.bind(plugin);
-      const { resource: params } = await fetchResource<PluginParameter>(
-        { limit: 20, offset: 0 },
-        boundFn,
+      const limit = 20;
+      const offset = 0;
+      const { status, data, errmsg } = await getPluginParameters(
+        plugin.id,
+        offset,
+        limit,
       );
+      const params = data || [];
 
-      const computeFn = plugin.getPluginComputeResources;
-      const boundComputeFn = computeFn.bind(plugin);
-      const { resource: computeEnvs } = await fetchResource<any>(
-        { limit: 20, offset: 0 },
-        boundComputeFn,
-      );
+      const limit2 = 20;
+      const offset2 = 0;
+      const {
+        status: status2,
+        data: data2,
+        errmsg: errmsg2,
+      } = await getPluginComputeResources(plugin.id, offset2, limit2);
+      const computeEnvs = data2 || [];
 
       const required = params.filter(
-        (param: PluginParameter) => param.data.optional === false,
+        (param: PluginParameter) => param.optional === false,
       );
       const dropdown = params.filter(
-        (param: PluginParameter) => param.data.optional === true,
+        (param: PluginParameter) => param.optional === true,
       );
 
       return { required, dropdown, computeEnvs };

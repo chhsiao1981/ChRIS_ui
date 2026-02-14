@@ -8,10 +8,10 @@ import {
 } from "../../api/common";
 import {
   createWorkflow,
-  getData,
-  searchPkgsByName,
-  createPkgInstance as serverCreatePluginInstance,
-  updateDataName,
+  getFeed,
+  searchPluginsByName,
+  createPluginInstance as serverCreatePluginInstance,
+  updateFeedName,
 } from "../../api/serverApi";
 import type { AddNodeState, InputType } from "../AddNode/types";
 import { unpackParametersIntoObject } from "../AddNode/utils";
@@ -24,7 +24,7 @@ const createFeedCore = async (
   fullFeedName: string,
   pipelineState: PipelineState,
 ) => {
-  const searchPluginsResult = await searchPkgsByName("pl-dircopy");
+  const searchPluginsResult = await searchPluginsByName("pl-dircopy");
   console.info(
     "createFeedCore: after searchPluginsByName: searchPluginsResult:",
     searchPluginsResult,
@@ -125,9 +125,9 @@ const createFeedCore = async (
   }
 
   const feedID = createdInstance.data?.feed_id || 0;
-  const feed = getData(feedID);
+  const feed = getFeed(feedID);
 
-  await updateDataName(feedID, fullFeedName);
+  await updateFeedName(feedID, fullFeedName);
 
   return feed;
 };
@@ -378,7 +378,7 @@ export const createPluginInstance = async (
   const client = ChrisAPIClient.getClient();
   const pluginInstance = await client.createPluginInstance(
     pluginId,
-    //@ts-ignore
+    //@ts-expect-error
     parameterInput,
   );
   const feed = await pluginInstance.getFeed();

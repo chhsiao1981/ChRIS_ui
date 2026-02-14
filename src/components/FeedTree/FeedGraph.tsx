@@ -1,4 +1,3 @@
-import type { PluginInstance } from "@fnndsc/chrisapi";
 import { Switch, Text } from "@patternfly/react-core";
 import React from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -7,10 +6,10 @@ import ForceGraph2D, {
   type NodeObject,
 } from "react-force-graph-2d";
 import { type ITreeChart, TreeModel } from "../../api/model";
+import type { Feed, PluginInstance } from "../../api/types";
 import { useAppSelector } from "../../store/hooks";
 import { type FeedTreeScaleType, NodeScaleDropdown } from "./Controls";
 import "./FeedTree.css";
-import type { Feed } from "@fnndsc/chrisapi";
 import { SpinContainer } from "../Common";
 import usePaginatedTreeQuery from "../Feeds/usePaginatedTreeQuery";
 import useSize from "./useSize";
@@ -59,7 +58,7 @@ const FeedGraph: React.FC<IFeedProps> = ({
       fgRef.current
     ) {
       const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
-      //@ts-ignore
+      //@ts-expect-error
       fgRef.current.cameraPosition(
         {
           x: node.x * distRatio,
@@ -137,7 +136,7 @@ const FeedGraph: React.FC<IFeedProps> = ({
               width={size.width || 500}
               ref={fgRef}
               graphData={graphData}
-              //@ts-ignore
+              //@ts-expect-error
               dagMode={controls["DAG Orientation"] as "td" | "lr" | "rl" | "bt"} // Adjust the type as needed
               dagLevelDistance={50}
               backgroundColor="#101020"
@@ -146,7 +145,7 @@ const FeedGraph: React.FC<IFeedProps> = ({
                 nodeScale.enabled
                   ? (node: NodeObject) => {
                       if (nodeScale.type === "time") {
-                        const instanceData = (node.item as PluginInstance).data;
+                        const instanceData = node.item as PluginInstance;
                         const start = new Date(instanceData?.start_date);
                         const end = new Date(instanceData?.end_date);
                         return Math.log10(end.getTime() - start.getTime()) * 10;
@@ -157,11 +156,11 @@ const FeedGraph: React.FC<IFeedProps> = ({
               }
               onNodeClick={handleNodeClick}
               nodeLabel={(d: NodeObject) =>
-                `${(d.item as PluginInstance).data.title || (d.item as PluginInstance).data.plugin_name}`
+                `${(d.item as PluginInstance).title || (d.item as PluginInstance).plugin_name}`
               }
               nodeAutoColorBy={(d: NodeObject) =>
                 selectedPlugin &&
-                (d.item as PluginInstance).data.id === selectedPlugin.data.id
+                (d.item as PluginInstance).id === selectedPlugin.data.id
                   ? "#fff"
                   : (d.group as string)
               }

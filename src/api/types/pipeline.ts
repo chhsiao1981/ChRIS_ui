@@ -1,6 +1,6 @@
 import type { Datetime } from "./datetime";
 import type { ID } from "./id";
-import type { UploadPkgNodeInfo } from "./pkgNode";
+import type { UploadPipingInfo } from "./piping";
 
 export type Pipeline = {
   id: ID;
@@ -19,5 +19,5 @@ export interface UploadPipeline {
   category: string;
   description: string;
   locked: false;
-  plugin_tree: UploadPkgNodeInfo[];
+  plugin_tree: UploadPipingInfo[];
 }

@@ -1,4 +1,3 @@
-import type { PluginMeta } from "@fnndsc/chrisapi";
 import {
   Badge,
   Card,
@@ -17,6 +16,7 @@ import {
 import { format } from "date-fns";
 import React from "react";
 import { Link } from "react-router-dom";
+import type { PluginMeta } from "../../api/types";
 import { EmptyStateComponent, SpinContainer } from "../Common";
 import { SearchIcon } from "../Icons";
 import "./display-page.css";

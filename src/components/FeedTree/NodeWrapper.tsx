@@ -1,6 +1,6 @@
-import type { PluginInstance } from "@fnndsc/chrisapi";
 import { useQuery } from "@tanstack/react-query";
 import type { HierarchyPointNode } from "d3-hierarchy";
+import type { PluginInstance } from "../../api/types";
 import { useAppSelector } from "../../store/hooks";
 import type { FeedTreeScaleType } from "./Controls";
 import type { Point, TreeNodeDatum } from "./data";
@@ -35,15 +35,15 @@ export default (props: Props) => {
     addNodeLocally,
     isStaff,
   } = props;
-  const intitalStatus = data.item?.data.status;
+  const intitalStatus = data.item?.status;
   const instance = data?.item;
 
   const activeStatus = useQuery<string | undefined, Error>({
-    queryKey: ["pluginInstance", instance?.data.id],
+    queryKey: ["pluginInstance", instance?.id],
     queryFn: async (): Promise<string | undefined> => {
       if (instance) {
-        const pluginDetails = await instance.get();
-        return pluginDetails.data.status; // e.g. "finishedSuccessfully"
+        const pluginDetails = instance;
+        return pluginDetails.status; // e.g. "finishedSuccessfully"
       }
       return undefined;
     },
@@ -67,7 +67,7 @@ export default (props: Props) => {
 
   let scale: number | undefined;
   if (overlayScale === "time") {
-    const instanceData = data.item?.data;
+    const instanceData = data.item;
     if (instanceData) {
       const start = new Date(instanceData.start_date);
       const end = new Date(instanceData.end_date);

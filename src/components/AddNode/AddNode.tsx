@@ -18,8 +18,8 @@ import {
 import BasicConfiguration from "./BasicConfiguration";
 import GuidedConfig from "./GuidedConfig";
 import "./add-node.css";
-import type { PluginInstance } from "@fnndsc/chrisapi";
 import ChrisAPIClient from "../../api/chrisapiclient";
+import type { PluginInstance } from "../../api/types";
 import { AddNodeContext } from "./context";
 import { Types } from "./types";
 

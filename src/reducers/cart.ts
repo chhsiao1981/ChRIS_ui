@@ -5,7 +5,7 @@ import {
   setData,
   type Thunk,
 } from "@chhsiao1981/use-thunk";
-import type { Data } from "../api/types";
+import type { Feed } from "../api/types";
 import type {
   FileBrowserFolder,
   FileBrowserFolderFile,
@@ -242,7 +242,7 @@ export const setFolderDownloadStatus = (
   step: DownloadTypes,
   filename: string,
   error?: string,
-  feed?: Data,
+  feed?: Feed,
 ): Thunk<State> => {
   return (dispatch, getClassState) => {
     const classState = getClassState();
@@ -474,7 +474,7 @@ const setStatus = (
   step: DownloadTypes,
   filename: string,
   error?: string,
-  feed?: Data,
+  feed?: Feed,
 ): Thunk<State> => {
   return (dispatch, _) => {
     if (theType === "file") {

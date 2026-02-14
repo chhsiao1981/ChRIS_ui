@@ -26,8 +26,8 @@ import {
 } from "@chhsiao1981/use-thunk";
 import { collectionJsonToJson } from "../../api/api";
 import {
-  PkgInstanceStatus,
-  type PkgInstance as PluginInstanceType,
+  PluginInstanceStatus,
+  type PluginInstance as PluginInstanceType,
 } from "../../api/types";
 import * as DoCart from "../../reducers/cart";
 import * as DoDrawer from "../../reducers/drawer";
@@ -121,7 +121,8 @@ export default () => {
       treeQuery.pluginInstances[treeQuery.pluginInstances.length - 1],
     ) as PluginInstanceType;
 
-    const isSuccess = lastPluginInstance.status === PkgInstanceStatus.SUCCESS;
+    const isSuccess =
+      lastPluginInstance.status === PluginInstanceStatus.SUCCESS;
 
     const theRole = role || Role.DefaultRole;
     doDrawer.resetDrawerState(drawerID, theRole, isSuccess);

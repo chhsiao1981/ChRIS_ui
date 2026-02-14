@@ -1,8 +1,4 @@
-import type {
-  FileBrowserFolderFile,
-  PACSFile,
-  PluginInstance,
-} from "@fnndsc/chrisapi";
+import type { FileBrowserFolderFile, PACSFile, PluginInstance } from "./types";
 
 export interface IActionTypeParam {
   type: string;
@@ -76,7 +72,7 @@ export class TreeModel {
   private buildNodeMap(items: PluginInstance[]): Map<NodeId, PluginInstance[]> {
     const map = new Map<NodeId, PluginInstance[]>();
     items.forEach((item) => {
-      const parentId = item.data.previous_id;
+      const parentId = item.previous_id;
       if (!map.has(parentId)) {
         map.set(parentId, []);
       }
@@ -96,14 +92,14 @@ export class TreeModel {
       this._nodes.push({
         id: this._workingIndex,
         item: rootItem,
-        group: rootItem.data.previous_id,
+        group: rootItem.previous_id,
         isRoot: true,
       });
       const currentNodeId = this._workingIndex;
       this._workingIndex++;
       this._totalRows++;
 
-      this.buildTree(rootItem.data.id, currentNodeId, 1);
+      this.buildTree(rootItem.id, currentNodeId, 1);
     });
 
     this.treeChart.nodes = this._nodes;
@@ -149,7 +145,7 @@ export class TreeModel {
       });
       this._workingIndex++;
       this._totalRows = Math.max(this._totalRows, depth + 1);
-      this.buildTree(child.data.id, childId, depth + 1);
+      this.buildTree(child.id, childId, depth + 1);
     });
   }
 }
@@ -199,7 +195,7 @@ export function getFileExtension(filename: string) {
 
 export class FileViewerModel {
   public getFileName(item: FileBrowserFolderFile) {
-    const splitString = item.data.fname.split("/");
+    const splitString = item.fname.split("/");
     const filename = splitString[splitString.length - 1];
     return filename;
   }
