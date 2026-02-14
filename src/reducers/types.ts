@@ -1,4 +1,9 @@
-import type { Data } from "../api/types";
+import type {
+  Feed,
+  FileBrowserFolder,
+  FileBrowserFolderFile,
+  FileBrowserFolderLinkFile,
+} from "../api/types";
 
 export enum Role {
   Guest = "a guest",
@@ -52,7 +57,7 @@ export type DownloadStatusObject = {
   step: DownloadTypes;
   error?: string;
   filename?: string;
-  feed?: Data;
+  feed?: Feed;
 };
 
 export type DownloadStatus = {
@@ -63,4 +68,15 @@ export interface FeedCreationStatus {
   type: string;
   folder_path: string;
   feed_id: number;
+}
+
+export type CartPayloadTypes =
+  | FileBrowserFolder
+  | FileBrowserFolderFile
+  | FileBrowserFolderLinkFile;
+
+export interface CartSelectionPayload {
+  path: string;
+  type: string;
+  payload: CartPayloadTypes;
 }

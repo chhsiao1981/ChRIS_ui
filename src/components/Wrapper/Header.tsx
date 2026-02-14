@@ -1,8 +1,7 @@
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
-  type UseThunk,
   useThunk,
 } from "@chhsiao1981/use-thunk";
 import {
@@ -33,7 +32,7 @@ export default (props: Props) => {
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, _] = useUser;
 
-  const userID = getRootID(classStateUser);
+  const userID = getDefaultID(classStateUser);
   const user = getState(classStateUser) || DoUser.defaultState;
 
   console.info("Header: user:", user, "userID:", userID);

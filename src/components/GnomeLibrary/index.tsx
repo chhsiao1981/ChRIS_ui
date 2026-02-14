@@ -3,10 +3,10 @@ import {
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
-import type { FileBrowserFolder } from "@fnndsc/chrisapi";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import type { FileBrowserFolder } from "../../api/types";
 import * as DoUser from "../../reducers/user";
 import { EmptyStateComponent, InfoSection, SpinContainer } from "../Common";
 import { OperationContext, OperationsProvider } from "../NewLibrary/context";
@@ -83,7 +83,7 @@ export default () => {
   const navigateToPath = useCallback(
     (path: string, folder?: FileBrowserFolder) => {
       navigate(`/library/${path}`, {
-        state: folder ? { selectedFolderId: folder.data.id } : {},
+        state: folder ? { selectedFolderId: folder.id } : {},
       });
     },
     [navigate],
@@ -93,10 +93,10 @@ export default () => {
   const handleFolderClick = useCallback(
     (folder: FileBrowserFolder) => {
       // Cache the folder object in React Query cache
-      queryClient.setQueryData(["folder", folder.data.id], folder);
+      queryClient.setQueryData(["folder", folder.id], folder);
 
       // Extract folder name from path
-      const folderName = folder.data.path.split("/").pop() || "";
+      const folderName = folder.path.split("/").pop() || "";
       const newPath = `${computedPath}/${folderName}`;
       navigateToPath(newPath, folder);
     },
@@ -162,7 +162,6 @@ export default () => {
               type: OperationContext.LIBRARY,
               additionalKeys: [computedPath],
             }}
-            foldersList={data?.folderList}
           />
 
           <div className={styles.gnomeLibraryContent}>

@@ -1,3 +1,4 @@
+/*
 import type { FileBrowserFolderFile } from "@fnndsc/chrisapi";
 import { SimpleList, SimpleListItem } from "@patternfly/react-core";
 
@@ -40,3 +41,4 @@ const FsmFileSelect = (props: FsmFileSelectProps) => {
 };
 
 export default FsmFileSelect;
+*/

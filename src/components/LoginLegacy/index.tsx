@@ -11,13 +11,13 @@ import ChRIS_Logo from "../../assets/chris-logo.png";
 import ChRIS_Logo_Inline from "../../assets/chris-logo-inline.png";
 import "./Login.css";
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
+import { useSignUpAllowed } from "../../hooks/useSignUpAllowed.ts";
 import * as DoUser from "../../reducers/user";
-import { useSignUpAllowed } from "../../store/hooks.ts";
 import FooterListItems from "./FooterListItems.tsx";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
@@ -27,7 +27,7 @@ type Status = "idle" | "loading" | "success" | "error";
 export default () => {
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, doUser] = useUser;
-  const userID = getRootID(classStateUser);
+  const userID = getDefaultID(classStateUser);
   const user = getState(classStateUser) || DoUser.defaultState;
 
   console.info("Login.index: userID:", userID, "user:", user);

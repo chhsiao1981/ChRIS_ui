@@ -2,10 +2,11 @@ import type { Datetime } from "./datetime";
 import type { ID } from "./id";
 
 // legacy: plugin
-export interface Pkg {
+export type Plugin = {
   id: ID;
   creation_date: Datetime; // yyyy-mm-ddTHH:MM:SS.ffffffTZ
   name: string;
+  name_exact: string;
   version: string;
   dock_image: string;
   public_repo: string;
@@ -30,4 +31,37 @@ export interface Pkg {
   max_gpu_limit: number;
   category: string;
   url: string;
-}
+};
+
+export type PluginMeta = {
+  id: ID;
+  creation_date: Datetime;
+  modification_date: Datetime;
+  name: string;
+  title: string;
+  stars: number;
+  public_repo: string;
+  license: string;
+  type: string;
+  icon: string;
+  category: string;
+  authors: string;
+  documentation: string;
+};
+
+export type PluginParameter = {
+  id: ID;
+  name: string;
+  type: string;
+  optional: boolean;
+  default: any;
+  flag: string;
+  short_flag: string;
+  help: string;
+  ui_exposed: boolean;
+};
+
+export type PluginDefaultParameter = {
+  name: string;
+  default: any;
+};

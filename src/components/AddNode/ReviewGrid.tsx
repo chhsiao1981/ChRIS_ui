@@ -1,22 +1,19 @@
-import type { Plugin } from "@fnndsc/chrisapi";
+import type { Plugin } from "../../api/types";
 import { RenderFlexItem } from "../Common";
 
-interface PluginDetailsProps {
+type Props = {
   generatedCommand: string;
   selectedPlugin?: Plugin;
   computeEnvironment: string;
-}
+};
 
-export const PluginDetails: React.FC<PluginDetailsProps> = ({
-  generatedCommand,
-  selectedPlugin,
-  computeEnvironment,
-}) => {
-  if (!selectedPlugin?.data) {
+export const PluginDetails = (props: Props) => {
+  const { generatedCommand, selectedPlugin, computeEnvironment } = props;
+  if (!selectedPlugin) {
     return <div>Something went wrong. Could you please try this again?</div>;
   }
 
-  const { version, title, name, type } = selectedPlugin.data;
+  const { version, title, name, type } = selectedPlugin;
   const pluginName = title ? title : `${name} v.${version}`;
 
   return (

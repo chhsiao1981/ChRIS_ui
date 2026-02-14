@@ -1,4 +1,3 @@
-import type { Tag } from "@fnndsc/chrisapi";
 import {
   Form,
   FormGroup,
@@ -9,6 +8,7 @@ import {
 import type React from "react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Typeahead } from "react-bootstrap-typeahead";
+import type { Tag } from "../../api/types";
 import { CreateFeedContext } from "./context";
 import { Types } from "./types/feed";
 import { fetchTagList } from "./utils";
@@ -115,7 +115,7 @@ const BasicInformation: React.FC = () => {
           }
           multiple
           options={availableTags}
-          //@ts-ignore
+          //@ts-expect-error
           onChange={(tags: Tag[]) => {
             dispatchCreateFeed({
               type: Types.TagsChange,
@@ -125,7 +125,7 @@ const BasicInformation: React.FC = () => {
             });
           }}
           selected={tags}
-          //@ts-ignore
+          //@ts-expect-error
           labelKey={(tag: Tag) => tag.data.name}
           emptyLabel={availableTagsLoaded ? "No tags found" : "Loading tags..."}
         />

@@ -1,3 +1,4 @@
+/*
 import type { FileBrowserFolderFile } from "@fnndsc/chrisapi";
 import {
   Button,
@@ -68,3 +69,4 @@ const CrvFileSelect = (props: CrvFileSelectProps) => {
 };
 
 export default CrvFileSelect;
+*/

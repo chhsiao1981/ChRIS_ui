@@ -1,87 +1,99 @@
+import {
+  getState,
+  type ThunkModuleToFunc,
+  type UseThunk,
+} from "@chhsiao1981/use-thunk";
 import { useMutation } from "@tanstack/react-query";
 import { useMemo } from "react";
-import ChrisAPIClient from "../../../api/chrisapiclient";
 import { getFileName } from "../../../api/common";
-import { createFeed } from "../../../store/cart/downloadSaga";
-import type { SelectionPayload } from "../../../store/cart/types";
-import { useAppSelector } from "../../../store/hooks";
+import { createFeedWithFilepaths, getFeed } from "../../../api/serverApi";
+import * as DoCart from "../../../reducers/cart";
+import type { CartSelectionPayload } from "../../../reducers/types";
 import { type OriginState, useOperationsContext } from "../context";
 
-const useFeedOperations = (origin: OriginState, api: any) => {
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+
+const useFeedOperations = (
+  origin: OriginState,
+  api: any,
+  useCart: UseThunk<DoCart.State, TDoCart>,
+) => {
   const { handleOrigin, invalidateQueries } = useOperationsContext();
-  const selectedPaths = useAppSelector((state) => state.cart.selectedPaths);
+
+  const [classStateCart, _doCart] = useCart;
+  const cart = getState(classStateCart) || DoCart.defaultState;
+  const { selectedPaths } = cart;
 
   const giveMePaths = useMemo(() => {
-    return selectedPaths.map((payload: SelectionPayload) => payload.path);
+    return selectedPaths.map((payload: CartSelectionPayload) => payload.path);
   }, [selectedPaths]);
 
   const handleDuplicate = async () => {
     handleOrigin(origin);
     const paths = giveMePaths;
-    try {
-      const feedList = await Promise.all(
-        paths.map(async (path) => {
-          // cube does not accept forward slashes in the feed name
-          const filePath = getFileName(path);
-          const idMatch = filePath.match(/feed_(\d+)/);
-          const id = idMatch ? idMatch[1] : null;
-          let pathToFeed = getFileName(path);
-          if (id) {
-            // this is feed duplicate
-            const client = ChrisAPIClient.getClient();
-            const feed = await client.getFeed(Number(id));
-            if (feed) {
-              pathToFeed = feed.data.name;
-            }
-          }
-          const { feed } = await createFeed([path], `Copy of ${pathToFeed}`);
-          return feed;
-        }),
-      );
-      return feedList;
-    } catch (e: any) {
-      const error_message = e?.response?.data?.value[0];
-      if (error_message) throw new Error(error_message);
-      if (e instanceof Error) throw new Error(e.message);
-    }
+    const feedList = paths.map(async (path) => {
+      // cube does not accept forward slashes in the feed name
+      const filePath = getFileName(path);
+      const idMatch = filePath.match(/feed_(\d+)/);
+      const id = idMatch ? idMatch[1] : null;
+      let pathToFeed = getFileName(path);
+      if (id) {
+        // this is feed duplicate
+        const { status, data: feed, errmsg } = await getFeed(id);
+        if (feed) {
+          pathToFeed = feed.name;
+        }
+      }
+      const {
+        status,
+        data: feed,
+        errmsg,
+      } = await createFeedWithFilepaths([path], `Copy of ${pathToFeed}`);
+
+      if (!feed) {
+        return;
+      }
+      return feed;
+    });
+    return feedList;
   };
 
   const handleMerge = async () => {
     handleOrigin(origin);
     const paths = giveMePaths;
-    try {
-      const sanitizedPaths = await Promise.all(
-        paths.map(async (path) => {
-          const filePath = getFileName(path);
-          const idMatch = filePath.match(/feed_(\d+)/);
-          const id = idMatch ? idMatch[1] : null;
-          let pathToFeed = getFileName(path);
+    const sanitizedPaths = await Promise.all(
+      paths.map(async (path) => {
+        const filePath = getFileName(path);
+        const idMatch = filePath.match(/feed_(\d+)/);
+        const id = idMatch ? idMatch[1] : null;
+        let pathToFeed = getFileName(path);
 
-          if (id) {
-            // this is a feed merge
-            const client = ChrisAPIClient.getClient();
-            const feed = await client.getFeed(Number(id));
-            if (feed) {
-              pathToFeed = feed.data.name;
-            }
+        if (id) {
+          // this is a feed merge
+          const { status, data: feed, errmsg } = await getFeed(id);
+          if (feed) {
+            pathToFeed = feed.name;
           }
+        }
 
-          // Return the sanitized path (with slashes replaced by underscores)
-          return pathToFeed.replace(/\//g, "_");
-        }),
-      );
+        // Return the sanitized path (with slashes replaced by underscores)
+        return pathToFeed.replace(/\//g, "_");
+      }),
+    );
 
-      // Join the sanitized paths with ", " and replace any slashes with underscores
-      const feedName = sanitizedPaths.join(", ");
+    // Join the sanitized paths with ", " and replace any slashes with underscores
+    const feedName = sanitizedPaths.join(", ");
 
-      // Create the merged feed with the final sanitized feed name
-      const { feed } = await createFeed(paths, `Merge of ${feedName}`);
-      return feed;
-    } catch (e: any) {
-      const error_message = e?.response?.data?.value[0];
-      if (error_message) throw new Error(error_message);
-      if (e instanceof Error) throw new Error(e.message);
+    // Create the merged feed with the final sanitized feed name
+    const {
+      status,
+      data: feed,
+      errmsg,
+    } = await createFeedWithFilepaths(paths, `Merge of ${feedName}`);
+    if (!feed) {
+      return;
     }
+    return feed;
   };
 
   const handleDuplicateMutation = useMutation({

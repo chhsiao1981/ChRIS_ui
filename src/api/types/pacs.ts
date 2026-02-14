@@ -113,3 +113,12 @@ export interface PFDCMResult {
   pypx: PYPXResult;
   status: string;
 }
+
+export type PACSFile = {
+  id: ID;
+  creation_date: Datetime;
+  fname: string;
+  fsize: number;
+  public: boolean;
+  owner_username: string;
+};

@@ -4,7 +4,7 @@ import {
   LoginMainFooterBandItem,
   LoginPage,
 } from "@patternfly/react-core";
-import { Link } from "react-router-dom";
+import { Link, redirect } from "react-router-dom";
 import ChRIS_Logo from "../../assets/chris-logo.png";
 import ChRIS_Logo_Inline from "../../assets/chris-logo-inline.png";
 import "./Login.css";
@@ -13,7 +13,7 @@ import config from "config";
 
 const { OIDC_URL, OIDC_PROMPT } = config;
 
-import { useSignUpAllowed } from "../../store/hooks.ts";
+import { useSignUpAllowed } from "../../hooks/useSignUpAllowed.ts";
 import FooterListItems from "./FooterListItems.tsx";
 
 export default () => {
@@ -35,11 +35,11 @@ export default () => {
 
   const onClickLegacyLogin = () => {
     const queryString = window.location.search;
-    window.location.href = `/login-legacy${queryString}`;
+    redirect(`/login-legacy${queryString}`);
   };
 
   const onClickOIDCLogin = () => {
-    window.location.href = OIDC_URL;
+    redirect(OIDC_URL);
   };
 
   return (

@@ -1,4 +1,3 @@
-import type { Pipeline } from "@fnndsc/chrisapi";
 import {
   type HierarchyPointLink,
   type HierarchyPointNode,
@@ -16,6 +15,7 @@ import React, {
   useState,
 } from "react";
 import { getFeedTree, type TreeNode } from "../../api/common";
+import type { Pipeline } from "../../api/types";
 import { EmptyStateComponent, SpinContainer } from "../Common";
 import { ThemeContext } from "../DarkTheme/useTheme";
 import {
@@ -49,8 +49,8 @@ export interface TreeProps {
 
 const Tree = (props: TreeProps) => {
   const { currentPipeline } = props;
-  const svgClassName = `pipeline-tree__svg_${currentPipeline.data.id}`;
-  const graphClassName = `pipeline-tree__graph_${currentPipeline.data.id}`;
+  const svgClassName = `pipeline-tree__svg_${currentPipeline.id}`;
+  const graphClassName = `pipeline-tree__graph_${currentPipeline.id}`;
   const { state } = React.useContext(PipelineContext);
   const { selectedPipeline } = state;
   const divRef = useRef<HTMLDivElement>(null);
@@ -95,7 +95,7 @@ const Tree = (props: TreeProps) => {
   React.useEffect(() => {
     if (selectedPipeline) {
       const { pluginPipings, parameters } =
-        selectedPipeline[currentPipeline.data.id];
+        selectedPipeline[currentPipeline.id];
       setLoading(true);
       const tree = getFeedTree(pluginPipings);
       getTsNodesWithPipings(pluginPipings, parameters).then((tsIds) => {
@@ -104,7 +104,7 @@ const Tree = (props: TreeProps) => {
       setData(tree);
       setLoading(false);
     }
-  }, [currentPipeline.data.id, selectedPipeline?.[currentPipeline.data.id]]);
+  }, [currentPipeline.id, selectedPipeline?.[currentPipeline.id]]);
 
   React.useEffect(() => {
     if (size?.width) {
@@ -246,7 +246,7 @@ const Tree = (props: TreeProps) => {
                       position={{ x, y }}
                       parent={parent}
                       orientation="vertical"
-                      currentPipelineId={currentPipeline.data.id}
+                      currentPipelineId={currentPipeline.id}
                     />
                   );
                 })}
@@ -335,7 +335,7 @@ const LinkData: React.FC<LinkProps> = ({ linkData }) => {
       <path
         ref={linkRef}
         className={`link ${ts ? "ts" : ""}`}
-        //@ts-ignore
+        //@ts-expect-error
         d={drawPath(ts)}
         style={{ ...initialStyle, stroke: strokeWidthColor }}
         data-source-id={linkData.source.id}

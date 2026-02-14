@@ -1,15 +1,10 @@
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
   useThunk,
 } from "@chhsiao1981/use-thunk";
-import {
-  FileBrowserFolder,
-  FileBrowserFolderFile,
-  type FileBrowserFolderLinkFile,
-} from "@fnndsc/chrisapi";
 import { Button, Checkbox, Skeleton, Spinner } from "@patternfly/react-core";
 import {
   AngleDownIcon,
@@ -24,6 +19,11 @@ import { format } from "date-fns";
 import type React from "react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import {
+  FileBrowserFolder,
+  FileBrowserFolderFile,
+  type FileBrowserFolderLinkFile,
+} from "../../api/types";
 import * as DoCart from "../../reducers/cart";
 import * as DoUser from "../../reducers/user";
 import { formatBytes } from "../Feeds/utilties";
@@ -85,25 +85,23 @@ export const GnomeBaseRow = (props: RowProps) => {
   // Redux dispatch for selection management
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
   const [classStateCart, doCart] = useCart;
-  const cartID = getRootID(classStateCart);
+  const cartID = getDefaultID(classStateCart);
   const cart = getState(classStateCart) || DoCart.defaultState;
   const { selectedPaths } = cart;
 
   const { isNewResource, scrollToNewResource } = useNewResourceHighlight(date);
   const isSelected = selectedPaths.some((payload) => {
     if (type === "folder" || type === "link") {
-      return payload.path === resource.data.path;
+      return payload.path === resource.path;
     }
     if (type === "file") {
-      return payload.path === resource.data.fname;
+      return payload.path === resource.fname;
     }
     return false;
   });
 
   const pathForCart =
-    type === "folder" || type === "link"
-      ? resource.data.path
-      : resource.data.fname;
+    type === "folder" || type === "link" ? resource.path : resource.fname;
 
   const toggleSelection = () => {
     if (isSelected) {

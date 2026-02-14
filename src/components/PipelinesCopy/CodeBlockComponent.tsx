@@ -1,4 +1,3 @@
-import type { Pipeline } from "@fnndsc/chrisapi";
 import {
   ClipboardCopyButton,
   CodeBlock,
@@ -8,6 +7,7 @@ import {
 } from "@patternfly/react-core";
 import { useQuery } from "@tanstack/react-query";
 import { useContext, useState } from "react";
+import type { Pipeline } from "../../api/types";
 import { Alert, Form } from "../Antd";
 import { EmptyStateComponent, SpinContainer } from "../Common";
 import { PipelineContext } from "./context";
@@ -19,7 +19,7 @@ type OwnProps = {
 const CodeBlockComponent = ({ currentPipeline }: OwnProps) => {
   const { state } = useContext(PipelineContext);
   const [copied, setCopied] = useState(false);
-  const { id } = currentPipeline.data;
+  const { id } = currentPipeline;
   const parameterList = state.selectedPipeline?.[id]?.parameters;
   const activeNode = state.currentlyActiveNode?.[id];
   const pluginPipings = state.selectedPipeline?.[id]?.pluginPipings;
@@ -28,7 +28,7 @@ const CodeBlockComponent = ({ currentPipeline }: OwnProps) => {
     if (pluginPipings && activeNode && parameterList) {
       try {
         const pluginPiping = pluginPipings.find(
-          (piping) => piping.data.id === activeNode,
+          (piping) => piping.id === activeNode,
         );
 
         if (!pluginPiping) {
@@ -44,8 +44,8 @@ const CodeBlockComponent = ({ currentPipeline }: OwnProps) => {
         const paramDict: {
           [key: string]: any;
         } = {};
-        const filteredParameters = parameterList?.data.filter(
-          (param) => param.plugin_piping_id === pluginPiping.data.id,
+        const filteredParameters = parameterList?.filter(
+          (param) => param.plugin_piping_id === pluginPiping.id,
         );
 
         for (const param of filteredParameters) {
@@ -53,7 +53,7 @@ const CodeBlockComponent = ({ currentPipeline }: OwnProps) => {
           paramDict[name] = param;
         }
 
-        const paramItems = params.getItems();
+        const paramItems = params;
 
         if (paramItems) {
           const newParamDict = paramItems.reduce((acc, param) => {
@@ -71,9 +71,7 @@ const CodeBlockComponent = ({ currentPipeline }: OwnProps) => {
 
           if (newParamDict.length > 0) {
             for (const input in newParamDict) {
-              //@ts-ignore
               const name = newParamDict[input].name;
-              //@ts-ignore
               const defaultValue =
                 newParamDict[input].default === false ||
                 newParamDict[input].default === true
@@ -116,7 +114,7 @@ const CodeBlockComponent = ({ currentPipeline }: OwnProps) => {
     <CodeBlockAction>
       <span style={{ margin: "0.5em" }}>
         {data?.pluginPiping
-          ? `${data.pluginPiping.data.plugin_name}:${data.pluginPiping.data.plugin_version}`
+          ? `${data.pluginPiping.plugin_name}:${data.pluginPiping.plugin_version}`
           : "N/A"}
       </span>
       {data && (

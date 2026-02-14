@@ -1,5 +1,5 @@
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
@@ -32,7 +32,7 @@ export default (props: Props) => {
   } = props;
 
   const [classStatePacs, doPacs] = useThunk<DoPacs.State, TDoPacs>(DoPacs);
-  const pacsID = getRootID(classStatePacs);
+  const pacsID = getDefaultID(classStatePacs);
   const pacs = getState(classStatePacs) ?? DoPacs.defaultState;
   const { studies, services, service, expandedStudyUids } = pacs;
 

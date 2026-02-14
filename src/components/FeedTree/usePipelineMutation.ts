@@ -1,57 +1,71 @@
-import type { PluginInstance } from "@fnndsc/chrisapi";
+import {
+  getDefaultID,
+  type ThunkModuleToFunc,
+  type UseThunk,
+} from "@chhsiao1981/use-thunk";
 import { useMutation } from "@tanstack/react-query";
 import { notification } from "antd";
 import { useEffect } from "react";
-import ChrisAPIClient from "../../api/chrisapiclient";
 import {
-  getSelectedPlugin,
-  setPluginInstancesAndSelectedPlugin,
-} from "../../store/pluginInstance/pluginInstanceSlice";
+  createWorkflow,
+  getPipelinesByName,
+  getWorkflowPluginInstances,
+} from "../../api/serverApi";
+import type { PluginInstance } from "../../api/types";
+import type * as DoPluginInstance from "../../reducers/pluginInstance";
+
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 export default (
   selectedPlugin: PluginInstance | undefined,
   pluginInstances: PluginInstance[],
-  dispatch: any,
+  usePluginInstance: UseThunk<DoPluginInstance.State, TDoPluginInstance>,
 ) => {
+  const [classStatePluginInstance, doPluginInstance] = usePluginInstance;
+  const pluginInstanceID = getDefaultID(classStatePluginInstance);
   const [api, contextHolder] = notification.useNotification();
 
   const fetchPipelines = async () => {
-    const client = ChrisAPIClient.getClient();
-
     try {
-      const pipelineList = await client.getPipelines({
-        name: "zip v20240311",
-      });
-
-      const pipelines = pipelineList.getItems();
+      const { status, data, errmsg } =
+        await getPipelinesByName("zip v20240311");
+      const pipelines = data || [];
 
       if (pipelines && pipelines.length > 0) {
         const pipeline = pipelines[0];
-        const { id } = pipeline.data;
+        const { id } = pipeline;
 
-        //@ts-ignore
-        const workflow = await client.createWorkflow(id, {
-          previous_plugin_inst_id: selectedPlugin?.data.id,
-        });
+        const {
+          status: status2,
+          data: workflow,
+          errmsg: errmsg2,
+        } = await createWorkflow(id, selectedPlugin?.id, []);
+        if (!workflow) {
+          return;
+        }
 
-        const pluginInstancesResponse = await workflow.getPluginInstances({
-          limit: 1000,
-        });
+        const {
+          status: status3,
+          data: data3,
+          errmsg: errmsg3,
+        } = await getWorkflowPluginInstances(workflow.id, 0, 1000);
+        const instances = data3 || [];
+        if (instances && instances.length > 0) {
+          const firstInstance = instances[instances.length - 1];
+          const completeList = [...pluginInstances, ...instances];
 
-        const instanceItems = pluginInstancesResponse.getItems();
-
-        if (instanceItems && instanceItems.length > 0) {
-          const firstInstance = instanceItems[instanceItems.length - 1];
-          const completeList = [...pluginInstances, ...instanceItems];
-
-          dispatch(getSelectedPlugin(firstInstance));
+          doPluginInstance.getSelectedPlugin(pluginInstanceID, firstInstance);
 
           const pluginInstanceObj = {
             selected: firstInstance,
             pluginInstances: completeList,
           };
 
-          dispatch(setPluginInstancesAndSelectedPlugin(pluginInstanceObj));
+          doPluginInstance.setPluginInstancesAndSelectedPlugin(
+            pluginInstanceID,
+            pluginInstanceObj.selected,
+            pluginInstanceObj.pluginInstances,
+          );
           //dispatch(getPluginInstanceStatusRequest(pluginInstanceObj));
         }
       } else {
@@ -61,7 +75,7 @@ export default (
       }
       return pipelines;
     } catch (error) {
-      // biome-ignore lint/complexity/noUselessCatch: <explanation>
+      // biome-ignore lint/complexity/noUselessCatch: some unknown error.
       throw error;
     }
   };

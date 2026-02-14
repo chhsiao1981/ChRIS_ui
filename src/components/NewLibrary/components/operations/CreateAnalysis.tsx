@@ -1,4 +1,11 @@
 import {
+  getDefaultID,
+  getState,
+  type ThunkModuleToFunc,
+  type UseThunk,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
+import {
   Modal,
   ModalVariant,
   Wizard,
@@ -6,13 +13,13 @@ import {
   WizardStep,
 } from "@patternfly/react-core";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useContext, useState } from "react";
+import { useContext, useState } from "react";
 import { catchError } from "../../../../api/common";
-import { getData, getPkgInstances } from "../../../../api/serverApi";
-import type { PkgInstance } from "../../../../api/types";
-import { MainRouterContext } from "../../../../routes";
-import type { SelectionPayload } from "../../../../store/cart/types";
-import { useAppSelector } from "../../../../store/hooks";
+import { getFeed, getPluginInstances } from "../../../../api/serverApi";
+import type { PluginInstance } from "../../../../api/types";
+import * as DoCart from "../../../../reducers/cart";
+import * as DoMainRouter from "../../../../reducers/mainRouter";
+import type { CartSelectionPayload } from "../../../../reducers/types";
 import { AddNodeContext } from "../../../AddNode/context";
 import BasicInformation from "../../../CreateFeed/BasicInformation";
 import { CreateFeedContext } from "../../../CreateFeed/context";
@@ -25,17 +32,28 @@ import PipelinesCopy from "../../../PipelinesCopy";
 import { PipelineContext } from "../../../PipelinesCopy/context";
 import OperationButton from "./OperationButton";
 
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+type TDoMainRouter = ThunkModuleToFunc<typeof DoMainRouter>;
+
 type Props = {
   handleOperations: (operationKey: string) => void;
   count: number;
   isStaff: boolean;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 export default (props: Props) => {
-  const { count, isStaff } = props;
-  const { selectedPaths } = useAppSelector((state) => state.cart);
+  const { count, isStaff, useCart } = props;
+  const [classStateCart, _doCart] = useCart;
+  const cart = getState(classStateCart) || DoCart.defaultState;
+  const { selectedPaths } = cart;
 
   const queryClient = useQueryClient();
-  const router = useContext(MainRouterContext);
+
+  const useMainRouter = useThunk<DoMainRouter.State, TDoMainRouter>(
+    DoMainRouter,
+  );
+  const [classStateMainRouter, doMainRouter] = useMainRouter;
+  const mainRouterID = getDefaultID(classStateMainRouter);
 
   const { state: stateCreateFeed, dispatch: dispatchCreateFeed } =
     useContext(CreateFeedContext);
@@ -78,7 +96,7 @@ export default (props: Props) => {
     pipelineDispatch({
       type: Types.ResetState,
     });
-    router.actions.clearFeedData();
+    doMainRouter.clearFeedData(mainRouterID);
   };
 
   const getFeedError = (error: any) => {
@@ -178,7 +196,7 @@ export default (props: Props) => {
     }
   };
 
-  const pathInfoToFeedID = (pathInfo: SelectionPayload): number => {
+  const pathInfoToFeedID = (pathInfo: CartSelectionPayload): number => {
     // home/chris/feeds/feed_14
     const thePathList = pathInfo.path.split("/");
     const feedID = Number.parseInt(
@@ -188,12 +206,12 @@ export default (props: Props) => {
   };
 
   const feedIDToLastChRISFile = async (feedID: number): Promise<ChRISFeed> => {
-    const pluginInstances = await getPkgInstances(feedID);
+    const pluginInstances = await getPluginInstances(feedID);
     if (!pluginInstances.data) {
       return { name: "", filename: "", theID: -1, createDateTime: "" };
     }
 
-    const feed = await getData(feedID);
+    const feed = await getFeed(feedID);
     if (!feed.data) {
       return { name: "", filename: "", theID: -1, createDateTime: "" };
     }
@@ -204,8 +222,14 @@ export default (props: Props) => {
       "data:",
       pluginInstances.data,
     );
-    pluginInstances.data.sort((a: PkgInstance, b: PkgInstance) => {
-      return b.id - a.id;
+    pluginInstances.data.sort((a: PluginInstance, b: PluginInstance) => {
+      if (b.id < a.id) {
+        return -1;
+      } else if (b.id > a.id) {
+        return 1;
+      } else {
+        return 0;
+      }
     });
     const { output_path: filename } = pluginInstances.data[0];
 
@@ -220,15 +244,14 @@ export default (props: Props) => {
     return { name, filename, theID: id, createDateTime };
   };
 
-  const pathInfoToChRISFiles = async (pathInfo: SelectionPayload) => {
+  const pathInfoToChRISFiles = async (pathInfo: CartSelectionPayload) => {
     const feedID = pathInfoToFeedID(pathInfo);
     const lastChRISFile = await feedIDToLastChRISFile(feedID);
 
     return lastChRISFile;
   };
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-  const handleOperations = useCallback(() => {
+  const handleOperations = () => {
     console.info(
       "CreateAnalysis.handleOperations: start: selectedPaths:",
       selectedPaths,
@@ -256,6 +279,7 @@ export default (props: Props) => {
       .map(pathInfoToChRISFiles)
       .map((eachPromise) => Promise.resolve(eachPromise));
 
+    // biome-ignore lint/suspicious/useIterableCallbackReturn: always return void
     resolvedPromises.map((eachPromise) => {
       eachPromise.then((chrisFile) => {
         console.info("CreateAnalysis.handleOperations: chrisFile:", chrisFile);
@@ -272,7 +296,7 @@ export default (props: Props) => {
         });
       });
     });
-  }, [selectedPaths]);
+  };
 
   const enableSave = !!(
     dataCreateFeed.chrisFiles.length > 0 || typeof pluginMeta !== "undefined"

@@ -1,10 +1,17 @@
-import type { PluginInstance } from "@fnndsc/chrisapi";
+import {
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import { useQuery } from "@tanstack/react-query";
 import type { HierarchyPointNode } from "d3-hierarchy";
-import { useAppSelector } from "../../store/hooks";
+import type { PluginInstance } from "../../api/types";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import type { FeedTreeScaleType } from "./Controls";
 import type { Point, TreeNodeDatum } from "./data";
 import Node from "./Node";
+
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 type Props = {
   tsNodes?: PluginInstance[];
@@ -35,15 +42,15 @@ export default (props: Props) => {
     addNodeLocally,
     isStaff,
   } = props;
-  const intitalStatus = data.item?.data.status;
+  const intitalStatus = data.item?.status;
   const instance = data?.item;
 
   const activeStatus = useQuery<string | undefined, Error>({
-    queryKey: ["pluginInstance", instance?.data.id],
+    queryKey: ["pluginInstance", instance?.id],
     queryFn: async (): Promise<string | undefined> => {
       if (instance) {
-        const pluginDetails = await instance.get();
-        return pluginDetails.data.status; // e.g. "finishedSuccessfully"
+        const pluginDetails = instance;
+        return pluginDetails.status; // e.g. "finishedSuccessfully"
       }
       return undefined;
     },
@@ -61,13 +68,19 @@ export default (props: Props) => {
     },
   });
 
-  const currentId = useAppSelector((state) => {
-    return state.instance.selectedPlugin?.data.id === data.id;
-  });
+  const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
+    DoPluginInstance,
+  );
+
+  const [classStatePluginInstance, _doPluginInstance] = usePluginInstance;
+  const pluginInstance =
+    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
+  const { selectedPlugin } = pluginInstance;
+  const isCurrentID = selectedPlugin?.id === data.id;
 
   let scale: number | undefined;
   if (overlayScale === "time") {
-    const instanceData = data.item?.data;
+    const instanceData = data.item;
     if (instanceData) {
       const start = new Date(instanceData.start_date);
       const end = new Date(instanceData.end_date);
@@ -89,7 +102,7 @@ export default (props: Props) => {
       addNodeLocally={addNodeLocally}
       status={activeStatus.data || intitalStatus}
       overlaySize={scale}
-      currentId={currentId}
+      isCurrentID={isCurrentID}
       isStaff={isStaff}
     />
   );

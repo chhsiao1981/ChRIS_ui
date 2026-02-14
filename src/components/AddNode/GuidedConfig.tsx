@@ -1,10 +1,9 @@
-import type {
-  Plugin,
-  PluginInstanceList,
-  PluginInstanceParameter,
-  PluginMetaPluginList,
-  PluginParameter,
-} from "@fnndsc/chrisapi";
+import {
+  getDefaultID,
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import {
   Button,
   Card,
@@ -28,17 +27,18 @@ import {
   Tooltip,
 } from "@patternfly/react-core";
 import { useMutation } from "@tanstack/react-query";
-import { isEmpty } from "lodash";
-import React, { useContext, useEffect, useState } from "react";
+import type React from "react";
+import { useContext, useEffect, useState } from "react";
 import { v4 } from "uuid";
-import {
-  catchError,
-  customQuote,
-  fetchResource,
-  needsQuoting,
-} from "../../api/common";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { fetchParamsAndComputeEnv } from "../../store/plugin/pluginSlice";
+import { customQuote, fetchResource, needsQuoting } from "../../api/common";
+import { getPluginsByPluginMeta } from "../../api/serverApi/plugin";
+import type {
+  Plugin,
+  PluginInstance,
+  PluginInstanceParameter,
+  PluginParameter,
+} from "../../api/types";
+import * as DoPlugin from "../../reducers/plugin";
 import { ClipboardCopyFixed, ErrorAlert } from "../Common";
 import ComputeEnvironments from "./ComputeEnvironment";
 import { AddNodeContext } from "./context";
@@ -46,6 +46,8 @@ import RequiredParam from "./RequiredParam";
 import SimpleDropdown from "./SimpleDropdown";
 import { type InputIndex, Types } from "./types";
 import { handleGetTokens, unpackParametersIntoString } from "./utils";
+
+type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
 
 const advancedConfigList = [
   {
@@ -65,16 +67,19 @@ const advancedConfigList = [
 
 const memory_limit = ["Mi", "Gi"];
 
-const GuidedConfig = () => {
-  const dispatch = useAppDispatch();
-  const { state, dispatch: nodeDispatch } = useContext(AddNodeContext);
-  const { parameters: params, resourceError } = useAppSelector(
-    (state) => state.plugin,
+export default () => {
+  const [classStatePlugin, doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(
+    DoPlugin,
   );
+  const pluginID = getDefaultID(classStatePlugin);
+  const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
+  const { parameters: params, resourceError } = plugin;
+
+  const { state, dispatch: nodeDispatch } = useContext(AddNodeContext);
   const { pluginMeta, dropdownInput, requiredInput, componentList, errors } =
     state;
 
-  const [plugins, setPlugins] = React.useState<Plugin[]>();
+  const [plugins, setPlugins] = useState<Plugin[]>();
 
   useEffect(() => {
     const el = document.querySelector(".react-json-view");
@@ -86,42 +91,41 @@ const GuidedConfig = () => {
 
   useEffect(() => {
     const fetchPluginVersions = async () => {
-      try {
-        // Todo: Use an already available helper here from the Store component
-        const pluginList: PluginMetaPluginList | undefined =
-          await pluginMeta?.getPlugins({
-            limit: 1000,
-          });
-
-        if (pluginList) {
-          const pluginItems = pluginList.getItems() as unknown as Plugin[];
-          setPlugins(pluginItems);
-          const plugin = pluginItems[0];
-          // Select the first plugin in the list as default
-          nodeDispatch({
-            type: Types.SetSelectedPluginFromMeta,
-            payload: {
-              plugin,
-            },
-          });
-
-          // Fetch the parameters for this particular plugin to display as a form.
-          dispatch(fetchParamsAndComputeEnv(plugin));
-        }
-      } catch (e) {
-        const error_message = catchError(e).error_message;
+      // Todo: Use an already available helper here from the Store component
+      if (!pluginMeta) {
+        return;
+      }
+      const { status, data, errmsg } = await getPluginsByPluginMeta(
+        pluginMeta.id,
+      );
+      if (errmsg) {
         nodeDispatch({
           type: Types.SetError,
           payload: {
-            error: !isEmpty(error_message)
-              ? error_message
-              : "Failed to fetch plugin versions.",
+            error: errmsg,
           },
         });
+        return;
       }
+      const pluginList = data || [];
+
+      const pluginItems = pluginList;
+      setPlugins(pluginItems);
+      const plugin = pluginItems[0];
+      // Select the first plugin in the list as default
+      nodeDispatch({
+        type: Types.SetSelectedPluginFromMeta,
+        payload: {
+          plugin,
+        },
+      });
+
+      // Fetch the parameters for this particular plugin to display as a form.
+      doPlugin.fetchParamsAndComputeEnv(pluginID, plugin);
     };
+
     fetchPluginVersions();
-  }, [dispatch, pluginMeta, nodeDispatch]);
+  }, [pluginMeta, nodeDispatch]);
 
   useEffect(() => {
     //Construct the dropdown components as the input for optional parameters change
@@ -176,7 +180,7 @@ const GuidedConfig = () => {
     // Component to render required parameters
     return params.map((param) => {
       return (
-        <div key={param.data.id}>
+        <div key={param.id}>
           <RequiredParam param={param} id={v4()} />
         </div>
       );
@@ -186,7 +190,6 @@ const GuidedConfig = () => {
   const renderDropdowns = () => {
     // Component to render optional parameters
     return componentList.map((id, index) => {
-      // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
       return <SimpleDropdown key={index} params={params} id={id} />;
     });
   };
@@ -310,8 +313,6 @@ const GuidedConfig = () => {
   );
 };
 
-export default GuidedConfig;
-
 const CardComponent = ({ children }: { children: React.ReactElement }) => {
   return (
     <Card>
@@ -321,16 +322,21 @@ const CardComponent = ({ children }: { children: React.ReactElement }) => {
 };
 
 const CheckboxComponent = () => {
-  // This component automatically constructs the Form and the Editor Value from a previous run of a plugin instance
-  const { parameters: params, resourceError } = useAppSelector(
-    (state) => state.plugin,
+  const [classStatePlugin, doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(
+    DoPlugin,
   );
+  const pluginID = getDefaultID(classStatePlugin);
+  const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
+  const { parameters: params, resourceError } = plugin;
+
+  // This component automatically constructs the Form and the Editor Value from a previous run of a plugin instance
+
   const { state, dispatch } = useContext(AddNodeContext);
   const { showPreviousRun, selectedPluginFromMeta } = state;
 
   const handleCheckboxChange = async () => {
     // Todo: This list needs to use a helper and be paginated
-    const pluginInstanceList: PluginInstanceList | undefined =
+    const pluginInstanceList: PluginInstance[] | undefined =
       await selectedPluginFromMeta?.getPluginInstances({
         limit: 1000,
       });
@@ -361,7 +367,7 @@ const CheckboxComponent = () => {
 
       const paramsRequiredFetched = params?.required.reduce(
         (acc: any, param) => {
-          acc[param.data.name] = [param.data.id, param.data.flag];
+          acc[param.name] = [param.id, param.flag];
           return acc;
         },
         {},
@@ -369,7 +375,7 @@ const CheckboxComponent = () => {
 
       const paramsDropdownFetched = params?.dropdown.reduce(
         (acc: any, param) => {
-          acc[param.data.name] = param.data.flag;
+          acc[param.name] = param.flag;
           return acc;
         },
         {},
@@ -377,7 +383,7 @@ const CheckboxComponent = () => {
 
       for (let i = 0; i < pluginParameters.length; i++) {
         const parameter = pluginParameters[i];
-        const { param_name, type, value } = parameter.data;
+        const { param_name, type, value } = parameter;
         if (paramsRequiredFetched?.[param_name]) {
           const quotedValue =
             type === "string" && needsQuoting(value)
@@ -516,8 +522,12 @@ const ItalicsComponent = ({
 };
 
 const DropdownBasic = ({ plugins }: { plugins?: Plugin[] }) => {
-  const dispatch = useAppDispatch();
-  const [isopen, setIsOpen] = React.useState(false);
+  const [classStatePlugin, doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(
+    DoPlugin,
+  );
+  const pluginID = getDefaultID(classStatePlugin);
+
+  const [isopen, setIsOpen] = useState(false);
   const { state, dispatch: nodeDispatch } = useContext(AddNodeContext);
   const { selectedPluginFromMeta } = state;
 
@@ -532,7 +542,7 @@ const DropdownBasic = ({ plugins }: { plugins?: Plugin[] }) => {
         plugin: selectedPlugin,
       },
     });
-    dispatch(fetchParamsAndComputeEnv(selectedPlugin));
+    doPlugin.fetchParamsAndComputeEnv(pluginID, selectedPlugin);
   };
 
   const menuItems =
@@ -547,17 +557,16 @@ const DropdownBasic = ({ plugins }: { plugins?: Plugin[] }) => {
                 }
               }}
               isSelected={
-                selectedPlugin.data.version ===
-                selectedPluginFromMeta?.data.version
+                selectedPlugin.version === selectedPluginFromMeta?.version
               }
               onClick={() => {
                 handleSelect(selectedPlugin);
               }}
-              key={selectedPlugin.data.id}
-              name={selectedPlugin.data.version}
-              value={selectedPlugin.data.value}
+              key={selectedPlugin.id}
+              name={selectedPlugin.version}
+              value={selectedPlugin.value}
             >
-              {selectedPlugin.data.version}
+              {selectedPlugin.version}
             </SelectOption>
           );
         })
@@ -568,7 +577,7 @@ const DropdownBasic = ({ plugins }: { plugins?: Plugin[] }) => {
       isOpen={isopen}
       toggle={(toggleRef: any) => (
         <MenuToggle ref={toggleRef} onClick={onToggle}>
-          {selectedPluginFromMeta?.data.version}
+          {selectedPluginFromMeta?.version}
         </MenuToggle>
       )}
     >
@@ -588,7 +597,7 @@ const EditorValue = ({
   // This component allows the user to copy paste the values directly into a clipboard, validate it and run the plugin
   const { state, dispatch } = useContext(AddNodeContext);
   const { editorValue } = state;
-  const [validating, setValidating] = React.useState(false);
+  const [validating, setValidating] = useState(false);
 
   return (
     <div style={{ width: "100%" }} className="autogenerated__text">

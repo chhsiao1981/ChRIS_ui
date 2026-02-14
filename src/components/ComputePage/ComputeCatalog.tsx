@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import ChrisAPIClient from "../../api/chrisapiclient";
+import { getComputeResources } from "../../api/serverApi/computeResource";
 import DisplayPage from "../DisplayPage";
 
 export default () => {
@@ -43,20 +43,19 @@ export default () => {
     ) {
       setLoading(true);
       const offset = perPage * (page - 1);
-      const client = ChrisAPIClient.getClient();
-      const params = {
+      const query = {
         limit: perPage,
         offset: offset,
         [searchType]: search,
       };
-      const computeResourcesList = await client.getComputeResources(params);
-      const computes = computeResourcesList.getItems();
-      if (computes) {
+      const { status, data, errmsg } = await getComputeResources(query);
+      const computes = data || [];
+      if (computes.length) {
         setComputeResources(computes);
         setPageState((pageState) => {
           return {
             ...pageState,
-            itemCount: computeResourcesList.totalCount,
+            itemCount: 0,
           };
         });
       }

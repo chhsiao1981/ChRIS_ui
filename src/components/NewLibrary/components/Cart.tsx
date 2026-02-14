@@ -8,7 +8,7 @@ import {
   type FileUploadObject,
   type FolderUpload,
   type FolderUploadObject,
-} from "../../../store/cart/types";
+} from "../../../reducers/types";
 import { Drawer, List, Popconfirm, Space } from "../../Antd";
 import { DotsIndicator, EmptyStateComponent } from "../../Common";
 import { CheckCircleIcon, CloseIcon, FileIcon, FolderIcon } from "../../Icons";
@@ -20,7 +20,7 @@ import {
 } from "../utils/longpress";
 import "./Cart.css";
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
@@ -35,7 +35,7 @@ type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 const Cart = () => {
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
   const [classStateCart, doCart] = useCart;
-  const cartID = getRootID(classStateCart);
+  const cartID = getDefaultID(classStateCart);
   const cart = getState(classStateCart) || DoCart.defaultState;
   const {
     openCart,
@@ -271,7 +271,7 @@ interface UploadStatusProps {
 const UploadStatus: React.FC<UploadStatusProps> = (props) => {
   const { status, type, name, useCart } = props;
   const [classStateCart, doCart] = useCart;
-  const cartID = getRootID(classStateCart);
+  const cartID = getDefaultID(classStateCart);
 
   const isError =
     status.currentStep.includes("Cancelled") ||

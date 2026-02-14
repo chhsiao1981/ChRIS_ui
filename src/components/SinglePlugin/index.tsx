@@ -1,16 +1,16 @@
-import type {
-  Plugin,
-  PluginInstance,
-  PluginMeta,
-  PluginParameter,
-} from "@fnndsc/chrisapi";
 import { useQuery } from "@tanstack/react-query";
 import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router";
-import ChrisAPIClient from "../../api/chrisapiclient";
 import { fetchResource } from "../../api/common";
+import type {
+  ID,
+  Plugin,
+  PluginInstance,
+  PluginMeta,
+  PluginParameter,
+} from "../../api/types";
 import { unpackParametersIntoString } from "../AddNode/utils";
 import { Alert } from "../Antd";
 import { EmptyStateComponent, SpinContainer } from "../Common";
@@ -26,6 +26,10 @@ import {
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
+import { id } from "fp-ts/lib/Refinement";
+import plugin from "vite-plugin-babel-macros";
+import { getPluginsByPluginMeta } from "../../api/serverApi/plugin";
+import { getPluginMeta } from "../../api/serverApi/pluginMeta";
 import * as DoUser from "../../reducers/user";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
@@ -41,7 +45,7 @@ export default () => {
 
   // Function to fetch the Readme from the Repo.
   const fetchReadme = async (currentPluginMeta: PluginMeta) => {
-    const repo = currentPluginMeta.data.public_repo.split("github.com/")[1];
+    const repo = currentPluginMeta.public_repo.split("github.com/")[1];
     const ghreadme = await fetch(`https://api.github.com/repos/${repo}/readme`);
     if (!ghreadme.ok) {
       return;
@@ -64,35 +68,26 @@ export default () => {
     return fileToSanitize;
   };
 
-  const fetchPlugins = async (id: number) => {
-    const client = ChrisAPIClient.getClient();
-
-    try {
-      const pluginMeta = await client.getPluginMeta(id);
-
-      if (!pluginMeta) throw new Error("Failed to fetch the plugin meta");
-
-      document.title = pluginMeta.data.name;
-
-      const fn = pluginMeta.getPlugins;
-      const boundFn = fn.bind(pluginMeta);
-      const params = {
-        limit: 1000,
-        offset: 0,
-      };
-
-      const results = await fetchResource<Plugin>(params, boundFn);
-      const readme = await fetchReadme(pluginMeta);
-      return {
-        currentPluginMeta: pluginMeta,
-        plugins: results.resource,
-        readme,
-      };
-    } catch (error: any) {
-      if (error instanceof Error) {
-        throw new Error(error.message);
-      }
+  const fetchPlugins = async (id: ID) => {
+    const { status, data: pluginMeta, errmsg } = await getPluginMeta(id);
+    if (!pluginMeta) {
+      return;
     }
+
+    document.title = pluginMeta.name;
+
+    const {
+      status: _status2,
+      data: data2,
+      errmsg: _errmsg2,
+    } = await getPluginsByPluginMeta(pluginMeta.id, 0, 1000);
+    const plugins = data2 || [];
+    const readme = await fetchReadme(pluginMeta);
+    return {
+      currentPluginMeta: pluginMeta,
+      plugins: plugins,
+      readme,
+    };
   };
 
   const setPluginParameters = useCallback(
@@ -124,14 +119,14 @@ export default () => {
       if (parameters.length > 0) {
         for (const param of parameters) {
           const generateInput = {
-            [param.data.id]: {
-              flag: param.data.flag,
-              id: param.data.id,
-              paramName: param.data.name,
-              type: param.data.type,
-              value: param.data.default
-                ? param.data.default
-                : param.data.type !== "boolean"
+            [param.id]: {
+              flag: param.flag,
+              id: param.id,
+              paramName: param.name,
+              type: param.type,
+              value: param.default
+                ? param.default
+                : param.type !== "boolean"
                   ? "' '"
                   : "",
             },
@@ -141,7 +136,7 @@ export default () => {
 
         setParameterPayload({
           generatedCommand,
-          version: plugin.data.version,
+          version: plugin.version,
           url: plugin.url,
           computes: computes,
           pluginInstances: pluginInstances,

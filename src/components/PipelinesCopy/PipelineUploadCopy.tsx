@@ -1,11 +1,11 @@
-import type { Plugin as ApiPlugin, ComputeResource } from "@fnndsc/chrisapi";
 import { Button } from "@patternfly/react-core";
 import CheckCircleIcon from "@patternfly/react-icons/dist/esm/icons/check-circle-icon";
 import axios from "axios";
 import { isEmpty } from "lodash";
 import { useEffect, useRef, useState } from "react";
 import { useCookies } from "react-cookie";
-import ChrisAPIClient from "../../api/chrisapiclient";
+import { getComputeResources } from "../../api/serverApi/computeResource";
+import type { ComputeResource, Plugin } from "../../api/types";
 import { envOptions } from "../NewStore/hooks/useFetchPlugins";
 import { handleInstallPlugin } from "../PipelinesCopy/utils";
 import { extractPluginInfo, uploadPipelineSourceFile } from "./utils";
@@ -17,7 +17,7 @@ interface Notification {
 
 export interface PluginsResponse {
   count: number;
-  results: ApiPlugin[];
+  results: Plugin[];
 }
 
 const COOKIE_NAME = "storeCreds";
@@ -47,12 +47,12 @@ export default (props: Props) => {
     return () => clearTimeout(t);
   }, [notification.type, lastSuccess]);
 
-  async function installPlugin(name: string, version: string) {
+  async function installPlugin(name: string, version: string, token: string) {
     setNotification({
       type: "info",
       description: `Installing package: ${name} version: ${version}…`,
     });
-    let pluginMeta: ApiPlugin | null = null;
+    let pluginMeta: Plugin | null = null;
 
     for (const baseUrl of Object.values(envOptions)) {
       try {
@@ -72,24 +72,21 @@ export default (props: Props) => {
     if (!pluginMeta)
       throw new Error(`Package "${name}"@${version} not found in any store.`);
 
-    const client = ChrisAPIClient.getClient();
-    const crResp = await client.getComputeResources();
+    const crResp = await getComputeResources();
     const crList = (crResp.getItems() as ComputeResource[]) || [];
     if (!crList.length) throw new Error("No compute resources available.");
 
     let authHeader: string | null = null;
-    if (isStaff) authHeader = `Token ${client.auth.token}`;
+    if (isStaff) authHeader = `Token ${token}`;
     else if (cookies[COOKIE_NAME]) authHeader = `Basic ${cookies[COOKIE_NAME]}`;
     if (!authHeader)
       throw new Error("Please configure admin credentials in the Store first.");
 
-    // @ts-expect-error XXX pluginMeta
     await handleInstallPlugin(authHeader, pluginMeta, crList);
   }
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    const client = ChrisAPIClient.getClient();
     if (!files) return;
 
     for (const file of Array.from(files)) {
@@ -97,7 +94,7 @@ export default (props: Props) => {
         let retry = true;
         while (retry) {
           try {
-            await uploadPipelineSourceFile(client, file);
+            await uploadPipelineSourceFile(file);
             setLastSuccess("Package uploaded successfully");
             fetchPipelinesAgain();
             retry = false;

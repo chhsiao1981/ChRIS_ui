@@ -1,7 +1,7 @@
-import type { PluginInstance } from "@fnndsc/chrisapi";
 import { useQuery } from "@tanstack/react-query";
 import { inflate, inflateRaw } from "pako";
-import ChrisAPIClient from "../../api/chrisapiclient"; // or your client
+import { getPluginInstance } from "../../api/serverApi/pluginInstance";
+import type { PluginInstance } from "../../api/types";
 import { getStatusLabels, type PluginStatusLabels } from "./utils";
 
 // Reuse your getLog function
@@ -37,30 +37,35 @@ interface PluginInstanceResource {
 }
 
 export function usePluginInstanceResourceQuery(instance?: PluginInstance) {
-  const client = ChrisAPIClient.getClient();
-
   return useQuery<PluginInstanceResource | null, Error>({
-    queryKey: ["pluginInstanceResource", instance?.data.id],
+    queryKey: ["pluginInstanceResource", instance?.id],
     queryFn: async () => {
       // Bail out if we don’t have an instance
       if (!instance) return null;
 
       // 1) Fetch current plugin instance details safely
 
-      const pluginDetails = await instance.get();
+      const {
+        status: _status,
+        data: pluginDetails,
+        errmsg,
+      } = await getPluginInstance(instance.id);
+      if (!pluginDetails) {
+        return null;
+      }
 
-      const status = pluginDetails.data.status;
+      const status = pluginDetails.status;
 
       // 2) Parse pluginStatus JSON from `data.summary`
       let parsedStatus: PluginStatusLabels = {};
-      const pluginStatusJson = pluginDetails.data.summary;
+      const pluginStatusJson = pluginDetails.summary;
       if (pluginStatusJson) {
         parsedStatus = JSON.parse(pluginStatusJson) as PluginStatusLabels;
       }
 
       // 3) Parse logs from base64 "raw" field
       let output = {};
-      const rawField = pluginDetails.data.raw;
+      const rawField = pluginDetails.raw;
       if (rawField && rawField.length > 0) {
         const parsedLog = getLog(rawField);
         if (parsedLog) {
@@ -70,16 +75,16 @@ export function usePluginInstanceResourceQuery(instance?: PluginInstance) {
 
       // 4) Fetch the previous instance’s status (if applicable)
       let previousStatus = "";
-      const previousInstanceId = instance.data.previous_id;
+      const previousInstanceId = instance.previous_id;
       if (previousInstanceId) {
-        try {
-          const previousInstance =
-            await client.getPluginInstance(previousInstanceId);
-          if (previousInstance?.data?.status) {
-            previousStatus = previousInstance.data.status;
-          }
-        } catch (err) {
-          console.warn("Failed to fetch previous instance:", err);
+        const {
+          status,
+          data: previousInstance,
+          errmsg,
+        } = await getPluginInstance(previousInstanceId);
+
+        if (previousInstance) {
+          previousStatus = previousInstance.status;
         }
       }
 

@@ -1,11 +1,10 @@
 import {
   init as _init,
-  genUUID,
   type State as rState,
   setData,
   type Thunk,
 } from "@chhsiao1981/use-thunk";
-import type { Feed } from "@fnndsc/chrisapi";
+import type { Feed } from "../api/types";
 
 export const myClass = "chris-ui/feed";
 

@@ -1,16 +1,22 @@
 // usePaginatedTreeQuery.ts
 
-import type { Feed, PluginInstance } from "@fnndsc/chrisapi";
-import { useCallback, useEffect, useMemo } from "react";
-import { collectionJsonToJson } from "../../api/api";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { getSelectedPlugin } from "../../store/pluginInstance/pluginInstanceSlice";
+import {
+  getDefaultID,
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
+import { useEffect } from "react";
+import type { Feed, PluginInstance } from "../../api/types";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { SpinContainer } from "../Common";
 import type { PaginatedTreeQueryReturn } from "../Feeds/usePaginatedTreeQuery";
 import type { TreeNodeDatum } from "./data";
 import FeedTree from "./FeedTree";
 
-interface ParentComponentProps {
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
+
+type Props = {
   changeLayout: () => void;
   currentLayout: boolean;
   treeQuery: PaginatedTreeQueryReturn;
@@ -19,16 +25,12 @@ interface ParentComponentProps {
   };
   feed?: Feed;
   isStaff: boolean;
-}
+};
 
-const ParentComponent: React.FC<ParentComponentProps> = ({
-  changeLayout,
-  currentLayout,
-  treeQuery,
-  statuses,
-  feed,
-  isStaff,
-}) => {
+export default (props: Props) => {
+  const { changeLayout, currentLayout, treeQuery, statuses, feed, isStaff } =
+    props;
+
   const {
     error,
     rootNode,
@@ -39,23 +41,26 @@ const ParentComponent: React.FC<ParentComponentProps> = ({
     isProcessing,
     processingProgress,
   } = treeQuery;
-  const selectedPlugin = useAppSelector(
-    (state) => state.instance.selectedPlugin,
-  );
 
-  const dispatch = useAppDispatch();
+  const [classStatePluginInstance, doPluginInstance] = useThunk<
+    DoPluginInstance.State,
+    TDoPluginInstance
+  >(DoPluginInstance);
 
-  const stableRootNode = useMemo(() => rootNode, [rootNode]);
+  const pluginInstanceID = getDefaultID(classStatePluginInstance);
+  const pluginInstance =
+    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
+  const { selectedPlugin } = pluginInstance;
+
+  const stableRootNode = rootNode;
 
   const lastPluginInstance = pluginInstances.reduce(
     (r: PluginInstance | null, x, i) => {
       if (r === null) {
         return x;
       }
-      const rJson = collectionJsonToJson(r);
-      const xJson = collectionJsonToJson(x);
 
-      return rJson.id <= xJson.id ? x : r;
+      return r.id <= x.id ? x : r;
     },
     null,
   );
@@ -78,16 +83,15 @@ const ParentComponent: React.FC<ParentComponentProps> = ({
       "lastPluginInstance:",
       lastPluginInstance,
     );
-    dispatch(getSelectedPlugin(lastPluginInstance));
-  }, [stableRootNode, dispatch, selectedPlugin, lastPluginInstance]);
 
-  const onNodeClick = useCallback(
-    (node: TreeNodeDatum) => {
-      console.info("ParentComponent: onNodeClick: node:", node.item);
-      node.item && dispatch(getSelectedPlugin(node.item));
-    },
-    [dispatch],
-  );
+    doPluginInstance.getSelectedPlugin(pluginInstanceID, lastPluginInstance);
+  }, [stableRootNode, selectedPlugin, lastPluginInstance]);
+
+  const onNodeClick = (node: TreeNodeDatum) => {
+    console.info("ParentComponent: onNodeClick: node:", node.item);
+    node.item &&
+      doPluginInstance.getSelectedPlugin(pluginInstanceID, node.item);
+  };
 
   if (error) {
     return <div style={{ color: "red" }}>Error: {String(error)}</div>;
@@ -164,5 +168,3 @@ const ParentComponent: React.FC<ParentComponentProps> = ({
     </>
   );
 };
-
-export default ParentComponent;

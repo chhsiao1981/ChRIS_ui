@@ -5,13 +5,13 @@ import {
   setData,
   type Thunk,
 } from "@chhsiao1981/use-thunk";
-import type { Data } from "../api/types";
+import type { Feed } from "../api/types";
 import type {
   FileBrowserFolder,
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
 } from "../api/types/fileBrowser";
-import type { SelectionPayload } from "../store/cart/types";
+import type { CartSelectionPayload } from "./types";
 import {
   type DownloadStatus,
   type DownloadStatusObject,
@@ -26,7 +26,7 @@ export const myClass = "chris-ui/cart";
 
 export interface State extends rState {
   currentLayout: string;
-  selectedPaths: SelectionPayload[];
+  selectedPaths: CartSelectionPayload[];
   openCart: boolean;
   folderDownloadStatus: DownloadStatus;
   fileDownloadStatus: DownloadStatus;
@@ -74,7 +74,7 @@ export const startUpload = (
 
 export const startDownload = (
   myID: string,
-  paths: SelectionPayload[],
+  paths: CartSelectionPayload[],
   username: string,
 ): Thunk<State> => {
   return (dispatch, _) => {};
@@ -90,7 +90,7 @@ export const cancelUpload = (
 
 export const startAnonymize = (
   myID: string,
-  paths: SelectionPayload[],
+  paths: CartSelectionPayload[],
   username: string,
 ): Thunk<State> => {
   return (dispatch, _) => {};
@@ -98,7 +98,7 @@ export const startAnonymize = (
 
 export const setSelectedPaths = (
   myID: string,
-  path: SelectionPayload,
+  path: CartSelectionPayload,
 ): Thunk<State> => {
   return (dispatch, getClassState) => {
     const classState = getClassState();
@@ -115,7 +115,7 @@ export const setSelectedPaths = (
 
 export const setBulkSelectedPaths = (
   myID: string,
-  paths: SelectionPayload[],
+  paths: CartSelectionPayload[],
 ): Thunk<State> => {
   return (dispatch, getClassState) => {
     const classState = getClassState();
@@ -242,7 +242,7 @@ export const setFolderDownloadStatus = (
   step: DownloadTypes,
   filename: string,
   error?: string,
-  feed?: Data,
+  feed?: Feed,
 ): Thunk<State> => {
   return (dispatch, getClassState) => {
     const classState = getClassState();
@@ -366,7 +366,7 @@ export const setFolderUploadStatus = (
 
 export const removeSelectedPayload = (
   myID: string,
-  payload: SelectionPayload,
+  payload: CartSelectionPayload,
 ): Thunk<State> => {
   return (dispatch, getClassState) => {
     const classState = getClassState();
@@ -474,7 +474,7 @@ const setStatus = (
   step: DownloadTypes,
   filename: string,
   error?: string,
-  feed?: Data,
+  feed?: Feed,
 ): Thunk<State> => {
   return (dispatch, _) => {
     if (theType === "file") {
@@ -510,7 +510,7 @@ const downloadFolder = (
 
 const downloadEach = (
   myID: string,
-  path: SelectionPayload,
+  path: CartSelectionPayload,
   username: string,
   pipelineType: string,
 ): Thunk<State> => {

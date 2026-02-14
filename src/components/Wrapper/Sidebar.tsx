@@ -1,5 +1,5 @@
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
@@ -49,7 +49,7 @@ export default (props: Props) => {
   const [classStateUI, doUI] = useUI;
   const [classStateUser, _2] = useUser;
   const ui = getState(classStateUI) || DoUI.defaultState;
-  const uiID = getRootID(classStateUI);
+  const uiID = getDefaultID(classStateUI);
   const user = getState(classStateUser) || DoUser.defaultState;
   const { sidebarActiveItem, isNavOpen, isTagExpanded, isPipelineTagExpanded } =
     ui;

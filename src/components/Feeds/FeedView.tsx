@@ -1,14 +1,9 @@
-import type { Feed, PluginInstance } from "@fnndsc/chrisapi";
 import { Tooltip } from "@patternfly/react-core";
-import { type CSSProperties, useCallback, useEffect, useState } from "react";
+import { type CSSProperties, useEffect, useState } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { elipses } from "../../api/common";
-import { useAppDispatch } from "../../store/hooks";
-import {
-  getSelectedPlugin,
-  resetSelectedPlugin,
-} from "../../store/pluginInstance/pluginInstanceSlice";
+import type { PluginInstance } from "../../api/types";
 import FeedOutputBrowser from "../FeedOutputBrowser/FeedOutputBrowser";
 import FeedGraph from "../FeedTree/FeedGraph";
 import ParentComponent from "../FeedTree/ParentComponent";
@@ -19,20 +14,21 @@ import { DrawerActionButton } from "./DrawerUtils";
 import usePaginatedTreeQuery from "./usePaginatedTreeQuery";
 import "./Feeds.css"; // Import your CSS file
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
 import { collectionJsonToJson } from "../../api/api";
 import {
-  PkgInstanceStatus,
-  type PkgInstance as PluginInstanceType,
+  PluginInstanceStatus,
+  type PluginInstance as PluginInstanceType,
 } from "../../api/types";
 import * as DoCart from "../../reducers/cart";
 import * as DoDrawer from "../../reducers/drawer";
 import * as DoExplorer from "../../reducers/explorer";
 import * as DoFeed from "../../reducers/feed";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { Role } from "../../reducers/types";
 import * as DoUser from "../../reducers/user";
 import CustomTitle from "./CustomTitle";
@@ -46,6 +42,7 @@ type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 type TDoExplorer = ThunkModuleToFunc<typeof DoExplorer>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 export default () => {
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
@@ -56,20 +53,25 @@ export default () => {
   const useDrawer = useThunk<DoDrawer.State, TDoDrawer>(DoDrawer);
   const [classStateDrawer, doDrawer] = useDrawer;
   const drawerState = getState(classStateDrawer) || DoDrawer.defaultState;
-  const drawerID = getRootID(classStateDrawer);
+  const drawerID = getDefaultID(classStateDrawer);
 
   const useExplorer = useThunk<DoExplorer.State, TDoExplorer>(DoExplorer);
   const [classStateExplorer, doExplorer] = useExplorer;
-  const explorerID = getRootID(classStateExplorer);
+  const explorerID = getDefaultID(classStateExplorer);
 
   const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
   const [classStateFeed, doFeed] = useFeed;
-  const feedID = getRootID(classStateFeed);
+  const feedID = getDefaultID(classStateFeed);
 
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
 
+  const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
+    DoPluginInstance,
+  );
+  const [classStatePluginInstance, doPluginInstance] = usePluginInstance;
+  const pluginInstanceID = getDefaultID(classStatePluginInstance);
+
   const [currentLayout, setCurrentLayout] = useState(false);
-  const dispatch = useAppDispatch();
   const query = useSearchQueryParams();
   const theType = query.get("type");
   const params = useParams();
@@ -102,11 +104,11 @@ export default () => {
     document.title = "My Analyses - CHRIS UI";
     doFeed.setShowToolbar(feedID, true);
     return () => {
-      dispatch(resetSelectedPlugin());
+      doPluginInstance.resetSelectedPlugin(pluginInstanceID);
       doExplorer.clearSelectedFile(explorerID);
       doFeed.setShowToolbar(feedID, false);
     };
-  }, [dispatch, isInit]);
+  }, [isInit]);
 
   // set drawer state
   useEffect(() => {
@@ -121,7 +123,8 @@ export default () => {
       treeQuery.pluginInstances[treeQuery.pluginInstances.length - 1],
     ) as PluginInstanceType;
 
-    const isSuccess = lastPluginInstance.status === PkgInstanceStatus.SUCCESS;
+    const isSuccess =
+      lastPluginInstance.status === PluginInstanceStatus.SUCCESS;
 
     const theRole = role || Role.DefaultRole;
     doDrawer.resetDrawerState(drawerID, theRole, isSuccess);
@@ -129,31 +132,25 @@ export default () => {
       const theRole = role || Role.DefaultRole;
       doDrawer.resetDrawerState(drawerID, theRole, isSuccess);
     };
-  }, [dispatch, role, treeQuery.pluginInstances, treeQuery.totalCount]);
+  }, [role, treeQuery.pluginInstances, treeQuery.totalCount]);
 
   useEffect(() => {
     if (!feed) {
       return;
     }
     doFeed.feedSuccess(feedID, feed);
-  }, [dispatch, feed]);
+  }, [feed]);
 
-  const onNodeClick = useCallback(
-    (node: any) => {
-      doExplorer.clearSelectedFile(explorerID);
-      dispatch(getSelectedPlugin(node.item));
-    },
-    [dispatch],
-  );
+  const onNodeClick = (node: any) => {
+    doExplorer.clearSelectedFile(explorerID);
+    doPluginInstance.getSelectedPlugin(pluginInstanceID, node.item);
+  };
 
-  const onNodeBrowserClick = useCallback(
-    (node: PluginInstance) => {
-      console.info("onNodeBrowserClick: start: node:", node);
-      doExplorer.clearSelectedFile(explorerID);
-      dispatch(getSelectedPlugin(node));
-    },
-    [dispatch],
-  );
+  const onNodeBrowserClick = (node: PluginInstance) => {
+    console.info("onNodeBrowserClick: start: node:", node);
+    doExplorer.clearSelectedFile(explorerID);
+    doPluginInstance.getSelectedPlugin(pluginInstanceID, node);
+  };
 
   const changeLayout = () => {
     setCurrentLayout(!currentLayout);
@@ -162,8 +159,8 @@ export default () => {
   const TitleComponent = (
     <CustomTitle color="white">
       <AnalysisIcon style={{ marginRight: "0.25em" }} />
-      <Tooltip content={feed?.data.name}>
-        <span>{feed ? elipses(feed?.data.name, 40) : ""}</span>
+      <Tooltip content={feed?.name}>
+        <span>{feed ? elipses(feed?.name, 40) : ""}</span>
       </Tooltip>
     </CustomTitle>
   );
@@ -258,7 +255,11 @@ export default () => {
                   maximized={drawerState.node.maximized}
                 />
                 <div className="node-block">
-                  <NodeDetails useDrawer={useDrawer} useFeed={useFeed} />
+                  <NodeDetails
+                    useDrawer={useDrawer}
+                    useFeed={useFeed}
+                    usePluginInstance={usePluginInstance}
+                  />
                 </div>
               </Panel>
             </PanelGroup>

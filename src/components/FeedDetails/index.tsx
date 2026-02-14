@@ -15,10 +15,9 @@ import {
 import ButtonContainer from "./ButtonContainer";
 import "./feed-details.css";
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
-  type UseThunk,
   useThunk,
 } from "@chhsiao1981/use-thunk";
 import * as DoDrawer from "../../reducers/drawer";
@@ -31,7 +30,7 @@ export default () => {
   const useDrawer = useThunk<DoDrawer.State, TDoDrawer>(DoDrawer);
   const [classStateDrawer, doDrawer] = useDrawer;
   const drawerState = getState(classStateDrawer) || DoDrawer.defaultState;
-  const drawerID = getRootID(classStateDrawer);
+  const drawerID = getDefaultID(classStateDrawer);
 
   const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
   const [classStateFeed, _] = useFeed;

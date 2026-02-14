@@ -1,5 +1,5 @@
-import type { PluginParameter } from "@fnndsc/chrisapi";
 import { v4 } from "uuid";
+import type { PluginParameter } from "../../api/types";
 import type { InputIndex, InputType } from "./types";
 
 export const unPackForKeyValue = (input: InputIndex) => {
@@ -51,9 +51,10 @@ export const unpackParametersIntoString = (input: InputType) => {
 export const getRequiredParams = (params: PluginParameter[]) => {
   return params
     .map((param) => {
-      if (param.data.optional === false) {
-        return param.data.flag;
+      if (param.optional === false) {
+        return param.flag;
       }
+      return undefined;
     })
     .filter((element) => element !== undefined);
 };
@@ -99,21 +100,19 @@ export const handleGetTokens = (
   const dictionary: InputIndex = {};
   let requiredInput: InputType = {};
   let dropdownInput: InputType = {};
-  // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
-  let specialCharIndex;
-
-  const flags = totalParams?.map((param) => param.data.flag);
+  const flags = totalParams?.map((param) => param.flag);
   const helperValues = totalParams?.map((param) => {
     return {
-      id: param.data.id,
-      flag: param.data.flag,
-      placeholder: param.data.help,
-      type: param.data.type,
-      required: param.data.optional,
+      id: param.id,
+      flag: param.flag,
+      placeholder: param.help,
+      type: param.type,
+      required: param.optional,
       value: "",
     };
   });
 
+  let specialCharIndex: number | undefined;
   const values = userValue.match(/(?:[^\s'"]+|"[^"]*"|'[^']*')+/g) || [];
   for (let i = 0; i < values.length; i++) {
     const currentValue = values[i];

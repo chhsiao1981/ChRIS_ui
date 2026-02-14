@@ -1,5 +1,5 @@
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
@@ -20,9 +20,9 @@ import { BarsIcon } from "@patternfly/react-icons"; // Add a tools icon
 import { type ReactElement, useContext, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useNavigate } from "react-router";
+import { useSignUpAllowed } from "../../hooks/useSignUpAllowed";
 import { type Role, Roles, StaffRoles } from "../../reducers/types";
 import * as DoUser from "../../reducers/user";
-import { useSignUpAllowed } from "../../store/hooks";
 import { ThemeContext } from "../DarkTheme/useTheme";
 import FeedDetails from "../FeedDetails";
 import CartNotify from "./CartNotify";
@@ -47,7 +47,7 @@ export default (props: Props) => {
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, doUser] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
-  const userID = getRootID(classStateUser);
+  const userID = getDefaultID(classStateUser);
   const { username, role, isStaff } = user;
 
   console.info("Wrapper.Toolbar: user:", user);

@@ -1,22 +1,21 @@
-import type {
-  Plugin,
-  PluginInstance,
-  PluginInstanceDescendantList,
-  PluginParameterList,
-} from "@fnndsc/chrisapi";
 import {
   Button,
   ExpandableSection,
   Grid,
   GridItem,
 } from "@patternfly/react-core";
-import React, { Fragment, type ReactNode } from "react";
+import React, { Fragment, type ReactNode, useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useNavigate } from "react-router";
 import { customQuote, needsQuoting } from "../../api/common";
-import { useAppSelector } from "../../store/hooks";
+import type {
+  Plugin,
+  PluginInstance,
+  PluginInstanceParameter,
+  PluginParameter,
+} from "../../api/types";
 import { SpinContainer } from "../Common";
-import { isPlVisualDataset } from "../DatasetRedirect/getDatasets";
+import { isPlVisualDataset } from "../DatasetRedirect/isPlVisualDataset";
 import FeedNote from "../FeedDetails/FeedNote";
 import { CalendarAltIcon, PreviewIcon } from "../Icons";
 import "./NodeDetails.css";
@@ -27,6 +26,7 @@ import {
 } from "@chhsiao1981/use-thunk";
 import * as DoDrawer from "../../reducers/drawer";
 import * as DoFeed from "../../reducers/feed";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import PluginLog from "./PluginLog";
 import PluginTitle from "./PluginTitle";
 import Status from "./Status";
@@ -36,11 +36,12 @@ import { getErrorCodeMessage } from "./utils";
 
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 interface INodeState {
   plugin?: Plugin;
-  instanceParameters?: PluginInstanceDescendantList;
-  pluginParameters?: PluginParameterList;
+  instanceParameters?: PluginInstance[];
+  pluginParameters?: PluginParameter[];
 }
 
 function getInitialState() {
@@ -54,10 +55,11 @@ function getInitialState() {
 type Props = {
   useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
   useFeed: UseThunk<DoFeed.State, TDoFeed>;
+  usePluginInstance: UseThunk<DoPluginInstance.State, TDoPluginInstance>;
 };
 
 export default (props: Props) => {
-  const { useDrawer, useFeed } = props;
+  const { useDrawer, useFeed, usePluginInstance } = props;
   const [classStateDrawer, _] = useDrawer;
   const drawer = getState(classStateDrawer) || DoDrawer.defaultState;
   const { node } = drawer;
@@ -66,16 +68,18 @@ export default (props: Props) => {
   const feedState = getState(classStateFeed) || DoFeed.defaultState;
   const { data: feed } = feedState;
 
-  const [nodeState, setNodeState] = React.useState<INodeState>(getInitialState);
-  const selectedPlugin = useAppSelector(
-    (state) => state.instance.selectedPlugin,
-  );
+  const [classStatePluginInstance, _doPluginInstance] = usePluginInstance;
+  const pluginInstance =
+    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
+  const { selectedPlugin } = pluginInstance;
+
+  const [nodeState, setNodeState] = useState<INodeState>(getInitialState);
   const navigate = useNavigate();
   const { plugin, instanceParameters, pluginParameters } = nodeState;
-  const [isExpanded, setIsExpanded] = React.useState(true);
-  const [isErrorExpanded, setisErrorExpanded] = React.useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [isErrorExpanded, setisErrorExpanded] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
       const instanceParameters = await selectedPlugin?.getParameters({
         limit: 100,
@@ -88,7 +92,7 @@ export default (props: Props) => {
         offset: 0,
       });
 
-      if (pluginParameters && instanceParameters) {
+      if (plugin && pluginParameters && instanceParameters) {
         setNodeState({
           plugin,
           instanceParameters,
@@ -102,7 +106,7 @@ export default (props: Props) => {
 
   const { data } = usePluginInstanceResourceQuery(selectedPlugin);
 
-  const command = React.useCallback(getCommand, []);
+  const command = getCommand;
 
   const text =
     plugin && instanceParameters && pluginParameters
@@ -112,11 +116,11 @@ export default (props: Props) => {
   const runTime = React.useCallback(getRuntimeString, []);
 
   const cancelled =
-    selectedPlugin?.data.status === "cancelled" ||
-    selectedPlugin?.data.status === "finishedWithError";
+    selectedPlugin?.status === "cancelled" ||
+    selectedPlugin?.status === "finishedWithError";
 
-  const error_code = selectedPlugin?.data.error_code;
-  const compute_env = selectedPlugin?.data.compute_resource_name;
+  const error_code = selectedPlugin?.error_code;
+  const compute_env = selectedPlugin?.compute_resource_name;
 
   const renderGridItem = (title: string, value: React.ReactNode) => {
     return (
@@ -137,7 +141,7 @@ export default (props: Props) => {
   const Time = (
     <>
       <CalendarAltIcon style={{ marginRight: "0.5em" }} />
-      {selectedPlugin.data.start_date}
+      {selectedPlugin.start_date}
     </>
   );
   return (
@@ -145,7 +149,7 @@ export default (props: Props) => {
       fallback={
         <Button
           onClick={() => {
-            feed && navigate(`/feeds/${feed.data.id}?type='private'`);
+            feed && navigate(`/feeds/${feed.id}?type='private'`);
           }}
           variant="link"
         >
@@ -178,22 +182,22 @@ export default (props: Props) => {
               className="node-details__expandable"
             >
               <Grid className="node-details__grid">
-                {renderGridItem("Feed Name", feed?.data?.name)}
-                {renderGridItem("Feed Author", feed?.data.owner_username)}
-                {selectedPlugin.data.previous_id &&
+                {renderGridItem("Feed Name", feed?.name)}
+                {renderGridItem("Feed Author", feed?.owner_username)}
+                {selectedPlugin.previous_id &&
                   renderGridItem(
                     "Parent Node ID",
-                    <span>{selectedPlugin.data.previous_id}</span>,
+                    <span>{selectedPlugin.previous_id}</span>,
                   )}
                 {renderGridItem(
                   "Selected Node ID",
-                  <span>{selectedPlugin.data.id}</span>,
+                  <span>{selectedPlugin.id}</span>,
                 )}
                 {renderGridItem(
                   "Plugin",
                   <span style={{ fontFamily: "monospace" }}>
-                    {selectedPlugin.data.plugin_name}, ver{" "}
-                    {selectedPlugin.data.plugin_version}
+                    {selectedPlugin.plugin_name}, ver{" "}
+                    {selectedPlugin.plugin_version}
                   </span>,
                 )}
                 {renderGridItem("Created", Time)}
@@ -205,9 +209,7 @@ export default (props: Props) => {
                   <Fragment>
                     {renderGridItem(
                       "Total Runtime",
-                      <span>
-                        {selectedPlugin?.data && runTime(selectedPlugin)}
-                      </span>,
+                      <span>{runTime(selectedPlugin)}</span>,
                     )}
                   </Fragment>
                 )}
@@ -248,9 +250,7 @@ export default (props: Props) => {
                   <RenderButtonGridItem>
                     <Button
                       icon={<PreviewIcon />}
-                      onClick={() =>
-                        navigate(`/niivue/${selectedPlugin.data.id}`)
-                      }
+                      onClick={() => navigate(`/niivue/${selectedPlugin.id}`)}
                     >
                       View Volumes{" "}
                       {/* I didn't make this shortcut work, since none of them currently work in caae85dd1cb337c11179724eedf3b81ac6373aaa */}
@@ -271,8 +271,8 @@ export default (props: Props) => {
 
 function getRuntimeString(selected: PluginInstance) {
   let runtime = 0;
-  const start = new Date(selected.data.start_date);
-  const end = new Date(selected.data.end_date);
+  const start = new Date(selected.start_date);
+  const end = new Date(selected.end_date);
   const elapsed = end.getTime() - start.getTime(); // milliseconds between start and end
   runtime += elapsed;
 
@@ -295,39 +295,33 @@ function getRuntimeString(selected: PluginInstance) {
 
 function getCommand(
   plugin: Plugin,
-  params: PluginInstanceDescendantList,
-  parameters: PluginParameterList,
+  params: PluginInstanceParameter[],
+  parameters: PluginParameter[],
 ) {
-  const { dock_image, selfexec } = plugin.data;
+  const { dock_image, selfexec } = plugin;
   const modifiedParams: {
     name?: string;
     value?: string;
   }[] = [];
 
-  let instanceParameters = [];
-  let pluginParameters = [];
-  if (params.getItems()) {
-    instanceParameters = params.getItems() as any[];
-  }
-  if (parameters.getItems()) {
-    pluginParameters = parameters.getItems() as any[];
-  }
+  const instanceParameters = params;
+  const pluginParameters = parameters;
 
   // Create a lookup map for plugin parameters to avoid O(n²) nested loop
   const pluginParamsMap = new Map();
   for (const pluginParam of pluginParameters) {
-    pluginParamsMap.set(pluginParam.data.name, pluginParam);
+    pluginParamsMap.set(pluginParam.name, pluginParam);
   }
 
   // Single pass through instance parameters - O(n) complexity
   for (const instanceParam of instanceParameters) {
-    const pluginParam = pluginParamsMap.get(instanceParam.data.param_name);
+    const pluginParam = pluginParamsMap.get(instanceParam.param_name);
 
     if (pluginParam) {
-      const isBoolean = instanceParam.data.type === "boolean";
-      const isString = instanceParam.data.type === "string";
-      const value = instanceParam.data.value;
-      const paramName = instanceParam.data.param_name;
+      const isBoolean = instanceParam.type === "boolean";
+      const isString = instanceParam.type === "string";
+      const value = instanceParam.value;
+      const paramName = instanceParam.param_name;
 
       // Check if parameter name contains "password" (case insensitive)
       const isPassword =

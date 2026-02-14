@@ -1,5 +1,4 @@
 import { type ThunkModuleToFunc, useThunk } from "@chhsiao1981/use-thunk";
-import type { FileBrowserFolderList } from "@fnndsc/chrisapi";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -23,6 +22,7 @@ import {
   useRef,
   useState,
 } from "react";
+import type { FileBrowserFolder } from "../../api/types";
 import * as DoCart from "../../reducers/cart";
 import { AddModal } from "../NewLibrary/components/Operations";
 import type { OriginState } from "../NewLibrary/context";
@@ -47,7 +47,7 @@ type Props = {
   path: string;
   onPathChange: (p: string) => void;
   origin: OriginState;
-  foldersList?: FileBrowserFolderList;
+  foldersList?: FileBrowserFolder[];
 };
 
 export default (props: Props) => {

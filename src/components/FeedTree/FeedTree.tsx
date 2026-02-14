@@ -1,4 +1,9 @@
-import type { Feed, PluginInstance } from "@fnndsc/chrisapi";
+import {
+  getDefaultID,
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import { useMutation } from "@tanstack/react-query";
 import { Input, notification, Switch } from "antd";
 import type { HierarchyPointLink, HierarchyPointNode } from "d3-hierarchy";
@@ -19,9 +24,13 @@ import {
   useState,
 } from "react";
 import { useImmer } from "use-immer";
-import ChrisAPIClient from "../../api/chrisapiclient";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { getSelectedPlugin } from "../../store/pluginInstance/pluginInstanceSlice";
+import {
+  createWorkflow,
+  getWorkflowPluginInstances,
+} from "../../api/serverApi";
+import { getPipelinesByName } from "../../api/serverApi/pipeline";
+import type { Feed, ID, PluginInstance } from "../../api/types";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import AddNodeConnect from "../AddNode/AddNode";
 import { AddNodeProvider } from "../AddNode/context";
 import AddPipeline from "../AddPipeline/AddPipeline";
@@ -32,14 +41,16 @@ import { PipelineProvider } from "../PipelinesCopy/context";
 import DropdownMenu from "./DropdownMenu";
 import useSize from "./useSize";
 
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
+
 export type TSID = {
-  [key: string]: number[];
+  [key: string]: ID[];
 };
 
 export interface TreeNodeDatum {
-  id: number;
+  id: ID;
   name: string;
-  parentId: number | undefined;
+  parentId: ID | undefined;
   item: PluginInstance;
   children: TreeNodeDatum[];
 }
@@ -55,7 +66,7 @@ export type FeedTreeProps = {
   removeNodeLocally: (ids: number[]) => void;
   pluginInstances: PluginInstance[];
   statuses: {
-    [id: number]: string;
+    [id: ID]: string;
   };
   feed?: Feed;
   isStaff: boolean;
@@ -166,7 +177,17 @@ export default (props: FeedTreeProps) => {
     feed,
     isStaff,
   } = props;
-  const dispatch = useAppDispatch();
+
+  const [classStatePluginInstance, doPluginInstance] = useThunk<
+    DoPluginInstance.State,
+    TDoPluginInstance
+  >(DoPluginInstance);
+
+  const pluginInstanceID = getDefaultID(classStatePluginInstance);
+  const pluginInstance =
+    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
+  const { selectedPlugin } = pluginInstance;
+
   const { isDarkTheme } = useContext(ThemeContext);
   const [state, updateState] = useImmer(getInitialState());
   const [transform, setTransform] = useState({
@@ -193,9 +214,7 @@ export default (props: FeedTreeProps) => {
     visible: false,
   });
   const orientation = state.switchState.orientation;
-  const selectedPlugin = useAppSelector(
-    (store) => store.instance.selectedPlugin,
-  );
+
   const [api, contextHolder] = notification.useNotification();
 
   const pipelineMutation = useMutation({
@@ -213,9 +232,12 @@ export default (props: FeedTreeProps) => {
   });
 
   const fetchPipeline = async (pluginInst: PluginInstance) => {
-    const client = ChrisAPIClient.getClient();
-    const pipelineList = await client.getPipelines({ name: "zip v20240311" });
-    const pipelines = pipelineList.getItems();
+    const {
+      status: status3,
+      data: data3,
+      errmsg: errmsg3,
+    } = await getPipelinesByName("zip v20240311");
+    const pipelines = data3 || [];
     if (!pipelines || pipelines.length === 0) {
       throw new Error("The zip pipeline is not registered. Contact admin.");
     }
@@ -223,22 +245,26 @@ export default (props: FeedTreeProps) => {
       message: "Preparing to initiate the zipping process...",
     });
     const pipeline = pipelines[0];
-    const { id: pipelineId } = pipeline.data;
-    const workflow = await client.createWorkflow(
-      pipelineId,
-      //@ts-ignore
-      {
-        previous_plugin_inst_id: pluginInst.data.id,
-      },
-    );
-    const pluginInstancesResponse = await workflow.getPluginInstances({
-      limit: 1000,
-    });
-    const newItems = pluginInstancesResponse.getItems();
-    if (newItems && newItems.length > 0) {
-      const firstInstance = newItems[newItems.length - 1];
-      dispatch(getSelectedPlugin(firstInstance));
-      addNodeLocally(newItems);
+    const { id: pipelineId } = pipeline;
+    const {
+      status,
+      data: workflow,
+      errmsg,
+    } = await createWorkflow(pipelineId, pluginInst.id, []);
+    if (!workflow) {
+      return;
+    }
+
+    const {
+      status: status2,
+      data,
+      errmsg: errmsg2,
+    } = await getWorkflowPluginInstances(workflow.id, 0, 1000);
+    const instances = data || [];
+    if (instances && instances.length > 0) {
+      const firstInstance = instances[instances.length - 1];
+      doPluginInstance.getSelectedPlugin(pluginInstanceID, firstInstance);
+      addNodeLocally(instances);
     }
     return pipelines;
   };
@@ -270,13 +296,17 @@ export default (props: FeedTreeProps) => {
     const newLinks: HierarchyPointLink<TreeNodeDatum>[] = [];
     if (tsIds && Object.keys(tsIds).length > 0) {
       // Create a map for O(1) lookups
-      const nodeMap = new Map<number, HierarchyPointNode<TreeNodeDatum>>();
+      const nodeMap = new Map<ID, HierarchyPointNode<TreeNodeDatum>>();
       computedNodes.forEach((node) => {
-        nodeMap.set(node.data.id, node);
+        if (!node.id) {
+          return;
+        }
+        nodeMap.set(node.id, node);
       });
 
       // Process topological links more efficiently
       for (const [targetIdStr, parentIds] of Object.entries(tsIds)) {
+        // biome-ignore lint/correctness/useParseIntRadix: parseInt
         const targetId = Number.parseInt(targetIdStr);
         const targetNode = nodeMap.get(targetId);
 
@@ -387,13 +417,13 @@ export default (props: FeedTreeProps) => {
 
     // Batch similar drawing operations for better performance
     // 1. Draw all links first (fewer state changes)
-    visibleLinks.forEach((link) => drawLink(ctx, link, isDarkTheme));
+    visibleLinks.map((link) => drawLink(ctx, link, isDarkTheme));
 
     // 2. Draw all nodes (bulk operation)
     visibleNodes.forEach((node) => {
-      const nodeId = node.data.item.data.id;
+      const nodeId = node.data.item.id;
       const polledStatus = statuses[nodeId];
-      const finalStatus = polledStatus || node.data.item.data.status;
+      const finalStatus = polledStatus || node.data.item.status;
       drawNode({
         ctx,
         node,
@@ -403,7 +433,7 @@ export default (props: FeedTreeProps) => {
         overlayScale: state.overlayScale.enabled
           ? state.overlayScale.type
           : undefined,
-        selectedId: selectedPlugin?.data.id,
+        selectedId: selectedPlugin?.id,
         finalStatus,
       });
     });
@@ -636,7 +666,6 @@ export default (props: FeedTreeProps) => {
           />
         )}
       </div>
-      {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
       <canvas
         ref={canvasRef}
         style={{ width: "100%", height: "100%", cursor: "grab" }}
@@ -654,7 +683,7 @@ function drawLink(
 ) {
   const { source, target } = linkData;
   const nodeRadius = DEFAULT_NODE_RADIUS;
-  const isTs = target.data.item.data.plugin_type === "ts";
+  const isTs = target.data.item.plugin_type === "ts";
   const dx = target.x - source.x;
   const dy = target.y - source.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
@@ -713,7 +742,7 @@ interface DrawNodeOptions {
   toggleLabel: boolean;
   searchFilter: string;
   overlayScale?: FeedTreeScaleType;
-  selectedId?: number;
+  selectedId?: ID;
   finalStatus: string | undefined;
 }
 
@@ -729,7 +758,7 @@ function drawNode({
 }: DrawNodeOptions) {
   const { x, y } = node;
   const data = node.data;
-  const itemData = data.item.data;
+  const itemData = data.item;
   const statusColor = getStatusColor(finalStatus, data, searchFilter);
   const isSelected = selectedId === node.data.id;
   const nodeName = node.data.name || `Node ${node.data.id}`;
@@ -793,8 +822,8 @@ function getStatusColor(
 ): string {
   if (searchFilter) {
     const term = searchFilter.toLowerCase();
-    const pluginName = data.item.data.plugin_name?.toLowerCase() || "";
-    const title = data.item.data.title?.toLowerCase() || "";
+    const pluginName = data.item.plugin_name?.toLowerCase() || "";
+    const title = data.item.title?.toLowerCase() || "";
     if (pluginName.includes(term) || title.includes(term)) {
       return "red";
     }

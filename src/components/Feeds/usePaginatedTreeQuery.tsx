@@ -1,13 +1,20 @@
-import type { Feed, PluginInstance } from "@fnndsc/chrisapi";
+import {
+  getDefaultID,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import {
   useInfiniteQuery,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
-import { getSelectedPlugin } from "../../store/pluginInstance/pluginInstanceSlice";
+import { getPluginInstances } from "../../api/serverApi";
+import type { Feed, ID, PluginInstance } from "../../api/types";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { getTsNodes } from "../FeedTree/data";
+
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 /**
  * Constants for performance optimization and network behavior
@@ -21,9 +28,9 @@ const NETWORK_RETRY_DELAY = 2000;
  * Tree node data structure for rendering feed tree
  */
 export interface TreeNodeDatum {
-  id: number;
+  id: ID;
   name: string;
-  parentId: number | undefined;
+  parentId: ID | undefined;
   item: PluginInstance;
   children: TreeNodeDatum[];
 }
@@ -56,10 +63,11 @@ export interface PaginatedTreeQueryReturn {
  * @param feed The feed to fetch the count for
  * @returns A promise resolving to the total count
  */
-async function fetchTotalCount(feed: Feed) {
-  const resp = await feed.getPluginInstances({ limit: 1 });
-  return resp.totalCount ?? 0;
-}
+const fetchTotalCount = async (feed: Feed) => {
+  const { status, data, errmsg } = await getPluginInstances(feed.id, 0, 1);
+  const pluginInstances = data || [];
+  return pluginInstances.length;
+};
 
 /**
  * Fetches a page of plugin instances with retry and exponential backoff
@@ -76,12 +84,13 @@ async function fetchPageWithRetry(
   retryCount = 0,
 ): Promise<{ items: PluginInstance[]; totalCount: number }> {
   try {
-    const resp = await feed.getPluginInstances({
+    const { status, data, errmsg } = await getPluginInstances(
+      feed.id,
       offset,
       limit,
-    });
-    const items = resp.getItems() || [];
-    const totalCount = resp.totalCount ?? 0;
+    );
+    const items = data || [];
+    const totalCount = items.length;
     return { items, totalCount };
   } catch (error) {
     if (retryCount < NETWORK_RETRY_COUNT) {
@@ -113,13 +122,13 @@ function getChunkSize(count: number) {
  */
 function integrateBatchDirectSingleRoot(
   items: PluginInstance[],
-  finalNodesById: Map<number, TreeNodeDatum>,
-  rootIdRef: React.MutableRefObject<number | null>,
+  finalNodesById: Map<ID, TreeNodeDatum>,
+  rootIdRef: React.MutableRefObject<ID | null>,
 ) {
   for (const item of items) {
-    const id = item.data.id;
-    const parentId = item.data.previous_id ?? null;
-    const nodeName = item.data.title || item.data.plugin_name || `Node ${id}`;
+    const id = item.id;
+    const parentId = item.previous_id ?? null;
+    const nodeName = item.title || item.plugin_name || `Node ${id}`;
     let finalNode = finalNodesById.get(id);
     if (!finalNode) {
       finalNode = {
@@ -174,7 +183,7 @@ function integrateBatchDirectSingleRoot(
  */
 function insertChildImmutable(
   root: TreeNodeDatum,
-  parentId: number,
+  parentId: ID,
   newChild: TreeNodeDatum,
 ): TreeNodeDatum {
   if (root.id === parentId) {
@@ -217,7 +226,7 @@ function insertChildImmutable(
  */
 function removeNodesIterative(
   root: TreeNodeDatum,
-  toRemove: Set<number>,
+  toRemove: Set<ID>,
 ): TreeNodeDatum | null {
   if (toRemove.has(root.id)) return null;
   const stack: TreeNodeDatum[] = [root];
@@ -235,10 +244,7 @@ function removeNodesIterative(
  * @param id ID of the node to find the parent for
  * @returns Parent node or null if not found
  */
-function findParent(
-  root: TreeNodeDatum | null,
-  id: number,
-): TreeNodeDatum | null {
+function findParent(root: TreeNodeDatum | null, id: ID): TreeNodeDatum | null {
   if (!root) return null;
   const stack: TreeNodeDatum[] = [root];
   while (stack.length) {
@@ -259,7 +265,13 @@ function findParent(
 export default function usePaginatedTreeQuery(
   feed?: Feed,
 ): PaginatedTreeQueryReturn {
-  const dispatch = useDispatch();
+  const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
+    DoPluginInstance,
+  );
+
+  const [classStatePluginInstance, doPluginInstance] = usePluginInstance;
+  const pluginInstanceID = getDefaultID(classStatePluginInstance);
+
   const queryClient = useQueryClient();
   const [localItems, setLocalItems] = useState<PluginInstance[]>([]);
   const [isViewportLimited, setIsViewportLimited] = useState(false);
@@ -278,7 +290,7 @@ export default function usePaginatedTreeQuery(
    * Retrieves plugin instances in pages and handles data loading states
    */
   const countQuery = useQuery({
-    queryKey: ["feedPluginInstances", feed?.data.id, "countOnly"],
+    queryKey: ["feedPluginInstances", feed?.id, "countOnly"],
     enabled: !!feed,
     queryFn: () => (feed ? fetchTotalCount(feed) : Promise.resolve(0)),
     staleTime: QUERY_STALE_TIME,
@@ -298,7 +310,7 @@ export default function usePaginatedTreeQuery(
     isFetchingNextPage,
     fetchNextPage: rawFetchNextPage,
   } = useInfiniteQuery({
-    queryKey: ["instanceList", feed?.data.id],
+    queryKey: ["instanceList", feed?.id],
     enabled: !!feed && totalCount > 0,
     initialPageParam: 0,
     queryFn: async ({ pageParam = 0 }) => {
@@ -337,7 +349,7 @@ export default function usePaginatedTreeQuery(
   }, [infiniteData, localItems]);
 
   const { data: tsIds } = useQuery({
-    queryKey: ["tsIds", feed?.data.id, pluginInstances.length],
+    queryKey: ["tsIds", feed?.id, pluginInstances.length],
     enabled: !!feed && pluginInstances.length > 0,
     queryFn: () => getTsNodes(pluginInstances),
   });
@@ -438,15 +450,12 @@ export default function usePaginatedTreeQuery(
       let updatedRoot = rootNode;
 
       for (const newItem of newItems) {
-        const parentId = newItem.data.previous_id ?? undefined;
+        const parentId = newItem.previous_id ?? undefined;
         if (!parentId) continue;
 
         const newChild: TreeNodeDatum = {
-          id: newItem.data.id,
-          name:
-            newItem.data.title ||
-            newItem.data.plugin_name ||
-            `Node ${newItem.data.id}`,
+          id: newItem.id,
+          name: newItem.title || newItem.plugin_name || `Node ${newItem.id}`,
           parentId,
           item: newItem,
           children: [],
@@ -463,17 +472,17 @@ export default function usePaginatedTreeQuery(
         setRootNode(updatedRoot);
         setLocalItems((prev) => [...prev, ...addedItems]);
         const lastAdded = addedItems[addedItems.length - 1];
-        dispatch(getSelectedPlugin(lastAdded));
+        doPluginInstance.getSelectedPlugin(pluginInstanceID, lastAdded);
         await queryClient.invalidateQueries({
-          queryKey: ["feedPluginInstances", feed?.data.id, "countOnly"],
+          queryKey: ["feedPluginInstances", feed?.id, "countOnly"],
         });
       }
     },
-    [rootNode, dispatch, feed, queryClient],
+    [rootNode, feed, queryClient],
   );
 
   const removeNodeLocally = useCallback(
-    async (ids: number[]) => {
+    async (ids: ID[]) => {
       if (!rootNode || ids.length === 0) return;
 
       const toRemove = new Set(ids);
@@ -482,19 +491,20 @@ export default function usePaginatedTreeQuery(
       const newRoot = removeNodesIterative(rootNode, toRemove);
 
       if (lastRemovedParent) {
-        dispatch(getSelectedPlugin(lastRemovedParent.item));
+        doPluginInstance.getSelectedPlugin(
+          pluginInstanceID,
+          lastRemovedParent.item,
+        );
       }
 
       setRootNode(newRoot);
-      setLocalItems((prev) =>
-        prev.filter((inst) => !toRemove.has(inst.data.id)),
-      );
+      setLocalItems((prev) => prev.filter((inst) => !toRemove.has(inst.id)));
 
       await queryClient.invalidateQueries({
-        queryKey: ["feedPluginInstances", feed?.data.id, "countOnly"],
+        queryKey: ["feedPluginInstances", feed?.id, "countOnly"],
       });
     },
-    [rootNode, feed, dispatch, queryClient],
+    [rootNode, feed, queryClient],
   );
 
   return {

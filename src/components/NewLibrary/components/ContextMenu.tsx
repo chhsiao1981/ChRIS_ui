@@ -1,7 +1,7 @@
 import { type ThunkModuleToFunc, useThunk } from "@chhsiao1981/use-thunk";
-import type { FileBrowserFolderList } from "@fnndsc/chrisapi";
 import type { DefaultError } from "@tanstack/react-query";
 import { matchPath } from "react-router";
+import type { FileBrowserFolder } from "../../../api/types";
 import * as DoCart from "../../../reducers/cart";
 import { Alert, Dropdown, type MenuProps } from "../../Antd";
 import {
@@ -24,7 +24,7 @@ type Props = {
   computedPath?: string;
   username: string;
   origin: OriginState;
-  folderList?: FileBrowserFolderList;
+  folderList?: FileBrowserFolder[];
 };
 
 export const FolderContextMenu = (props: Props) => {

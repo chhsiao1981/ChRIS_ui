@@ -3,7 +3,7 @@ import {
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
-import { Navigate } from "react-router-dom";
+import { redirect } from "../../api/redirect";
 import * as DoUser from "../../reducers/user";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
@@ -25,10 +25,10 @@ export default (props: Props) => {
   );
 
   const isValid = isLoggedIn || !isInit;
+  if (!isValid) {
+    // use redirect to have a clean react state.
+    redirect(`/login?redirectTo=${redirectTo}`);
+  }
 
-  return isValid ? (
-    children
-  ) : (
-    <Navigate to={`/login?redirectTo=${redirectTo}`} />
-  );
+  return children;
 };

@@ -1,14 +1,13 @@
 import {
-  getRootID,
+  getDefaultID,
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { useState } from "react";
-import ChrisAPIClient from "../../../api/chrisapiclient";
 import * as DoCart from "../../../reducers/cart";
-import type { SelectionPayload } from "../../../store/cart/types";
+import type { CartSelectionPayload } from "../../../reducers/types";
 import { type OriginState, useOperationsContext } from "../context";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
@@ -18,12 +17,12 @@ type DeletionErrors = { path: string; message: string }[];
 const useDeletePayload = (origin: OriginState, api: any) => {
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
   const [classStateCart, doCart] = useCart;
-  const cartID = getRootID(classStateCart);
+  const cartID = getDefaultID(classStateCart);
 
   const { handleOrigin, invalidateQueries } = useOperationsContext();
   const [notificationKey, setNotificationKey] = useState<string | null>(null);
 
-  const handleDelete = async (paths: SelectionPayload[]) => {
+  const handleDelete = async (paths: CartSelectionPayload[]) => {
     handleOrigin(origin);
     const errors: DeletionErrors = [];
     const successfulPaths: string[] = [];
@@ -33,10 +32,9 @@ const useDeletePayload = (origin: OriginState, api: any) => {
         const { payload, path: pathToClear } = path;
         try {
           const urlForDeletion = payload.url;
-          const client = ChrisAPIClient.getClient();
           await axios.delete(urlForDeletion, {
             headers: {
-              Authorization: `Token ${client.auth.token}`,
+              Authorization: `Token ${token}`,
             },
           });
           successfulPaths.push(pathToClear);
@@ -60,7 +58,7 @@ const useDeletePayload = (origin: OriginState, api: any) => {
   };
 
   const mutation = useMutation({
-    mutationFn: (paths: SelectionPayload[]) => handleDelete(paths),
+    mutationFn: (paths: CartSelectionPayload[]) => handleDelete(paths),
     onMutate: () => {
       const key = `open${Date.now()}`;
       setNotificationKey(key);

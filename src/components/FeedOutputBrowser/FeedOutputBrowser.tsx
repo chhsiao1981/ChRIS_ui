@@ -1,4 +1,4 @@
-import type { PluginInstance } from "@fnndsc/chrisapi";
+import type { PluginInstance } from "../../api/types";
 import { Alert } from "../Antd";
 import "./FeedOutputBrowser.css";
 import type { ThunkModuleToFunc, UseThunk } from "@chhsiao1981/use-thunk";

@@ -1,11 +1,11 @@
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { STATUS_OK } from "../../../../api/constants";
+import { getFileBrowserFoldersByPath } from "../../../../api/serverApi/filebrowser";
 import type {
   FileBrowserFolder,
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
-  FileBrowserFolderList,
-} from "@fnndsc/chrisapi";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import ChrisAPIClient from "../../../../api/chrisapiclient";
+} from "../../../../api/types";
 
 // Define the interface for pagination
 interface PaginationInfo {
@@ -27,7 +27,7 @@ export interface FolderTableData {
 
 // Extended interface for our hook's return data
 export interface FolderHookData extends FolderTableData {
-  folderList?: FileBrowserFolderList;
+  folderList?: FileBrowserFolder[];
   errorMessages?: string[];
 }
 
@@ -39,15 +39,14 @@ export async function fetchFolders(
   pageNumber = 1,
   previousData?: FolderHookData,
   selectedFolder?: FileBrowserFolder,
-): Promise<FolderHookData> {
+): Promise<FolderHookData | null> {
   // Get the client instance with proper authentication
-  const client = ChrisAPIClient.getClient();
   const itemsPerPage = 50;
   const errorMessages: string[] = [];
 
   try {
     // Only fetch folder list if we don't have a selectedFolder
-    let folderList: FileBrowserFolderList | undefined;
+    let folderList: FileBrowserFolder[];
     let folders: FileBrowserFolder[] = [];
 
     // Skip folder list fetching entirely when we have a selectedFolder
@@ -55,13 +54,16 @@ export async function fetchFolders(
       // If we have previous data and haven't changed paths, reuse the folder list
       if (previousData?.folderList && pageNumber > 1) {
         folderList = previousData.folderList;
-        folders = folderList.getItems() as FileBrowserFolder[];
+        folders = folderList as FileBrowserFolder[];
       } else {
         // Otherwise fetch the folder list
-        folderList = await client.getFileBrowserFolders({
-          path: computedPath,
-        });
-        folders = folderList.getItems() as FileBrowserFolder[];
+        const { status, data, errmsg } =
+          await getFileBrowserFoldersByPath(computedPath);
+        if (status !== STATUS_OK) {
+          return null;
+        }
+        folderList = data || [];
+        folders = folderList;
       }
     }
 

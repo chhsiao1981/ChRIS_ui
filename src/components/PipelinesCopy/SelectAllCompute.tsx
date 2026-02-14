@@ -1,4 +1,3 @@
-import type { ComputeResource, Pipeline } from "@fnndsc/chrisapi";
 import {
   MenuToggle,
   type MenuToggleElement,
@@ -9,42 +8,32 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import React, { useContext } from "react";
 import { useLocation } from "react-router";
-import ChrisAPIClient from "../../api/chrisapiclient";
-import { fetchResource } from "../../api/common";
+import { getComputeResources } from "../../api/serverApi/computeResource";
+import type { Pipeline } from "../../api/types";
 import { Avatar } from "../Antd";
 import { stringToColour } from "../CreateFeed/utils";
 import { PipelineContext, Types } from "./context";
 
-type OwnProps = {
+type Props = {
   pipeline: Pipeline;
 };
 
-function SelectAllCompute({ pipeline }: OwnProps) {
+export default (props: Props) => {
+  const { pipeline } = props;
   const location = useLocation();
-  const { id } = pipeline.data;
+  const { id } = pipeline;
   const { state, dispatch } = useContext(PipelineContext);
   const [isOpen, setIsOpen] = React.useState(false);
 
   const selectedItem = state.generalCompute?.[id] || "";
 
   const fetchCompute = async () => {
-    const client = ChrisAPIClient.getClient();
-    const fn = client.getComputeResources;
-    const boundFn = fn.bind(client);
-    try {
-      const data: {
-        resource: ComputeResource[];
-        totalCount: number;
-      } = await fetchResource<ComputeResource>(
-        { limit: 100, offset: 0 },
-        boundFn,
-      );
-      return data;
-    } catch (e) {
-      throw new Error(
-        "Count not fetch the compute resources registered to this ChRIS instance",
-      );
-    }
+    const { status, data, errmsg } = await getComputeResources({
+      limit: 100,
+      offset: 0,
+    });
+    const computeResources = data || [];
+    return computeResources;
   };
 
   const { data, isLoading, isError, error } = useQuery({
@@ -104,27 +93,27 @@ function SelectAllCompute({ pipeline }: OwnProps) {
   return (
     <Select
       onOpenChange={(nextOpen: boolean) => setIsOpen(nextOpen)}
-      selected={data?.resource || []}
+      selected={data || []}
       onSelect={onSelect}
       isOpen={isOpen}
       toggle={toggle}
     >
       <SelectList>
-        {data?.resource && !isLoading && !isError ? (
-          data.resource.map((resource) => {
+        {data && !isLoading && !isError ? (
+          data.map((resource) => {
             return (
               <SelectOption
-                isSelected={resource.data.name === selectedItem}
-                value={resource.data.name}
-                key={resource.data.name}
+                isSelected={resource.name === selectedItem}
+                value={resource.name}
+                key={resource.name}
               >
                 <Avatar
                   style={{
-                    background: `${stringToColour(resource.data.name)}`,
+                    background: `${stringToColour(resource.name)}`,
                     marginRight: "0.5em",
                   }}
                 />
-                <span>{resource.data.name}</span>
+                <span>{resource.name}</span>
               </SelectOption>
             );
           })
@@ -139,6 +128,4 @@ function SelectAllCompute({ pipeline }: OwnProps) {
       </SelectList>
     </Select>
   );
-}
-
-export default SelectAllCompute;
+};

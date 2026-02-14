@@ -1,17 +1,17 @@
 import {
-  getRootID,
+  getDefaultID,
   type ThunkModuleToFunc,
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
 import { Chip, ChipGroup } from "@patternfly/react-core";
 import { getFileName } from "../../../../api/common";
 import type * as DoCart from "../../../../reducers/cart";
-import type { SelectionPayload } from "../../../../store/cart/types";
+import type { CartSelectionPayload } from "../../../../reducers/types";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type Props = {
-  selectedPaths: SelectionPayload[];
+  selectedPaths: CartSelectionPayload[];
   useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
@@ -19,7 +19,7 @@ export default (props: Props) => {
   const { selectedPaths, useCart } = props;
 
   const [classStateCart, doCart] = useCart;
-  const cartID = getRootID(classStateCart);
+  const cartID = getDefaultID(classStateCart);
 
   return (
     <ChipGroup>

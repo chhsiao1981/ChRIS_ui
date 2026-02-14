@@ -1,5 +1,5 @@
-import type { Tag } from "@fnndsc/chrisapi";
 import type { DataNode, EventDataNode, Key } from "rc-tree/lib/interface";
+import type { ID, Tag } from "../../../api/types";
 
 type ActionMap<M extends { [index: string]: any }> = {
   [Key in keyof M]: M[Key] extends undefined
@@ -40,7 +40,7 @@ export enum Types {
 type CreateFeedPayload = {
   [Types.ToggleWizard]: boolean;
   [Types.SetStep]: {
-    id: number;
+    id: ID;
   };
   [Types.FeedNameChange]: {
     value: string;
@@ -89,13 +89,13 @@ export interface ChRISFeed {
   name: string;
   filename: string;
 
-  theID: number;
+  theID: ID;
 
   createDateTime: string;
 }
 
 export interface PACSData {
-  id: number;
+  id: ID;
   creation_date: string;
   fname: string;
   PatientID: string;

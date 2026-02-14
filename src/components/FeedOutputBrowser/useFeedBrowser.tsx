@@ -2,14 +2,17 @@ import {
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
+  useThunk,
 } from "@chhsiao1981/use-thunk";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { ID } from "../../api/types";
 import * as DoDrawer from "../../reducers/drawer";
-import { useAppSelector } from "../../store/hooks";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import fetchFolders from "../NewLibrary/utils/fetchFolders";
 
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 const TERMINAL_STATUSES = [
   "finishedSuccessfully",
@@ -26,21 +29,30 @@ const getInitialDownloadState = () => ({
 });
 
 export const useFeedBrowser = (
-  statuses: Record<number, string>,
+  statuses: Record<ID, string>,
   useDrawer: UseThunk<DoDrawer.State, TDoDrawer>,
 ) => {
   const [classStateDrawer, _] = useDrawer;
   const drawer = getState(classStateDrawer) || DoDrawer.defaultState;
   const { files, preview } = drawer;
 
-  const selected = useAppSelector((state) => state.instance.selectedPlugin);
+  const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
+    DoPluginInstance,
+  );
+
+  const [classStatePluginInstance, _doPluginInstance] = usePluginInstance;
+
+  const pluginInstance =
+    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
+  const { selectedPlugin: selected } = pluginInstance;
+
   const [download, setDownload] = useState(getInitialDownloadState);
   const [currentPath, setCurrentPath] = useState("");
   const [pageNumber, setPageNumber] = useState(1);
 
   const isFinished =
-    TERMINAL_STATUSES.includes(statuses[selected?.data.id]) ||
-    TERMINAL_STATUSES.includes(selected?.data.status);
+    TERMINAL_STATUSES.includes(statuses[selected?.id || ""]) ||
+    TERMINAL_STATUSES.includes(selected?.status || "");
 
   const queryKey = ["pluginFiles", currentPath, pageNumber];
   const {
@@ -105,7 +117,7 @@ export const useFeedBrowser = (
   }, [isFinished, download.error]);
 
   useEffect(() => {
-    setCurrentPath(selected?.data.output_path || "");
+    setCurrentPath(selected?.output_path || "");
   }, [selected]);
 
   const handleFileClick = (path: string) => {

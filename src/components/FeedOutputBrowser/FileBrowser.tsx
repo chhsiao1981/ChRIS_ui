@@ -1,15 +1,9 @@
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
-import {
-  FileBrowserFolder,
-  FileBrowserFolderFile,
-  type FileBrowserFolderLinkFile,
-  type PluginInstance,
-} from "@fnndsc/chrisapi";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -21,12 +15,18 @@ import {
 import { Table, Tbody, Th, Thead, Tr } from "@patternfly/react-table";
 import { type CSSProperties, useEffect, useMemo, useRef } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import type {
+  FileBrowserFolder,
+  FileBrowserFolderFile,
+  FileBrowserFolderLinkFile,
+  PluginInstance,
+} from "../../api/types";
+import { useDownload } from "../../hooks/useDownload";
 import type * as DoCart from "../../reducers/cart";
 import * as DoDrawer from "../../reducers/drawer";
 import * as DoExplorer from "../../reducers/explorer";
 import * as DoFeed from "../../reducers/feed";
 import * as DoUser from "../../reducers/user";
-import useDownload from "../../store/hooks";
 import { notification } from "../Antd";
 import { ClipboardCopyContainer } from "../Common";
 import { DrawerActionButton } from "../Feeds/DrawerUtils";
@@ -110,10 +110,10 @@ export default (props: Props) => {
 
   const [classStateDrawer, doDrawer] = useDrawer;
   const drawer = getState(classStateDrawer) || DoDrawer.defaultState;
-  const drawerID = getRootID(classStateDrawer);
+  const drawerID = getDefaultID(classStateDrawer);
 
   const [classStateExplorer, doExplorer] = useExplorer;
-  const explorerID = getRootID(classStateExplorer);
+  const explorerID = getDefaultID(classStateExplorer);
   const explorer = getState(classStateExplorer) || DoExplorer.defaultState;
   const { selectedFile } = explorer;
 
@@ -129,7 +129,7 @@ export default (props: Props) => {
   const { subFoldersMap, linkFilesMap, filesMap, folderList } =
     pluginFilesPayload;
   const breadcrumb = useMemo(() => additionalKey.split("/"), [additionalKey]);
-  const currentPath = `home/${username}/feeds/feed_${feed?.data.id}/${selected?.data.plugin_name}_${selected?.data.id}/data`;
+  const currentPath = `home/${username}/feeds/feed_${feed?.id}/${selected?.plugin_name}_${selected?.id}/data`;
   const noFiles = useMemo(
     () =>
       filesMap?.length === 0 &&
@@ -172,12 +172,12 @@ export default (props: Props) => {
     };
 
     const disabledIndex = breadcrumb.findIndex(
-      (path) => path === `${selected?.data.plugin_name}_${selected?.data.id}`,
+      (path) => path === `${selected?.plugin_name}_${selected?.id}`,
     );
 
     const shouldNotClick =
       (disabledIndex > 1 && index <= disabledIndex) ||
-      selected?.data.plugin_type === "fs";
+      selected?.plugin_type === "fs";
 
     return (
       <BreadcrumbItem
@@ -296,7 +296,7 @@ export default (props: Props) => {
                         </Tooltip>
 
                         {additionalKey !== currentPath &&
-                          selected?.data.plugin_type === "fs" && (
+                          selected?.plugin_type === "fs" && (
                             <Tooltip content="Return to the plugin's root directory">
                               <Button
                                 onClick={() => handleFileClick(currentPath)}

@@ -1,9 +1,18 @@
+import {
+  getDefaultID,
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import type React from "react";
 import type { ReactNode } from "react";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { getNodeOperations } from "../../store/plugin/pluginSlice";
+import * as DoPlugin from "../../reducers/plugin";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { Dropdown, type MenuProps } from "../Antd";
 import { AddIcon, DeleteIcon, PatternflyArchiveIcon } from "../Icons";
+
+type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 type Props = {
   onZip: () => void;
@@ -11,13 +20,25 @@ type Props = {
 };
 export default (props: Props) => {
   const { onZip, children } = props;
-  const dispatch = useAppDispatch();
-  const { selectedPlugin } = useAppSelector((state) => {
-    return state.instance;
-  });
+
+  const [classStatePluginInstance, _1] = useThunk<
+    DoPluginInstance.State,
+    TDoPluginInstance
+  >(DoPluginInstance);
+
+  const pluginInstance =
+    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
+  const { selectedPlugin } = pluginInstance;
+
+  const [classStatePlugin, doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(
+    DoPlugin,
+  );
+  const pluginID = getDefaultID(classStatePlugin);
+
   const cancelled =
-    selectedPlugin?.data.status === "cancelled" ||
-    selectedPlugin?.data.status === "finishedWithError";
+    selectedPlugin?.status === "cancelled" ||
+    selectedPlugin?.status === "finishedWithError";
+
   const items: MenuProps["items"] = [
     {
       key: "1",
@@ -41,8 +62,8 @@ export default (props: Props) => {
       key: "4",
       label: "Delete a Node",
       disabled:
-        selectedPlugin?.data.plugin_type === "fs" &&
-        selectedPlugin?.data.plugin_name === "pl-dircopy",
+        selectedPlugin?.plugin_type === "fs" &&
+        selectedPlugin?.plugin_name === "pl-dircopy",
       icon: <DeleteIcon />,
     },
     {
@@ -54,18 +75,18 @@ export default (props: Props) => {
 
   const handleOperations = (e: any) => {
     if (e.key === "1") {
-      dispatch(getNodeOperations("childNode"));
+      doPlugin.getNodeOperations(pluginID, "childNode");
     }
     if (e.key === "2") {
-      dispatch(getNodeOperations("childPipeline"));
+      doPlugin.getNodeOperations(pluginID, "childPipeline");
     }
 
     if (e.key === "3") {
-      dispatch(getNodeOperations("graphNode"));
+      doPlugin.getNodeOperations(pluginID, "childGraph");
     }
 
     if (e.key === "4") {
-      dispatch(getNodeOperations("deleteNode"));
+      doPlugin.getNodeOperations(pluginID, "deleteNode");
     }
 
     if (e.key === "5") {

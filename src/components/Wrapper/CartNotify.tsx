@@ -1,5 +1,5 @@
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
@@ -16,7 +16,7 @@ type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 const CartNotify = () => {
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
   const [classStateCart, doCart] = useCart;
-  const cartID = getRootID(classStateCart);
+  const cartID = getDefaultID(classStateCart);
   const cart = getState(classStateCart) || DoCart.defaultState;
 
   const {

@@ -1,10 +1,10 @@
 import { type ThunkModuleToFunc, useThunk } from "@chhsiao1981/use-thunk";
-import type { FileBrowserFolderList } from "@fnndsc/chrisapi";
 import type { DefaultError } from "@tanstack/react-query";
 import { Alert, Dropdown, type MenuProps } from "antd";
 import { useCallback, useRef, useState } from "react";
 import { matchPath } from "react-router";
 import { useLocation } from "react-router-dom";
+import type { FileBrowserFolder } from "../../api/types";
 import * as DoCart from "../../reducers/cart";
 import {
   AnalysisIcon,
@@ -26,7 +26,7 @@ type Props = {
   username: string;
   origin: OriginState;
   computedPath: string;
-  folderList?: FileBrowserFolderList;
+  folderList?: FileBrowserFolder[];
 };
 
 export const GnomeContextMenu = (props: Props) => {

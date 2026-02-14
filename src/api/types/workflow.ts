@@ -1,14 +1,13 @@
 import type { Datetime } from "./datetime";
 import type { ID } from "./id";
 
-export interface Data {
+export type Workflow = {
   id: ID;
-  creation_date: Datetime; // yyyy-mm-ddTHH:MM:SS.ffffffTZ
-  modification_date: Datetime; // yyyy-mm-ddTHH:MM:SS.ffffffTZ
-  name: string;
-  public: boolean;
+  creation_date: Datetime;
+  title: string;
+  pipeline_id: ID;
+  pipeline_name: string;
   owner_username: string;
-  folder_path: string; // home/{username}/feeds/feed_{id}
   created_jobs: number;
   waiting_jobs: number;
   scheduled_jobs: number;
@@ -17,4 +16,4 @@ export interface Data {
   finished_jobs: number;
   errored_jobs: number;
   cancelled_jobs: number;
-}
+};

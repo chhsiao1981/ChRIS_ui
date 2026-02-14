@@ -1,15 +1,27 @@
-import type { PluginInstance } from "@fnndsc/chrisapi";
+import {
+  getDefaultID,
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import { Button, Modal, ModalVariant } from "@patternfly/react-core";
 import { useMutation } from "@tanstack/react-query";
-import React, { Fragment, useCallback, useContext } from "react";
-import ChrisAPIClient from "../../api/chrisapiclient";
-import { fetchResource } from "../../api/common";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { getNodeOperations } from "../../store/plugin/pluginSlice";
+import React, { Fragment, useContext } from "react";
+import {
+  computeWorkflowNodesInfo,
+  createWorkflow,
+  getWorkflowPluginInstances,
+} from "../../api/serverApi";
+import type { PluginInstance } from "../../api/types";
+import * as DoPlugin from "../../reducers/plugin";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { Alert, Form, Tag } from "../Antd";
 import { SpinContainer } from "../Common";
 import Pipelines from "../PipelinesCopy";
 import { PipelineContext, Types } from "../PipelinesCopy/context";
+
+type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 type Props = {
   addNodeLocally: (instance: PluginInstance | PluginInstance[]) => void;
@@ -17,39 +29,50 @@ type Props = {
 };
 export default (props: Props) => {
   const { addNodeLocally, isStaff } = props;
-  const { state, dispatch } = useContext(PipelineContext);
-  const { pipelineToAdd, selectedPipeline, computeInfo, titleInfo } = state;
-  const reactDispatch = useAppDispatch();
-  const { childPipeline } = useAppSelector(
-    (state) => state.plugin.nodeOperations,
+
+  const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
+    DoPluginInstance,
   );
 
-  const { pluginInstances, selectedPlugin } = useAppSelector(
-    (state) => state.instance,
-  );
+  const [classStatePluginInstance, _doPluginInstance] = usePluginInstance;
+  const pluginInstance =
+    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
+  const { selectedPlugin, pluginInstances } = pluginInstance;
+
+  const usePlugin = useThunk<DoPlugin.State, TDoPlugin>(DoPlugin);
+  const [classStatePlugin, doPlugin] = usePlugin;
+  const pluginID = getDefaultID(classStatePlugin);
+  const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
+  const { nodeOperations } = plugin;
+  const { childPipeline } = nodeOperations;
+
+  const { state, dispatch } = useContext(PipelineContext);
+  const { pipelineToAdd, selectedPipeline, computeInfo, titleInfo } = state;
 
   const alreadyAvailableInstances = pluginInstances.data;
 
-  const handleToggle = useCallback(() => {
+  const handleToggle = () => {
     if (childPipeline) {
       dispatch({
         type: Types.ResetState,
       });
       mutation.reset();
     }
-    reactDispatch(getNodeOperations("childPipeline"));
-  }, [childPipeline, dispatch, reactDispatch]);
+    doPlugin.getNodeOperations(pluginID, "childPipeline");
+  };
 
   const addPipeline = async () => {
-    const id = pipelineToAdd?.data.id;
+    if (!pipelineToAdd) {
+      return;
+    }
+    const id = pipelineToAdd.id;
     const resources = selectedPipeline?.[id];
 
     if (selectedPlugin && resources) {
       const { parameters } = resources;
-      const client = ChrisAPIClient.getClient();
 
       try {
-        const nodes_info = client.computeWorkflowNodesInfo(parameters.data);
+        const nodes_info = computeWorkflowNodesInfo(parameters);
         for (const node of nodes_info) {
           const activeNode = computeInfo?.[id][node.piping_id];
           const titleSet = titleInfo?.[id][node.piping_id];
@@ -64,20 +87,23 @@ export default (props: Props) => {
           }
         }
 
-        const workflow = await client.createWorkflow(id, {
-          previous_plugin_inst_id: selectedPlugin.data.id,
-          nodes_info: JSON.stringify(nodes_info),
-        });
+        const {
+          status,
+          data: workflow,
+          errmsg,
+        } = await createWorkflow(id, selectedPlugin.id, nodes_info);
+        if (!workflow) {
+          return;
+        }
 
-        const fn = workflow.getPluginInstances;
-        const boundFn = fn.bind(workflow);
-        const params = { limit: 100, offset: 0 };
-        const { resource: instanceItems } = await fetchResource<PluginInstance>(
-          params,
-          boundFn,
-        );
-        if (instanceItems && alreadyAvailableInstances) {
-          addNodeLocally(instanceItems.reverse());
+        const {
+          status: status2,
+          data,
+          errmsg: errmsg2,
+        } = await getWorkflowPluginInstances(workflow.id, 0, 100);
+        const instances = data || [];
+        if (instances && alreadyAvailableInstances) {
+          addNodeLocally(instances.reverse());
         }
       } catch (e: any) {
         if (e instanceof Error) throw new Error(e.message);
@@ -107,7 +133,7 @@ export default (props: Props) => {
 
   const isButtonDisabled = !(
     pipelineToAdd &&
-    computeInfo?.[pipelineToAdd.data.id] &&
+    computeInfo?.[pipelineToAdd.id] &&
     !mutation.isPending
   );
 
@@ -148,7 +174,7 @@ export default (props: Props) => {
                     });
                   }}
                 >
-                  {state.pipelineToAdd.data.name}
+                  {state.pipelineToAdd.name}
                 </Tag>
               </Form.Item>
             </div>

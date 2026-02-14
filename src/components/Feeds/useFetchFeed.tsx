@@ -1,7 +1,7 @@
-import type { Feed } from "@fnndsc/chrisapi";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
+import type { Feed } from "../../api/types";
 import { notification } from "../Antd";
 import { fetchAuthenticatedFeed, fetchPublicFeed } from "./utilties";
 
@@ -73,7 +73,7 @@ export const useFetchFeed = (
     }
   }, [id, isValidId, api, navigate, type]);
 
-  const feed: Feed | undefined = privateFeed || publicFeed;
+  const feed = privateFeed || publicFeed;
 
   return {
     feed,

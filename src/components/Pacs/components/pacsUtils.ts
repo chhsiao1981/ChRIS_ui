@@ -1,5 +1,4 @@
-import type { PACSSeries, PACSSeriesList } from "@fnndsc/chrisapi";
-import ChrisAPIClient from "../../../api/chrisapiclient";
+import { getPACSSeriesList } from "../../../api/serverApi/pacs.ts";
 import type { PacsSeriesState } from "../types.ts";
 
 /**
@@ -35,23 +34,16 @@ export const sanitizeSeriesDescription = (description: string) => {
 export const fetchSeriesPath = async (
   series: PacsSeriesState,
 ): Promise<string> => {
-  try {
-    const client = ChrisAPIClient.getClient();
-    const seriesList: PACSSeriesList = await client.getPACSSeriesList({
-      SeriesInstanceUID: series.info.SeriesInstanceUID,
-      pacs_identifier: series.info.RetrieveAETitle,
-    });
+  const { status, data, errmsg } = await getPACSSeriesList({
+    SeriesInstanceUID: series.info.SeriesInstanceUID,
+    pacs_identifier: series.info.RetrieveAETitle,
+  });
+  const items = data || [];
 
-    const items = seriesList.getItems();
-
-    if (items && items.length > 0) {
-      return (items[0] as PACSSeries).data.folder_path;
-    }
-    throw new Error("Failed to fetch series path");
-  } catch (error) {
-    // biome-ignore lint/complexity/noUselessCatch: <explanation>
-    throw error;
+  if (items && items.length > 0) {
+    return items[0].folder_path;
   }
+  return "";
 };
 
 /**

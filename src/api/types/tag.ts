@@ -1,6 +1,6 @@
 import type { ID } from "./id";
 
-export interface DataTag {
+export interface Tag {
   id: ID;
   name: string;
   color: string;

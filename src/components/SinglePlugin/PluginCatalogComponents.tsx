@@ -1,4 +1,3 @@
-import type { Plugin, PluginInstance, PluginMeta } from "@fnndsc/chrisapi";
 import {
   ActionGroup,
   Badge,
@@ -35,6 +34,7 @@ import { useMutation } from "@tanstack/react-query";
 import React from "react";
 import { useNavigate } from "react-router";
 import { Link } from "react-router-dom";
+import type { Plugin, PluginInstance, PluginMeta } from "../../api/types";
 import PluginImg from "../../assets/brainy-pointer.png";
 import { Alert, Spin } from "../Antd";
 import { ClipboardCopyFixed } from "../Common";
@@ -50,10 +50,9 @@ export const HeaderComponent = ({
     <Grid>
       <GridItem lg={10} sm={12}>
         <h3 className="plugin-name">
-          {currentPluginMeta.data.name}{" "}
-          <Badge>{currentPluginMeta.data.category}</Badge>
+          {currentPluginMeta.name} <Badge>{currentPluginMeta.category}</Badge>
         </h3>
-        <h2 className="plugin-title">{currentPluginMeta.data.title}</h2>
+        <h2 className="plugin-title">{currentPluginMeta.title}</h2>
       </GridItem>
 
       <GridItem lg={2} sm={12} className="plugin-stats">
@@ -66,7 +65,7 @@ export const HeaderComponent = ({
         <p style={{ color: "gray" }}>
           Created{" "}
           {new Date(
-            currentPluginMeta.data.creation_date.split("T")[0],
+            currentPluginMeta.creation_date.split("T")[0],
           ).toDateString()}
         </p>
       </GridItem>
@@ -127,7 +126,7 @@ export const DropdownPluginVersions = ({
                 padding: "0",
               }}
               icon={
-                plugin.data.version === parameterPayload?.version && (
+                plugin.version === parameterPayload?.version && (
                   <CheckCircleIcon style={{ color: "green" }} />
                 )
               }
@@ -142,12 +141,12 @@ export const DropdownPluginVersions = ({
                 setIsOpen(!isOpen);
               }}
               component="button"
-              key={plugin.data.id}
-              name={plugin.data.version}
-              value={plugin.data.version}
-              autoFocus={plugin.data.version === parameterPayload?.version}
+              key={plugin.id}
+              name={plugin.version}
+              value={plugin.version}
+              autoFocus={plugin.version === parameterPayload?.version}
             >
-              {plugin.data.version}
+              {plugin.version}
             </DropdownItem>
           );
         })
@@ -173,7 +172,7 @@ export const DropdownPluginVersions = ({
         toggle={(toggleRef) => {
           return (
             <MenuToggle onClick={onToggle} ref={toggleRef}>
-              {currentPluginMeta.data.name}
+              {currentPluginMeta.name}
             </MenuToggle>
           );
         }}
@@ -442,7 +441,7 @@ export const HeaderSidebar = ({
 
     if (parameterPayload?.url) {
       const decodedURL = encodeURIComponent(parameterPayload?.url);
-      const url = `${trimmedValue}/install?uri=${decodedURL}&plugin=${currentPluginMeta.data.name}`;
+      const url = `${trimmedValue}/install?uri=${decodedURL}&plugin=${currentPluginMeta.name}`;
       setInstallModal(!installModal);
       setValue("");
       //Set Cookie for url's being used
@@ -536,20 +535,18 @@ export const HeaderSidebar = ({
       </div>
       <div className="plugin-body-detail-section">
         <h4>Repository</h4>
-        <a href={currentPluginMeta.data.public_repo}>
-          {currentPluginMeta.data.public_repo}
+        <a href={currentPluginMeta.public_repo}>
+          {currentPluginMeta.public_repo}
         </a>
       </div>
 
       <div className="plugin-body-detail-section">
         <h4>Author</h4>
-        {removeEmail(currentPluginMeta.data.authors.split(",")).map(
-          (author) => (
-            <div key={author}>
-              <UserAltIcon /> {author}
-            </div>
-          ),
-        )}
+        {removeEmail(currentPluginMeta.authors.split(",")).map((author) => (
+          <div key={author}>
+            <UserAltIcon /> {author}
+          </div>
+        ))}
       </div>
       <div className="plugin-body-detail-section">
         <h4>Collaborators</h4>
@@ -558,7 +555,7 @@ export const HeaderSidebar = ({
           // https://docs.github.com/en/rest/collaborators/collaborators?apiVersion=2022-11-28
           <a
             className="pf-m-link"
-            href={`${currentPluginMeta.data.public_repo}/graphs/contributors`}
+            href={`${currentPluginMeta.public_repo}/graphs/contributors`}
           >
             View contributors on Github
           </a>
@@ -567,17 +564,15 @@ export const HeaderSidebar = ({
 
       <div className="plugin-body-detail-section">
         <h4>License</h4>
-        {currentPluginMeta.data.license} License
+        {currentPluginMeta.license} License
       </div>
       <div className="plugin-body-detail-section">
         <h4>Content Type</h4>
-        {currentPluginMeta.data.type}
+        {currentPluginMeta.type}
       </div>
       <div className="plugin-body-detail-section">
         <h4>Date added</h4>
-        {new Date(
-          currentPluginMeta.data.creation_date.split("T")[0],
-        ).toDateString()}
+        {new Date(currentPluginMeta.creation_date.split("T")[0]).toDateString()}
       </div>
     </div>
   );

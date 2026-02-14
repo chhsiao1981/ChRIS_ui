@@ -1,23 +1,25 @@
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
-  useThunk,
 } from "@chhsiao1981/use-thunk";
+import { useMutation } from "@tanstack/react-query";
+import { useRef, useState } from "react";
+import { getFileName } from "../../../api/common";
+import { getFeed } from "../../../api/serverApi";
+import {
+  updateFileBrowserFolderFilePath,
+  updateFileBrowserFolderLinkFilePath,
+  updateFileBrowserFolderPath,
+} from "../../../api/serverApi/filebrowser";
 import type {
   FileBrowserFolder,
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
-  FileBrowserFolderList,
-} from "@fnndsc/chrisapi";
-import { useMutation } from "@tanstack/react-query";
-import { useRef, useState } from "react";
-import ChrisAPIClient from "../../../api/chrisapiclient";
-import { getFileName } from "../../../api/common";
+} from "../../../api/types";
 import * as DoCart from "../../../reducers/cart";
-import { createFeed as createFeedSaga } from "../../../store/cart/downloadSaga";
-import type { SelectionPayload } from "../../../store/cart/types";
+import type { CartSelectionPayload } from "../../../reducers/types";
 import { notification } from "../../Antd";
 import { getFolderName } from "../components/FolderCard";
 import type { AdditionalValues } from "../components/Operations";
@@ -77,13 +79,13 @@ export const useFolderOperations = (
   origin: OriginState,
   useCart: UseThunk<DoCart.State, TDoCart>,
   computedPath?: string,
-  folderList?: FileBrowserFolderList,
+  folderList?: FileBrowserFolder[],
   createFeed?: boolean,
 ) => {
   const { handleOrigin, invalidateQueries } = useOperationsContext();
 
   const [classStateCart, doCart] = useCart;
-  const cartID = getRootID(classStateCart);
+  const cartID = getDefaultID(classStateCart);
   const cart = getState(classStateCart) || DoCart.defaultState;
   const { selectedPaths } = cart;
 
@@ -107,6 +109,7 @@ export const useFolderOperations = (
   const { handleDuplicateMutation, handleMergeMutation } = useFeedOperations(
     origin,
     notificationAPI,
+    useCart,
   );
 
   // For resetting file inputs after each upload
@@ -205,7 +208,7 @@ export const useFolderOperations = (
   const createFeedFromMenu = async (inputValue: string) => {
     handleOrigin(origin);
     const pathList = selectedPaths.map((payload) => payload.path);
-    await createFeedSaga(pathList, inputValue, invalidateQueries);
+    // await createFeedSaga(pathList, inputValue, invalidateQueries);
   };
 
   // Share Folder
@@ -218,7 +221,7 @@ export const useFolderOperations = (
         if (createFeed) {
           // Make the feed public or set permissions on the feed
           // If we're dealing with a feed, fetch it:
-          const feed = await fetchFeedForPath(payload.data.path);
+          const feed = await fetchFeedForPath(payload.path);
           if (feed) {
             if (additionalValues?.share.public) {
               await feed.put({ public: true });
@@ -269,7 +272,7 @@ export const useFolderOperations = (
     payload: FileBrowserFolder,
     inputValue: string,
   ): Promise<void> => {
-    const fileName = getFolderName(payload, payload.data.path);
+    const fileName = getFolderName(payload, payload.path);
     const feed = await fetchFeedForPath(fileName);
     if (feed) {
       await feed.put({ name: inputValue });
@@ -286,23 +289,17 @@ export const useFolderOperations = (
     inputValue: string,
   ): Promise<void> => {
     const newPath = `${computedPath}/${inputValue}`;
-    const oldPath = type === "folder" ? payload.data.path : payload.data.fname;
+    // @ts-expect-error taken care of the type
+    const oldPath = type === "folder" ? payload.path : payload.fname;
     switch (type) {
       case "folder":
-        await (payload as FileBrowserFolder).put({
-          //@ts-expect-error
-          path: newPath,
-        });
+        await updateFileBrowserFolderPath(payload.id, newPath);
         break;
       case "file":
-        await (payload as FileBrowserFolderFile).put({
-          new_file_path: newPath,
-        });
+        await updateFileBrowserFolderFilePath(payload.id, newPath);
         break;
       case "link":
-        await (payload as FileBrowserFolderLinkFile).put({
-          new_link_file_path: newPath,
-        });
+        await updateFileBrowserFolderLinkFilePath(payload.id, newPath);
         break;
       default:
         throw new Error(`Unsupported type: ${type}`);
@@ -327,8 +324,7 @@ export const useFolderOperations = (
   ) => {
     switch (modalState.type) {
       case "group": {
-        const client = ChrisAPIClient.getClient();
-        await client.adminCreateGroup({ name: inputValue });
+        await adminCreateGroup({ name: inputValue });
         break;
       }
       case "folder":
@@ -441,9 +437,10 @@ export const useFolderOperations = (
   };
 
   // Get the feed name for a single path
-  const getFeedNameForSinglePath = (selectedPayload: SelectionPayload) => {
+  const getFeedNameForSinglePath = (selectedPayload: CartSelectionPayload) => {
     const { payload } = selectedPayload;
-    const name = payload.data.path || payload.data.fname;
+    // @ts-expect-error taking care of type differences.
+    const name = payload.path || payload.fname;
     return getFileName(name);
   };
 
@@ -454,7 +451,8 @@ export const useFolderOperations = (
     const { payload } = selectedPaths[0];
 
     if (createFeed) {
-      const resourcePath = payload.data.path;
+      // @ts-expect-error taking care of type difference.
+      const resourcePath = payload.path;
       // For feeds, expect resourcePath like "/home/username/feed_17"
       const parts = resourcePath.split("/");
       const feedSegment = parts[parts.length - 1]; // "feed_17"
@@ -462,9 +460,9 @@ export const useFolderOperations = (
       const feedId = Number.parseInt(idPart, 10);
       (async () => {
         try {
-          const feed = await ChrisAPIClient.getClient().getFeed(feedId);
+          const { status, data: feed, errmsg } = await getFeed(feedId);
           // Use the feed's title if available; otherwise fallback to the feedSegment.
-          const defaultName = feed?.data.name || feedSegment;
+          const defaultName = feed?.name || feedSegment;
           setModalState({
             type: "rename",
             isOpen: true,
@@ -480,7 +478,8 @@ export const useFolderOperations = (
         }
       })();
     } else {
-      const resourcePath = payload.data.path || payload.data.fname;
+      // @ts-expect-error taking care of the type difference.
+      const resourcePath = payload.path || payload.fname;
       // For folders, simply use the last part of the path as the default name.
       const parts = resourcePath.split("/");
       const defaultName = parts[parts.length - 1];

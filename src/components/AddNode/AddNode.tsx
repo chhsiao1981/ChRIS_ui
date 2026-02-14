@@ -6,10 +6,6 @@ import {
   WizardStep,
 } from "@patternfly/react-core";
 import { useCallback, useContext } from "react";
-import { catchError } from "../../api/common";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { getNodeOperations } from "../../store/plugin/pluginSlice";
-import type { ApplicationState } from "../../store/root/applicationState";
 import { Alert } from "../Antd";
 import {
   getParameterInput,
@@ -18,29 +14,51 @@ import {
 import BasicConfiguration from "./BasicConfiguration";
 import GuidedConfig from "./GuidedConfig";
 import "./add-node.css";
-import type { PluginInstance } from "@fnndsc/chrisapi";
-import ChrisAPIClient from "../../api/chrisapiclient";
+import {
+  getDefaultID,
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
+import { createPluginInstance } from "../../api/serverApi";
+import type { PluginInstance } from "../../api/types";
+import * as DoPlugin from "../../reducers/plugin";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { AddNodeContext } from "./context";
 import { Types } from "./types";
 
-const AddNode = ({
-  addNodeLocally,
-}: {
+type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
+
+type Props = {
   addNodeLocally: (instance: PluginInstance | PluginInstance[]) => void;
-}) => {
-  const dispatch = useAppDispatch();
-  const { childNode } = useAppSelector(
-    (state: ApplicationState) => state.plugin.nodeOperations,
+};
+
+export default (props: Props) => {
+  const { addNodeLocally } = props;
+
+  const [classStatePluginInstance, _1] = useThunk<
+    DoPluginInstance.State,
+    TDoPluginInstance
+  >(DoPluginInstance);
+
+  const pluginInstance =
+    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
+  const { selectedPlugin, pluginInstances } = pluginInstance;
+
+  const [classStatePlugin, doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(
+    DoPlugin,
   );
-  const { pluginInstances, selectedPlugin } = useAppSelector(
-    (state) => state.instance,
-  );
-  const params = useAppSelector((state) => state.plugin.parameters);
+  const pluginID = getDefaultID(classStatePlugin);
+  const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
+  const { nodeOperations, parameters: params } = plugin;
+  const { childNode } = nodeOperations;
+
   const { state, dispatch: nodeDispatch } = useContext(AddNodeContext);
 
   const {
     pluginMeta,
-    selectedPluginFromMeta: plugin,
+    selectedPluginFromMeta,
     dropdownInput,
     requiredInput,
     selectedComputeEnv,
@@ -51,20 +69,17 @@ const AddNode = ({
   const isDisabled =
     params && Object.keys(requiredInput).length !== params.required.length;
 
-  const toggleOpen = useCallback(() => {
+  const toggleOpen = () => {
     nodeDispatch({ type: Types.ResetState, payload: {} });
-    dispatch(getNodeOperations("childNode"));
-  }, [dispatch, nodeDispatch]);
+    doPlugin.getNodeOperations(pluginID, "childNode");
+  };
 
-  const errorCallback = useCallback(
-    (error: any) => {
-      nodeDispatch({ type: Types.SetError, payload: { error } });
-    },
-    [nodeDispatch],
-  );
+  const errorCallback = (error: any) => {
+    nodeDispatch({ type: Types.SetError, payload: { error } });
+  };
 
   const handleSave = useCallback(async () => {
-    if (!plugin || !selectedPlugin || !pluginInstances) return;
+    if (!selectedPluginFromMeta || !selectedPlugin || !pluginInstances) return;
 
     const { advancedConfigErrors, sanitizedInput } = sanitizeAdvancedConfig(
       advancedConfig,
@@ -76,32 +91,32 @@ const AddNode = ({
       return;
     }
 
-    try {
-      const parameterInput = await getParameterInput(
-        dropdownInput,
-        requiredInput,
-        plugin,
-        selectedComputeEnv,
-        sanitizedInput,
-        selectedPlugin,
-      );
+    const parameterInput = await getParameterInput(
+      dropdownInput,
+      requiredInput,
+      selectedPluginFromMeta,
+      selectedComputeEnv,
+      sanitizedInput,
+      selectedPlugin,
+    );
 
-      const client = ChrisAPIClient.getClient();
-      const instance = await client.createPluginInstance(plugin.data.id, {
-        previous_id: selectedPlugin.data.id,
-        ...parameterInput,
-      });
-
-      if (instance) {
-        addNodeLocally(instance);
-        toggleOpen();
-      }
-    } catch (error: any) {
-      const errObj = catchError(error);
-      nodeDispatch({ type: Types.SetError, payload: { error: errObj } });
+    const {
+      status,
+      data: instance,
+      errmsg,
+    } = await createPluginInstance(selectedPluginFromMeta.id, {
+      previous_id: selectedPlugin.id,
+      ...parameterInput,
+    });
+    if (!instance) {
+      nodeDispatch({ type: Types.SetError, payload: { error: errmsg } });
+      return;
     }
+
+    addNodeLocally(instance);
+    toggleOpen();
   }, [
-    plugin,
+    selectedPluginFromMeta,
     selectedPlugin,
     pluginInstances,
     dropdownInput,
@@ -161,5 +176,3 @@ const AddNode = ({
     </Modal>
   );
 };
-
-export default AddNode;

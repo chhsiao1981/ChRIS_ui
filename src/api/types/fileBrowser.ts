@@ -1,7 +1,8 @@
 import type { Datetime } from "./datetime";
+import type { ID } from "./id";
 
 export type FileBrowserFolder = {
-  id: number;
+  id: ID;
   creation_date: Datetime;
   path: string;
   public: boolean;
@@ -9,7 +10,7 @@ export type FileBrowserFolder = {
 };
 
 export type FileBrowserFolderFile = {
-  id: number;
+  id: ID;
   creation_date: Datetime;
   fname: string;
   fsize: number;
@@ -18,7 +19,7 @@ export type FileBrowserFolderFile = {
 };
 
 export type FileBrowserFolderLinkFile = {
-  id: number;
+  id: ID;
   creation_date: Datetime;
   path: string;
   fname: string;

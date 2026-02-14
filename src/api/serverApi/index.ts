@@ -1,10 +1,10 @@
 import {
-  createDataWithFilepath,
-  getData,
-  updateDataName,
-  updateDataPublic,
-} from "./data";
-import { createDataTag, getDataTags } from "./dataTag";
+  createFeedWithFilepaths,
+  getFeed,
+  getFeeds,
+  updateFeedName,
+  updateFeedPublic,
+} from "./feed";
 import { createDownloadToken, getLinkMap } from "./misc";
 import {
   getPACSSeriesListBySeriesUID,
@@ -15,8 +15,17 @@ import {
   queryPFDCMStudies,
   retrievePFDCMPACS,
 } from "./pacs";
-import { createPkg, searchPkgsByName } from "./pkg";
-import { createPkgInstance, getPkgInstances } from "./pkgInstance";
+import { createPipeline, getPipelinesByName } from "./pipeline";
+import { getPlugins, searchPluginsByName } from "./plugin";
+import {
+  createPluginInstance,
+  createPluginInstanceByDirs,
+  deletePluginInstance,
+  getPluginInstance,
+  getPluginInstances,
+  getWorkflowPluginInstances,
+} from "./pluginInstance";
+import { createTag, getTags } from "./tag";
 import {
   createUser,
   getAuthToken,
@@ -25,7 +34,7 @@ import {
   getUserInfo,
   oidcRedirect,
 } from "./user";
-import { createWorkflow } from "./workflow";
+import { computeWorkflowNodesInfo, createWorkflow } from "./workflow";
 
 export {
   createUser,
@@ -34,16 +43,24 @@ export {
   getUserID,
   getUserInfo,
   oidcRedirect,
-  getPkgInstances,
-  createPkgInstance,
+  getPluginInstances,
+  getPluginInstance,
+  deletePluginInstance,
+  getWorkflowPluginInstances,
+  createPluginInstance,
+  createPluginInstanceByDirs,
   getLinkMap,
-  getData,
-  updateDataName,
-  updateDataPublic,
-  createDataWithFilepath,
-  searchPkgsByName,
-  createPkg,
+  getFeed,
+  getFeeds,
+  updateFeedName,
+  updateFeedPublic,
+  createFeedWithFilepaths,
+  searchPluginsByName,
+  getPlugins,
+  createPipeline,
+  getPipelinesByName,
   createWorkflow,
+  computeWorkflowNodesInfo,
   createDownloadToken,
   getPACSSeriesListBySeriesUID,
   getPACSSeriesListByStudyUID,
@@ -52,6 +69,6 @@ export {
   queryPFDCMSeries,
   queryPFDCMStudies,
   retrievePFDCMPACS,
-  getDataTags,
-  createDataTag,
+  getTags,
+  createTag,
 };

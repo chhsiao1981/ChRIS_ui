@@ -1,22 +1,22 @@
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
+import { Button, Tooltip } from "@patternfly/react-core";
+import { useQuery } from "@tanstack/react-query";
+import { useRef, useState } from "react";
+import { useNavigate } from "react-router";
+import { getFeed } from "../../../api/serverApi";
 import type {
   Feed,
   FileBrowserFolder,
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
-} from "@fnndsc/chrisapi";
-import { Button, Tooltip } from "@patternfly/react-core";
-import { useQuery } from "@tanstack/react-query";
-import { useRef, useState } from "react";
-import { useNavigate } from "react-router";
-import ChrisAPIClient from "../../../api/chrisapiclient";
+} from "../../../api/types";
 import * as DoCart from "../../../reducers/cart";
-import type { PayloadTypes } from "../../../store/cart/types";
+import type { CartPayloadTypes } from "../../../reducers/types";
 import { FolderIcon } from "../../Icons";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
@@ -29,7 +29,7 @@ export const elipses = (str: string, len: number) => {
 export default () => {
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
   const [classStateCart, doCart] = useCart;
-  const cartID = getRootID(classStateCart);
+  const cartID = getDefaultID(classStateCart);
   const cart = getState(classStateCart) || DoCart.defaultState;
 
   const [action, setAction] = useState<string>();
@@ -64,7 +64,7 @@ export default () => {
 
   const handleOnClick = (
     e: React.MouseEvent | React.TouchEvent | React.KeyboardEvent,
-    payload: PayloadTypes,
+    payload: CartPayloadTypes,
     pathForCart: string,
     type: string,
     optionalCallback?: () => void,
@@ -208,7 +208,7 @@ export const ShowInFolder = ({
   const navigate = useNavigate();
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
   const [classStateCart, doCart] = useCart;
-  const cartID = getRootID(classStateCart);
+  const cartID = getDefaultID(classStateCart);
 
   const onClick = () => {
     navigate(`/library/${path}`);
@@ -232,9 +232,11 @@ export const fetchFeedForPath = async (path: string): Promise<Feed | null> => {
   const id = feedMatches ? feedMatches[1] : null;
 
   if (id) {
-    const client = ChrisAPIClient.getClient();
-    const feed: Feed = (await client.getFeed(Number(id))) as Feed;
-    if (!feed) throw new Error("Failed to fetch the feed");
+    const { status, data, errmsg } = await getFeed(id);
+    if (!data) {
+      return null;
+    }
+    const feed = data;
     return feed;
   }
   return null;
@@ -248,10 +250,12 @@ export const useAssociatedFeed = (folderPath: string) => {
     queryFn: async () => {
       const id = feedMatches ? feedMatches[1] : null;
       if (id) {
-        const client = ChrisAPIClient.getClient();
-        const feed = await client.getFeed(Number(id));
-        if (!feed) throw new Error("Failed to fetch the feed");
-        return feed.data.name;
+        const { status, data, errmsg } = await getFeed(id);
+        if (!data) {
+          return null;
+        }
+        const feed = data;
+        return feed.name;
       }
       return null;
     },

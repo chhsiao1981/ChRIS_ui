@@ -2,14 +2,13 @@ import type {
   FileBrowserFolder,
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
-  FileBrowserFolderList,
-} from "@fnndsc/chrisapi";
+} from "../../api/types";
 
 export interface FilesPayload {
   filesMap?: FileBrowserFolderFile[];
   subFoldersMap?: FileBrowserFolder[];
   linkFilesMap?: FileBrowserFolderLinkFile[];
-  folderList?: FileBrowserFolderList;
+  folderList?: FileBrowserFolder[];
   filesPagination?: {
     totalCount: number;
     hasNextPage: boolean;

@@ -1,5 +1,5 @@
 import {
-  getRootID,
+  getDefaultID,
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
@@ -47,7 +47,7 @@ export const OperationsProvider = (props: Props) => {
   const { children } = props;
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
   const [classStateCart, doCart] = useCart;
-  const cartID = getRootID(classStateCart);
+  const cartID = getDefaultID(classStateCart);
 
   const queryClient = useQueryClient();
   const originRef = useRef<OriginState>();

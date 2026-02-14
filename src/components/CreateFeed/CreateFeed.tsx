@@ -1,4 +1,3 @@
-import type { Feed } from "@fnndsc/chrisapi";
 import {
   Button,
   Modal,
@@ -8,10 +7,9 @@ import {
   WizardStep,
 } from "@patternfly/react-core";
 import { useQueryClient } from "@tanstack/react-query";
-import * as React from "react";
-import { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { catchError } from "../../api/common";
-import { MainRouterContext } from "../../routes";
+import type { Feed } from "../../api/types";
 import { AddNodeContext } from "../AddNode/context";
 import { notification } from "../Antd";
 import { AnalysisIcon } from "../Icons";
@@ -24,29 +22,35 @@ import Review from "./Review";
 import withSelectionAlert from "./SelectionAlert";
 import "./createFeed.css";
 import {
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
+import type * as DoMainRouter from "../../reducers/mainRouter";
 import * as DoUser from "../../reducers/user";
 import { createFeedInstanceWithFS, createFeeds } from "./createFeedHelper";
 import { Types } from "./types/feed";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
+type TDoMainRouter = ThunkModuleToFunc<typeof DoMainRouter>;
 
 type Props = {
   useUser: UseThunk<DoUser.State, TDoUser>;
+  useMainRouter: UseThunk<DoMainRouter.State, TDoMainRouter>;
 };
 
 export default (props: Props) => {
-  const { useUser } = props;
-  const [classStateUser, _] = useUser;
+  const { useUser, useMainRouter } = props;
+  const [classStateUser, _doUser] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
   const { isLoggedIn, username, isStaff } = user;
 
-  const [feedProcessing, setFeedProcessing] = React.useState(false);
+  const [classStateMainRouter, doMainRouter] = useMainRouter;
+  const mainRouterID = getDefaultID(classStateMainRouter);
+
+  const [feedProcessing, setFeedProcessing] = useState(false);
   const queryClient = useQueryClient();
-  const router = useContext(MainRouterContext);
 
   const { state: stateCreateFeed, dispatch: dispatchCreateFeed } =
     useContext(CreateFeedContext);
@@ -87,7 +91,7 @@ export default (props: Props) => {
     pipelineDispatch({
       type: Types.ResetState,
     });
-    router.actions.clearFeedData();
+    doMainRouter.clearFeedData(mainRouterID);
   };
 
   const enableSave = !!(

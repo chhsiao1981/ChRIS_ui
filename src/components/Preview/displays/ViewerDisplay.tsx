@@ -1,5 +1,5 @@
 import type { ThunkModuleToFunc, UseThunk } from "@chhsiao1981/use-thunk";
-import type { FileBrowserFolderFile, PACSFile } from "@fnndsc/chrisapi";
+import type { FileBrowserFolderFile, PACSFile } from "../../../api/types";
 import type * as DoUser from "../../../reducers/user";
 import {
   CatchallDisplay,

@@ -1,13 +1,10 @@
+//XXX seems deprecated.
+
 import {
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
-import type {
-  FileBrowserFolder,
-  FileBrowserFolderFile,
-  FileBrowserFolderLinkFile,
-} from "@fnndsc/chrisapi";
 import { Skeleton } from "@patternfly/react-core";
 import {
   type ISortBy,
@@ -25,8 +22,13 @@ import { Drawer, Tag } from "antd";
 import { format } from "date-fns";
 import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router";
+import type {
+  FileBrowserFolder,
+  FileBrowserFolderFile,
+  FileBrowserFolderLinkFile,
+} from "../../../api/types";
+import * as DoCart from "../../..//reducers/cart";
 import * as DoUser from "../../../reducers/user";
-import { useAppSelector } from "../../../store/hooks";
 import { getIcon } from "../../Common";
 import { ThemeContext } from "../../DarkTheme/useTheme";
 import { formatBytes } from "../../Feeds/utilties";
@@ -42,6 +44,7 @@ import { getFileName, getLinkFileName } from "./FileCard";
 import { getFolderName } from "./FolderCard";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 interface TableProps {
   data: {
@@ -65,7 +68,7 @@ const columnNames = {
   size: "Size",
 };
 
-interface RowProps {
+type RowProps = {
   rowIndex: number;
   key: string;
   resource:
@@ -86,33 +89,40 @@ interface RowProps {
   };
 
   username: string;
-}
+  useCart: UseThunk<DoCart.State, TDoCart>;
+};
 
-export const BaseRow: React.FC<RowProps> = ({
-  resource,
-  name,
-  date,
-  owner,
-  size,
-  type,
-  computedPath,
-  handleFolderClick,
-  handleFileClick,
-  origin,
+export const BaseRow = (props: RowProps) => {
+  const {
+    resource,
+    name,
+    date,
+    owner,
+    size,
+    type,
+    computedPath,
+    handleFolderClick,
+    handleFileClick,
+    origin,
 
-  username,
-}) => {
+    username,
+
+    useCart,
+  } = props;
   const { handlers } = useLongPress();
   const { handleOnClick } = handlers;
-  const selectedPaths = useAppSelector((state) => state.cart.selectedPaths);
+
+  const [classStateCart, _doCart] = useCart;
+  const cart = getState(classStateCart) || DoCart.defaultState;
+  const { selectedPaths } = cart;
   const { isDarkTheme } = useContext(ThemeContext);
   const { isNewResource, scrollToNewResource } = useNewResourceHighlight(date);
   const isSelected = selectedPaths.some((payload) => {
     if (type === "folder" || type === "link") {
-      return payload.path === resource.data.path;
+      return payload.path === resource.path;
     }
     if (type === "file") {
-      return payload.path === resource.data.fname;
+      return payload.path === resource.fname;
     }
     return false;
   });
@@ -120,9 +130,7 @@ export const BaseRow: React.FC<RowProps> = ({
   const highlightedBgRow = getBackgroundRowColor(shouldHighlight, isDarkTheme);
   const icon = getIcon(type, isDarkTheme, { marginRight: "0.5em" });
   const path =
-    type === "folder" || type === "link"
-      ? resource.data.path
-      : resource.data.fname;
+    type === "folder" || type === "link" ? resource.path : resource.fname;
   const handleItem = () => {
     if (type === "folder") {
       handleFolderClick();
@@ -235,20 +243,16 @@ export const FolderRow: React.FC<Omit<RowProps, "type">> = (props) => {
   return <BaseRow {...props} name={data ? data : props.name} type="folder" />;
 };
 
-export const FileRow: React.FC<Omit<RowProps, "type">> = (props) => (
+export const FileRow = (props: Omit<RowProps, "type">) => (
   <BaseRow {...props} type="file" />
 );
 
-export const LinkRow: React.FC<Omit<RowProps, "type">> = (props) => (
+export const LinkRow = (props: Omit<RowProps, "type">) => (
   <BaseRow {...props} type="link" />
 );
 
-const LibraryTable: React.FC<TableProps> = ({
-  data,
-  computedPath,
-  handleFolderClick,
-  useUser,
-}) => {
+export default (props: TableProps) => {
+  const { data, computedPath, handleFolderClick, useUser } = props;
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
   const { username } = user;
@@ -428,5 +432,3 @@ const LibraryTable: React.FC<TableProps> = ({
     </React.Fragment>
   );
 };
-
-export default LibraryTable;

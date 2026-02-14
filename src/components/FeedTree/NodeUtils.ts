@@ -1,4 +1,4 @@
-import type { PluginInstance } from "@fnndsc/chrisapi";
+import type { PluginInstance } from "../../api/types";
 import type { Point, TreeNodeDatum } from "./data";
 
 /**
@@ -49,24 +49,22 @@ export const getStatusClass = (
 
   if (
     searchFilter.length > 0 &&
-    (data.item?.data.plugin_name
+    (data.item?.plugin_name
       ?.toLowerCase()
       .includes(searchFilter.toLowerCase()) ||
-      data.item?.data.title?.toLowerCase().includes(searchFilter.toLowerCase()))
+      data.item?.title?.toLowerCase().includes(searchFilter.toLowerCase()))
   ) {
     statusClass = "search";
   }
 
-  const previous_id = data.item?.data?.previous_id;
+  const previous_id = data.item?.previous_id;
   if (previous_id) {
-    const parentNode = pluginInstances.find(
-      (node) => node.data.id === previous_id,
-    );
+    const parentNode = pluginInstances.find((node) => node.id === previous_id);
 
     if (
       parentNode &&
-      (parentNode.data.status === "cancelled" ||
-        parentNode.data.status === "finishedWithError")
+      (parentNode.status === "cancelled" ||
+        parentNode.status === "finishedWithError")
     ) {
       statusClass = "notExecuted";
     }

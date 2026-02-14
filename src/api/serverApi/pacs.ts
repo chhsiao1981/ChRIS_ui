@@ -22,6 +22,13 @@ export const getPACSSeriesListBySeriesUID = (seriesUID: string) =>
     },
   });
 
+export const getPACSSeriesList = (query: Partial<PACSSeries>) =>
+  api<PACSSeries[]>({
+    endpoint: "/pacs/series/search/",
+    method: "get",
+    query,
+  });
+
 export const queryPFDCMStudies = (service: string, query: PACSqueryCore) => {
   // @ts-expect-error study-only
   query.StudyOnly = true;

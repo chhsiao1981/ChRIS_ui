@@ -5,14 +5,14 @@ import {
   type Thunk,
 } from "@chhsiao1981/use-thunk";
 import { STATUS_OK } from "../api/constants";
-import { createDataTag, getDataTags } from "../api/serverApi";
-import type { DataTag } from "../api/types";
+import { createTag, getTags } from "../api/serverApi";
+import type { Tag } from "../api/types";
 
 export const myClass = "chris-ui/data-tag";
 
 const MUST_HAVE_TAGS = ["uploaded", "pacs"];
 
-type TagMap = { [name: string]: DataTag };
+type TagMap = { [name: string]: Tag };
 export interface State extends rState {
   tags: string[];
   tagMap: TagMap;
@@ -32,7 +32,7 @@ export const init = (myID: string): Thunk<State> => {
 export const ensureTags = (myID: string, username: string): Thunk<State> => {
   return async (dispatch) => {
     for (const tag of MUST_HAVE_TAGS) {
-      const { status, data, errmsg } = await getDataTags(username, tag);
+      const { status, data, errmsg } = await getTags(username, tag);
       if (status !== STATUS_OK) {
         return;
       }
@@ -54,7 +54,7 @@ export const ensureTags = (myID: string, username: string): Thunk<State> => {
         "tag:",
         tag,
       );
-      await createDataTag(username, tag);
+      await createTag(username, tag);
     }
 
     dispatch(fetchTags(myID, username));
@@ -63,7 +63,7 @@ export const ensureTags = (myID: string, username: string): Thunk<State> => {
 
 export const fetchTags = (myID: string, username: string): Thunk<State> => {
   return async (dispatch, _) => {
-    const { status, data: newTags, errmsg } = await getDataTags(username);
+    const { status, data: newTags, errmsg } = await getTags(username);
     if (status !== STATUS_OK) {
       return;
     }
@@ -76,7 +76,7 @@ export const fetchTags = (myID: string, username: string): Thunk<State> => {
     }
 
     const sortedNewTags = newTags.sort((a, b) => b.id - a.id);
-    const tagMap = sortedNewTags.reduce((r: TagMap, each: DataTag) => {
+    const tagMap = sortedNewTags.reduce((r: TagMap, each: Tag) => {
       r[each.name] = each;
       return r;
     }, {});
