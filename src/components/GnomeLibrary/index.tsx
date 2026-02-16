@@ -3,10 +3,10 @@ import {
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
-import type { FileBrowserFolder } from "@fnndsc/chrisapi";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import type { FileBrowserFolder } from "../../api/types";
 import * as DoUser from "../../reducers/user";
 import { EmptyStateComponent, InfoSection, SpinContainer } from "../Common";
 import { OperationContext, OperationsProvider } from "../NewLibrary/context";
