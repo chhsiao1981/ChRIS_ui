@@ -25,8 +25,8 @@ import type {
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
 } from "../../../api/types";
+import * as DoCart from "../../..//reducers/cart";
 import * as DoUser from "../../../reducers/user";
-import { useAppSelector } from "../../../store/hooks";
 import { getIcon } from "../../Common";
 import { ThemeContext } from "../../DarkTheme/useTheme";
 import { formatBytes } from "../../Feeds/utilties";
@@ -42,6 +42,7 @@ import { getFileName, getLinkFileName } from "./FileCard";
 import { getFolderName } from "./FolderCard";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 interface TableProps {
   data: {
@@ -65,7 +66,7 @@ const columnNames = {
   size: "Size",
 };
 
-interface RowProps {
+type RowProps = {
   rowIndex: number;
   key: string;
   resource:
@@ -86,9 +87,10 @@ interface RowProps {
   };
 
   username: string;
-}
+  useCart: UseThunk<DoCart.State, TDoCart>;
+};
 
-export const BaseRow: React.FC<RowProps> = (props: RowProps) => {
+export const BaseRow = (props: RowProps) => {
   const {
     resource,
     name,
@@ -102,10 +104,15 @@ export const BaseRow: React.FC<RowProps> = (props: RowProps) => {
     origin,
 
     username,
+
+    useCart,
   } = props;
   const { handlers } = useLongPress();
   const { handleOnClick } = handlers;
-  const selectedPaths = useAppSelector((state) => state.cart.selectedPaths);
+
+  const [classStateCart, _doCart] = useCart;
+  const cart = getState(classStateCart) || DoCart.defaultState;
+  const { selectedPaths } = cart;
   const { isDarkTheme } = useContext(ThemeContext);
   const { isNewResource, scrollToNewResource } = useNewResourceHighlight(date);
   const isSelected = selectedPaths.some((payload) => {
@@ -121,9 +128,7 @@ export const BaseRow: React.FC<RowProps> = (props: RowProps) => {
   const highlightedBgRow = getBackgroundRowColor(shouldHighlight, isDarkTheme);
   const icon = getIcon(type, isDarkTheme, { marginRight: "0.5em" });
   const path =
-    type === "folder" || type === "link"
-      ? resource.data.path
-      : resource.data.fname;
+    type === "folder" || type === "link" ? resource.path : resource.fname;
   const handleItem = () => {
     if (type === "folder") {
       handleFolderClick();

@@ -1,8 +1,8 @@
-import type { ThunkModuleToFunc, UseThunk } from "@chhsiao1981/use-thunk";
-import type {
-  FileBrowserFolderFile,
-  FileBrowserFolderLinkFile,
-} from "@fnndsc/chrisapi";
+import {
+  getState,
+  type ThunkModuleToFunc,
+  type UseThunk,
+} from "@chhsiao1981/use-thunk";
 import {
   Button,
   Card,
@@ -15,12 +15,18 @@ import {
   SplitItem,
   Tooltip,
 } from "@patternfly/react-core";
+import list from "antd/es/list";
 import { differenceInSeconds, format } from "date-fns";
 import { isEmpty } from "lodash";
 import type React from "react";
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { getFileExtension } from "../../../api/model";
+import type {
+  FileBrowserFolderFile,
+  FileBrowserFolderLinkFile,
+} from "../../../api/types";
+import * as DoCart from "../../..//reducers/cart";
 import type * as DoUser from "../../../reducers/user";
 import useDownload, { useAppSelector } from "../../../store/hooks";
 import { notification } from "../../Antd";
@@ -36,6 +42,7 @@ import useLongPress, {
 import { FolderContextMenu } from "./ContextMenu";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type Pagination = {
   totalCount: number;
@@ -57,6 +64,7 @@ type ComponentProps = {
   bgRow?: string;
 
   username: string;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 const PresentationComponent: React.FC<ComponentProps> = ({
@@ -155,7 +163,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({
     <>
       {linkFiles.map((val) => (
         <SubLinkCard
-          key={val.data.fname}
+          key={val.fname}
           linkFile={val}
           computedPath={computedPath}
           username={username}
@@ -177,34 +185,40 @@ type FilesCardProps = {
 
   username: string;
   useUser: UseThunk<DoUser.State, TDoUser>;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
-export const FilesCard: React.FC<FilesCardProps> = ({
-  files,
-  computedPath,
-  list,
-  fetchMore,
-  handlePagination,
-  filesLoading,
-  username,
-  useUser,
-}) => (
-  <>
-    {files.map((file) => (
-      <SubFileCard
-        key={file.data.fname}
-        file={file}
-        computedPath={computedPath}
-        list={list}
-        fetchMore={fetchMore}
-        filesLoading={filesLoading}
-        handlePagination={handlePagination}
-        username={username}
-        useUser={useUser}
-      />
-    ))}
-  </>
-);
+export const FilesCard = (props: FilesCardProps) => {
+  const {
+    files,
+    computedPath,
+    list,
+    fetchMore,
+    handlePagination,
+    filesLoading,
+    username,
+    useUser,
+    useCart,
+  } = props;
+  return (
+    <>
+      {files.map((file) => (
+        <SubFileCard
+          key={file.fname}
+          file={file}
+          computedPath={computedPath}
+          list={list}
+          fetchMore={fetchMore}
+          filesLoading={filesLoading}
+          handlePagination={handlePagination}
+          username={username}
+          useUser={useUser}
+          useCart={useCart}
+        />
+      ))}
+    </>
+  );
+};
 
 type SubFileCardProps = {
   file: FileBrowserFolderFile;
@@ -217,43 +231,48 @@ type SubFileCardProps = {
 
   username: string;
   useUser: UseThunk<DoUser.State, TDoUser>;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 export const getFileName = (
   file: FileBrowserFolderFile | FileBrowserFolderLinkFile,
 ) => {
-  return file.data.fname.split("/").pop() || "";
+  return file.fname.split("/").pop() || "";
 };
 
-export const SubFileCard: React.FC<SubFileCardProps> = ({
-  file,
-  computedPath,
-  list,
-  fetchMore,
-  handlePagination,
-  filesLoading,
-  username,
-  useUser,
-}) => {
+export const SubFileCard = (props: SubFileCardProps) => {
+  const {
+    file,
+    computedPath,
+    list,
+    fetchMore,
+    handlePagination,
+    filesLoading,
+    username,
+    useUser,
+    useCart,
+  } = props;
   const { isDarkTheme } = useContext(ThemeContext);
-  const selectedPaths = useAppSelector((state) => state.cart.selectedPaths);
+  const [classStateCart, _doCart] = useCart;
+  const cart = getState(classStateCart) || DoCart.defaultState;
+  const { selectedPaths } = cart;
   const handleDownloadMutation = useDownload();
   const { handlers } = useLongPress();
   const [api, contextHolder] = notification.useNotification();
   const [preview, setIsPreview] = useState(false);
   const [isNewFile, setIsNewFile] = useState<boolean>(false);
-  const creationDate = file.data.creation_date;
+  const creationDate = file.creation_date;
   const secondsSinceCreation = differenceInSeconds(new Date(), creationDate);
   const [isNewFolder, setIsNewFolder] = useState<boolean>(
     secondsSinceCreation <= 15,
   );
   const fileName = getFileName(file);
   const isSelected = selectedPaths.some(
-    (payload) => payload.path === file.data.fname,
+    (payload) => payload.path === file.fname,
   );
   const shouldHighlight = isNewFolder || isSelected;
   const selectedBgRow = getBackgroundRowColor(shouldHighlight, isDarkTheme);
-  const ext = getFileExtension(file.data.fname);
+  const ext = getFileExtension(file.fname);
   const icon = getIcon(ext, isDarkTheme);
 
   useEffect(() => {
@@ -268,7 +287,7 @@ export const SubFileCard: React.FC<SubFileCardProps> = ({
   }, [isNewFolder]);
 
   useEffect(() => {
-    const creationDate = new Date(file.data.creation_date);
+    const creationDate = new Date(file.creation_date);
     const secondsSinceCreation = differenceInSeconds(new Date(), creationDate);
 
     if (secondsSinceCreation <= 15) {
@@ -279,7 +298,7 @@ export const SubFileCard: React.FC<SubFileCardProps> = ({
 
       return () => clearTimeout(timeoutId);
     }
-  }, [file.data.creation_date]);
+  }, [file.creation_date]);
 
   useEffect(() => {
     if (handleDownloadMutation.isSuccess) {
@@ -305,14 +324,14 @@ export const SubFileCard: React.FC<SubFileCardProps> = ({
 
   const handleClick = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
     e.stopPropagation();
-    handlers.handleOnClick(e, file, file.data.fname, "file", () => {
+    handlers.handleOnClick(e, file, file.fname, "file", () => {
       setIsPreview(!preview);
     });
   };
 
   const handleCheckboxChange = (e: React.FormEvent<HTMLInputElement>) => {
     e.stopPropagation();
-    handlers.handleCheckboxChange(e, file.data.fname, file, "file");
+    handlers.handleCheckboxChange(e, file.fname, file, "file");
   };
 
   return (
@@ -331,12 +350,13 @@ export const SubFileCard: React.FC<SubFileCardProps> = ({
         computedPath={computedPath}
         isChecked={isSelected}
         name={fileName}
-        date={file.data.creation_date}
+        date={file.creation_date}
         icon={icon}
         bgRow={
           isNewFile ? getBackgroundRowColor(true, isDarkTheme) : selectedBgRow
         }
         username={username}
+        useCart={useCart}
       />
       <Modal
         className="library-preview"
@@ -359,7 +379,7 @@ type SubLinkCardProps = {
 };
 
 export const getLinkFileName = (file: FileBrowserFolderLinkFile) => {
-  return file.data.path.split("/").pop() || "";
+  return file.path.split("/").pop() || "";
 };
 
 export const SubLinkCard: React.FC<SubLinkCardProps> = ({
