@@ -1,5 +1,5 @@
-import type { Pipeline } from "@fnndsc/chrisapi";
 import { useContext } from "react";
+import type { Pipeline } from "../../api/types";
 import { Form } from "../Antd";
 import { EmptyStateComponent } from "../Common";
 import { PipelineContext, Types } from "./context";
@@ -12,7 +12,7 @@ type OwnProps = {
 function ComputeListForSingleCompute({ currentPipeline }: OwnProps) {
   const { state, dispatch } = useContext(PipelineContext);
   const { computeInfo, currentlyActiveNode } = state;
-  const { id } = currentPipeline.data;
+  const { id } = currentPipeline;
 
   const currentNode = currentlyActiveNode?.[id];
   const currentCompute = currentNode
