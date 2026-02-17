@@ -83,7 +83,7 @@ export default () => {
   const navigateToPath = useCallback(
     (path: string, folder?: FileBrowserFolder) => {
       navigate(`/library/${path}`, {
-        state: folder ? { selectedFolderId: folder.data.id } : {},
+        state: folder ? { selectedFolderId: folder.id } : {},
       });
     },
     [navigate],
@@ -93,10 +93,10 @@ export default () => {
   const handleFolderClick = useCallback(
     (folder: FileBrowserFolder) => {
       // Cache the folder object in React Query cache
-      queryClient.setQueryData(["folder", folder.data.id], folder);
+      queryClient.setQueryData(["folder", folder.id], folder);
 
       // Extract folder name from path
-      const folderName = folder.data.path.split("/").pop() || "";
+      const folderName = folder.path.split("/").pop() || "";
       const newPath = `${computedPath}/${folderName}`;
       navigateToPath(newPath, folder);
     },
