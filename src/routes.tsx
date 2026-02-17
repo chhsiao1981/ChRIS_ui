@@ -96,7 +96,6 @@ const _ROUTE_TO_SIDEBAR_ITEM: Record<string, string> = {
 export default () => {
   const location = useLocation();
   const [state, setState] = useState(State);
-  const [route, setRoute] = useState("");
   const navigate = useNavigate();
 
   const [uiID, _] = useState(genUUID);
@@ -127,8 +126,6 @@ export default () => {
 
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
   const [_9, doCart] = useCart;
-
-  console.info("routes: start: route:", route);
 
   const actions: Actions = {
     createFeedWithData: (selectData: Series) => {
@@ -165,7 +162,11 @@ export default () => {
 
   useEffect(() => {
     // No need to set thunks when doing login.
-    if (location.pathname.startsWith("/login")) {
+    if (
+      location.pathname.startsWith("/login") ||
+      location.pathname === "/signup" ||
+      location.pathname === "/oidc-redirect"
+    ) {
       return;
     }
 
@@ -176,7 +177,18 @@ export default () => {
     doExplorer.init();
     doFeed.init();
     doCart.init();
-  }, []);
+  }, [
+    dataTagID,
+    doCart.init,
+    doDataTag,
+    doDrawer.init,
+    doExplorer.init,
+    doFeed.init,
+    doUI.init,
+    doUser.init,
+    location.pathname,
+    uiID,
+  ]);
 
   // Update the active sidebar item based on the current route
   useEffect(() => {
@@ -194,10 +206,7 @@ export default () => {
       path: "library/*",
       element: (
         <PrivateRoute>
-          <RouterProvider
-            {...{ actions, state, route, setRoute }}
-            context={MainRouterContext}
-          >
+          <RouterProvider {...{ actions, state }} context={MainRouterContext}>
             <OperationsProvider>
               <GnomeLibrary />
             </OperationsProvider>
@@ -208,10 +217,7 @@ export default () => {
     {
       path: "data/tag/uploaded",
       element: (
-        <RouterProvider
-          {...{ actions, state, route, setRoute }}
-          context={MainRouterContext}
-        >
+        <RouterProvider {...{ actions, state }} context={MainRouterContext}>
           <OperationsProvider>
             <FeedsListView title="Data: uploaded" isShared={false} />
           </OperationsProvider>
@@ -221,10 +227,7 @@ export default () => {
     {
       path: "data/tag/public",
       element: (
-        <RouterProvider
-          {...{ actions, state, route, setRoute }}
-          context={MainRouterContext}
-        >
+        <RouterProvider {...{ actions, state }} context={MainRouterContext}>
           <OperationsProvider>
             <FeedsListView title="Data: public" isShared={true} />
           </OperationsProvider>
@@ -234,10 +237,7 @@ export default () => {
     {
       path: "data/tag/pacs",
       element: (
-        <RouterProvider
-          {...{ actions, state, route, setRoute }}
-          context={MainRouterContext}
-        >
+        <RouterProvider {...{ actions, state }} context={MainRouterContext}>
           <OperationsProvider>
             <FeedsListView title="Data: pacs" isShared={false} />
           </OperationsProvider>
@@ -247,10 +247,7 @@ export default () => {
     {
       path: "data/tag/:id",
       element: (
-        <RouterProvider
-          {...{ actions, state, route, setRoute }}
-          context={MainRouterContext}
-        >
+        <RouterProvider {...{ actions, state }} context={MainRouterContext}>
           <OperationsProvider>
             <FeedsListView title="Data" isShared={false} />
           </OperationsProvider>
@@ -260,10 +257,7 @@ export default () => {
     {
       path: "data/:id",
       element: (
-        <RouterProvider
-          {...{ actions, state, route, setRoute }}
-          context={MainRouterContext}
-        >
+        <RouterProvider {...{ actions, state }} context={MainRouterContext}>
           <OperationsProvider>
             <FeedView />
           </OperationsProvider>
@@ -273,10 +267,7 @@ export default () => {
     {
       path: "data/*",
       element: (
-        <RouterProvider
-          {...{ actions, state, route, setRoute }}
-          context={MainRouterContext}
-        >
+        <RouterProvider {...{ actions, state }} context={MainRouterContext}>
           <OperationsProvider>
             <FeedsListView title="My Data" isShared={false} />
           </OperationsProvider>
@@ -286,10 +277,7 @@ export default () => {
     {
       path: "shared/*",
       element: (
-        <RouterProvider
-          {...{ actions, state, route, setRoute }}
-          context={MainRouterContext}
-        >
+        <RouterProvider {...{ actions, state }} context={MainRouterContext}>
           <OperationsProvider>
             <FeedsListView title="Shared Data" isShared={true} />
           </OperationsProvider>

@@ -4,7 +4,7 @@ import {
   type UseThunk,
   useThunk,
 } from "@chhsiao1981/use-thunk";
-import type { Feed, FileBrowserFolder } from "@fnndsc/chrisapi";
+
 import { ChartDonutUtilization } from "@patternfly/react-charts";
 import {
   Button,
@@ -33,9 +33,9 @@ import type React from "react";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useNavigate } from "react-router";
+import type { Feed, FileBrowserFolder, ID } from "../../api/types";
 import * as DoCart from "../../reducers/cart";
 import * as DoUser from "../../reducers/user";
-import { useAppSelector } from "../../store/hooks";
 import { Typography } from "../Antd";
 import { InfoSection } from "../Common";
 import { ThemeContext } from "../DarkTheme/useTheme";
@@ -69,26 +69,32 @@ const COLUMN_DEFINITIONS: ColumnDefinition[] = [
   {
     id: "id",
     label: "ID",
-    comparator: (a: Feed, b: Feed) => a.data.id - b.data.id,
+    comparator: (a: Feed, b: Feed) => {
+      if (a.id > b.id) {
+        return 1;
+      } else if (a.id < b.id) {
+        return -1;
+      }
+      return 0;
+    },
   },
 
   {
     id: "analysis",
     label: "Analysis",
-    comparator: (a: Feed, b: Feed) => a.data.name.localeCompare(b.data.name),
+    comparator: (a: Feed, b: Feed) => a.name.localeCompare(b.name),
   },
   {
     id: "created",
     label: "Created",
     comparator: (a: Feed, b: Feed) =>
-      new Date(a.data.creation_date).getTime() -
-      new Date(b.data.creation_date).getTime(),
+      new Date(a.creation_date).getTime() - new Date(b.creation_date).getTime(),
   },
   {
     id: "creator",
     label: "Creator",
     comparator: (a: Feed, b: Feed) =>
-      a.data.owner_username.localeCompare(b.data.owner_username),
+      a.owner_username.localeCompare(b.owner_username),
   },
   {
     id: "status",
@@ -333,12 +339,13 @@ export default (props: Props) => {
               {sortedFeeds.map((feed, rowIndex) => (
                 <TableRow
                   username={username}
-                  key={feed.data.id}
+                  key={feed.id}
                   feed={feed}
                   rowIndex={rowIndex}
                   allFeeds={feedsToDisplay}
                   type={theType}
                   additionalKeys={[perPage, page, theType, search, searchType]}
+                  useCart={useCart}
                 />
               ))}
             </Tbody>
@@ -359,12 +366,17 @@ type TableRowProps = {
   type: string;
   additionalKeys: string[];
   username: string;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 // -------------- TableRow --------------
 const TableRow = (props: TableRowProps) => {
-  const { rowIndex, feed, additionalKeys, type, username } = props;
-  const selectedPaths = useAppSelector((state) => state.cart.selectedPaths);
+  const { rowIndex, feed, additionalKeys, type, username, useCart } = props;
+
+  const [classStateCart, _doCart] = useCart;
+  const cart = getState(classStateCart) || DoCart.defaultState;
+  const { selectedPaths } = cart;
+
   const { handlers } = useLongPress();
   const { handleOnClick } = handlers;
   const navigate = useNavigate();
@@ -404,7 +416,7 @@ const TableRow = (props: TableRowProps) => {
       : "inherit";
 
   const isSelected = selectedPaths.some(
-    (payload) => payload.path === feed.data.folder_path,
+    (payload) => payload.path === feed.folder_path,
   );
 
   const selectedBgRow = isSelected ? backgroundColor : backgroundRow;
@@ -413,9 +425,7 @@ const TableRow = (props: TableRowProps) => {
    * Handle feed name click
    */
   const onFeedNameClick = () => {
-    navigate(
-      `/data/${feed.data.id}?type=${feed.data.public ? "public" : "private"}`,
-    );
+    navigate(`/data/${feed.id}?type=${feed.public ? "public" : "private"}`);
   };
 
   return (
@@ -427,18 +437,18 @@ const TableRow = (props: TableRowProps) => {
       }}
     >
       <Tr
-        key={feed.data.id}
-        id={`feed-row-${feed.data.id}`}
+        key={feed.id}
+        id={`feed-row-${feed.id}`}
         style={{ backgroundColor: selectedBgRow, cursor: "pointer" }}
-        data-test-id={`${feed.data.name}-test`}
+        data-test-id={`${feed.name}-test`}
         onContextMenu={async (e) => {
           const payload = await getFolderForThisFeed();
-          handleOnClick(e, payload, feed.data.folder_path, "folder");
+          handleOnClick(e, payload, feed.folder_path, "folder");
         }}
         onClick={async (e) => {
           e?.stopPropagation();
           const payload = await getFolderForThisFeed();
-          handleOnClick(e, payload, feed.data.folder_path, "folder", () => {
+          handleOnClick(e, payload, feed.folder_path, "folder", () => {
             onFeedNameClick();
           });
         }}
@@ -462,7 +472,7 @@ const TableRow = (props: TableRowProps) => {
                 // If unchecking, we don't need to fetch again, just use the path
                 handlers.handleCheckboxChange(
                   event,
-                  feed.data.folder_path,
+                  feed.folder_path,
                   null,
                   "folder",
                 );
@@ -489,21 +499,21 @@ const TableRow = (props: TableRowProps) => {
 
               handlers.handleCheckboxChange(
                 newEvent as unknown as React.FormEvent<HTMLInputElement>,
-                feed.data.folder_path,
+                feed.folder_path,
                 payload,
                 "folder",
               );
             },
           }}
         />
-        <Td dataLabel="ID">{feed.data.id}</Td>
+        <Td dataLabel="ID">{feed.id}</Td>
         <Td dataLabel="analysis">
           <FeedInfoColumn feed={feed} onClick={onFeedNameClick} />
         </Td>
         <Td dataLabel="created">
-          {format(new Date(feed.data.creation_date), "dd MMM yyyy, HH:mm")}
+          {format(new Date(feed.creation_date), "dd MMM yyyy, HH:mm")}
         </Td>
-        <Td dataLabel="creator">{feed.data.owner_username}</Td>
+        <Td dataLabel="creator">{feed.owner_username}</Td>
         {/* Status column with progress donut */}
         <Td dataLabel="status">
           <DonutUtilization
@@ -540,7 +550,7 @@ const isFeedCompleted = (details: PluginInstanceDetails | null): boolean => {
  * @returns Promise with updated feed details
  */
 const fetchFeedDetails = async (
-  feedId: number,
+  feedId: ID,
   type: string,
 ): Promise<PluginInstanceDetails> => {
   let updatedFeed: Feed | undefined;
@@ -609,8 +619,8 @@ function DonutUtilization({
     isLoading,
     status,
   } = useQuery({
-    queryKey: ["feedDetails", feed.data.id, type],
-    queryFn: () => fetchFeedDetails(feed.data.id, type),
+    queryKey: ["feedDetails", feed.id, type],
+    queryFn: () => fetchFeedDetails(feed.id, type),
     refetchInterval: (query) => {
       // Check data from the current query state
       const data = query.state.data;

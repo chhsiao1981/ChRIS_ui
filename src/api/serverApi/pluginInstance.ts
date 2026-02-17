@@ -48,3 +48,8 @@ export const getPluginInstanceParameters = (
     endpoint: `/plugins/instances/${pluginID}/parameters/`,
     query: { limit, offset },
   });
+
+export const getPluginInstance = (theID: ID) =>
+  api<PluginInstance>({
+    endpoint: `/plugins/instances/${theID}`,
+  });

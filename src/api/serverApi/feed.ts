@@ -8,6 +8,26 @@ export const getFeed = (dataID: ID) =>
     method: "get",
   });
 
+export const getFeeds = (
+  searchType?: string,
+  search?: string,
+  offset: number = 0,
+  limit: number = 100,
+) => {
+  const query: any = {
+    offset,
+    limit,
+  };
+  if (searchType) {
+    query[searchType] = search;
+  }
+  return api<Feed[]>({
+    endpoint: `/`,
+    method: "get",
+    query,
+  });
+};
+
 export const updateFeedName = (dataID: ID, dataName: string) =>
   api<Feed>({
     endpoint: `/${dataID}/`,

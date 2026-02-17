@@ -3,7 +3,7 @@ import type {
   FileBrowserFolder,
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
-} from "@fnndsc/chrisapi";
+} from "../../api/types";
 
 export type PayloadTypes =
   | FileBrowserFolder

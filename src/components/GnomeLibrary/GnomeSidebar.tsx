@@ -1,4 +1,3 @@
-import type { FileBrowserFolderList } from "@fnndsc/chrisapi";
 import { Flex, FlexItem, Nav, NavItem, NavList } from "@patternfly/react-core";
 import {
   CubeIcon,
@@ -7,22 +6,18 @@ import {
   ShareIcon,
   TreeviewIcon,
 } from "@patternfly/react-icons";
-import type React from "react";
 import type { OriginState } from "../NewLibrary/context";
 import styles from "./gnome.module.css";
 
-interface GnomeLibrarySidebarProps {
+type Props = {
   activeSidebarItem: string;
   computedPath: string;
   handleSidebarItemClick: (item: string) => void;
   origin: OriginState;
-  foldersList?: FileBrowserFolderList;
-}
+};
 
-const GnomeLibrarySidebar: React.FC<GnomeLibrarySidebarProps> = ({
-  activeSidebarItem,
-  handleSidebarItemClick,
-}) => {
+const GnomeLibrarySidebar = (props: Props) => {
+  const { activeSidebarItem, handleSidebarItemClick } = props;
   return (
     <div className={styles.gnomeLibrarySidebar}>
       <Nav>

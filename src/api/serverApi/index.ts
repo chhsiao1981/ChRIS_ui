@@ -1,6 +1,7 @@
 import {
   createFeedWithFilepath,
   getFeed,
+  getFeeds,
   updateFeedName,
   updateFeedPublic,
 } from "./feed";
@@ -44,6 +45,7 @@ export {
   createPluginInstance,
   getLinkMap,
   getFeed,
+  getFeeds,
   updateFeedName,
   updateFeedPublic,
   createFeedWithFilepath,

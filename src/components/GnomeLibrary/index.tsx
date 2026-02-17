@@ -162,7 +162,6 @@ export default () => {
               type: OperationContext.LIBRARY,
               additionalKeys: [computedPath],
             }}
-            foldersList={data?.folderList}
           />
 
           <div className={styles.gnomeLibraryContent}>

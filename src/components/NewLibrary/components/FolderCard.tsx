@@ -1,4 +1,8 @@
-import type { FileBrowserFolder } from "@fnndsc/chrisapi";
+import {
+  getState,
+  type ThunkModuleToFunc,
+  type UseThunk,
+} from "@chhsiao1981/use-thunk";
 import {
   Button,
   Card,
@@ -13,7 +17,8 @@ import { isEmpty } from "lodash";
 import { useContext, useEffect, useState } from "react";
 import { Fragment } from "react/jsx-runtime";
 import { elipses } from "../../../api/common";
-import { useAppSelector } from "../../../store/hooks";
+import type { FileBrowserFolder } from "../../../api/types";
+import * as DoCart from "../../..//reducers/cart";
 import { ThemeContext } from "../../DarkTheme/useTheme";
 import { FolderIcon } from "../../Icons";
 import { OperationContext } from "../context";
@@ -23,33 +28,34 @@ import useLongPress, {
 } from "../utils/longpress";
 import { FolderContextMenu } from "./ContextMenu";
 
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+
 type Pagination = {
   totalCount: number;
   hasNextPage: boolean;
 };
 
-export const FolderCard = ({
-  folders,
-  handleFolderClick,
-  computedPath,
-  username,
-}: {
+type FolderCardProps = {
   folders: FileBrowserFolder[];
   handleFolderClick: (path: string) => void;
   computedPath: string;
   pagination?: Pagination;
   username: string;
-}) => {
+  useCart: UseThunk<DoCart.State, TDoCart>;
+};
+export const FolderCard = (props: FolderCardProps) => {
+  const { folders, handleFolderClick, computedPath, username, useCart } = props;
   return (
     <Fragment>
       {folders.map((folder) => {
         return (
           <SubFolderCard
-            key={`sub_folder_${folder.data.path}`}
+            key={`sub_folder_${folder.path}`}
             folder={folder}
             computedPath={computedPath}
             handleFolderClick={handleFolderClick}
             username={username}
+            useCart={useCart}
           />
         );
       })}
@@ -57,31 +63,37 @@ export const FolderCard = ({
   );
 };
 
-interface SubFolderCardProps {
+export const getFolderName = (
+  folder: FileBrowserFolder,
+  computedPath: string,
+) => {
+  const folderPathParts = folder.path.split("/");
+  const pathName = folderPathParts[folderPathParts.length - 1];
+  const folderName = computedPath === "/" ? folder.path : pathName;
+  return folderName;
+};
+
+type SubFolderCardProps = {
   folder: FileBrowserFolder;
   computedPath: string;
   handleFolderClick: (path: string) => void;
   username: string;
-}
+  useCart: UseThunk<DoCart.State, TDoCart>;
+};
 
-export function getFolderName(folder: FileBrowserFolder, computedPath: string) {
-  const folderPathParts = folder.data.path.split("/");
-  const pathName = folderPathParts[folderPathParts.length - 1];
-  const folderName = computedPath === "/" ? folder.data.path : pathName;
-  return folderName;
-}
-
-export const SubFolderCard: React.FC<SubFolderCardProps> = (props) => {
-  const { folder, computedPath, handleFolderClick, username } = props;
+export const SubFolderCard = (props: SubFolderCardProps) => {
+  const { folder, computedPath, handleFolderClick, username, useCart } = props;
   const isDarkTheme = useContext(ThemeContext).isDarkTheme;
-  const selectedPaths = useAppSelector((state) => state.cart.selectedPaths);
+  const [classStateCart, _doCart] = useCart;
+  const cart = getState(classStateCart) || DoCart.defaultState;
+  const { selectedPaths } = cart;
   const { handlers } = useLongPress();
 
   const { handleOnClick, handleOnMouseDown, handleCheckboxChange } = handlers;
   const folderName = getFolderName(folder, computedPath);
   const { data: feedName, isLoading } = useAssociatedFeed(folderName);
 
-  const creationDate = folder.data.creation_date;
+  const creationDate = folder.creation_date;
   const secondsSinceCreation = differenceInSeconds(new Date(), creationDate);
 
   const [isNewFolder, setIsNewFolder] = useState<boolean>(
@@ -100,14 +112,14 @@ export const SubFolderCard: React.FC<SubFolderCardProps> = (props) => {
   }, [isNewFolder]);
 
   const isSelected = selectedPaths.some(
-    (payload) => payload.path === folder.data.path,
+    (payload) => payload.path === folder.path,
   );
 
   const shouldHighlight = isNewFolder || isSelected;
   const highlightedBgRow = getBackgroundRowColor(shouldHighlight, isDarkTheme);
 
   return (
-    <GridItem xl={3} lg={4} md={6} sm={12} key={folder.data.id}>
+    <GridItem xl={3} lg={4} md={6} sm={12} key={folder.id}>
       <FolderContextMenu
         origin={{
           type: OperationContext.LIBRARY,
@@ -127,13 +139,11 @@ export const SubFolderCard: React.FC<SubFolderCardProps> = (props) => {
           isCompact
           isFlat
           onClick={(e) => {
-            handleOnClick(e, folder, folder.data.path, "folder", () => {
+            handleOnClick(e, folder, folder.path, "folder", () => {
               handleFolderClick(folderName);
             });
           }}
-          onContextMenu={(e) =>
-            handleOnClick(e, folder, folder.data.path, "folder")
-          }
+          onContextMenu={(e) => handleOnClick(e, folder, folder.path, "folder")}
           onMouseDown={handleOnMouseDown}
           isRounded
         >
@@ -143,10 +153,10 @@ export const SubFolderCard: React.FC<SubFolderCardProps> = (props) => {
                 <Checkbox
                   className="large-checkbox"
                   isChecked={isSelected}
-                  id={folder.data.id}
+                  id={`${folder.id}`}
                   onClick={(e) => e.stopPropagation()}
                   onChange={(e) =>
-                    handleCheckboxChange(e, folder.data.path, folder, "folder")
+                    handleCheckboxChange(e, folder.path, folder, "folder")
                   }
                 />
               ),

@@ -129,7 +129,7 @@ export default (props: Props) => {
   const { subFoldersMap, linkFilesMap, filesMap, folderList } =
     pluginFilesPayload;
   const breadcrumb = useMemo(() => additionalKey.split("/"), [additionalKey]);
-  const currentPath = `home/${username}/feeds/feed_${feed?.data.id}/${selected?.plugin_name}_${selected?.id}/data`;
+  const currentPath = `home/${username}/feeds/feed_${feed?.id}/${selected?.plugin_name}_${selected?.id}/data`;
   const noFiles = useMemo(
     () =>
       filesMap?.length === 0 &&
@@ -172,12 +172,12 @@ export default (props: Props) => {
     };
 
     const disabledIndex = breadcrumb.findIndex(
-      (path) => path === `${selected?.data.plugin_name}_${selected?.data.id}`,
+      (path) => path === `${selected?.plugin_name}_${selected?.id}`,
     );
 
     const shouldNotClick =
       (disabledIndex > 1 && index <= disabledIndex) ||
-      selected?.data.plugin_type === "fs";
+      selected?.plugin_type === "fs";
 
     return (
       <BreadcrumbItem
@@ -296,7 +296,7 @@ export default (props: Props) => {
                         </Tooltip>
 
                         {additionalKey !== currentPath &&
-                          selected?.data.plugin_type === "fs" && (
+                          selected?.plugin_type === "fs" && (
                             <Tooltip content="Return to the plugin's root directory">
                               <Button
                                 onClick={() => handleFileClick(currentPath)}

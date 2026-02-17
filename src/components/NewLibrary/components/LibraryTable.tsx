@@ -3,11 +3,6 @@ import {
   type ThunkModuleToFunc,
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
-import type {
-  FileBrowserFolder,
-  FileBrowserFolderFile,
-  FileBrowserFolderLinkFile,
-} from "@fnndsc/chrisapi";
 import { Skeleton } from "@patternfly/react-core";
 import {
   type ISortBy,
@@ -25,6 +20,11 @@ import { Drawer, Tag } from "antd";
 import { format } from "date-fns";
 import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router";
+import type {
+  FileBrowserFolder,
+  FileBrowserFolderFile,
+  FileBrowserFolderLinkFile,
+} from "../../../api/types";
 import * as DoUser from "../../../reducers/user";
 import { useAppSelector } from "../../../store/hooks";
 import { getIcon } from "../../Common";
@@ -88,20 +88,21 @@ interface RowProps {
   username: string;
 }
 
-export const BaseRow: React.FC<RowProps> = ({
-  resource,
-  name,
-  date,
-  owner,
-  size,
-  type,
-  computedPath,
-  handleFolderClick,
-  handleFileClick,
-  origin,
+export const BaseRow: React.FC<RowProps> = (props: RowProps) => {
+  const {
+    resource,
+    name,
+    date,
+    owner,
+    size,
+    type,
+    computedPath,
+    handleFolderClick,
+    handleFileClick,
+    origin,
 
-  username,
-}) => {
+    username,
+  } = props;
   const { handlers } = useLongPress();
   const { handleOnClick } = handlers;
   const selectedPaths = useAppSelector((state) => state.cart.selectedPaths);
@@ -109,10 +110,10 @@ export const BaseRow: React.FC<RowProps> = ({
   const { isNewResource, scrollToNewResource } = useNewResourceHighlight(date);
   const isSelected = selectedPaths.some((payload) => {
     if (type === "folder" || type === "link") {
-      return payload.path === resource.data.path;
+      return payload.path === resource.path;
     }
     if (type === "file") {
-      return payload.path === resource.data.fname;
+      return payload.path === resource.fname;
     }
     return false;
   });
@@ -235,11 +236,11 @@ export const FolderRow: React.FC<Omit<RowProps, "type">> = (props) => {
   return <BaseRow {...props} name={data ? data : props.name} type="folder" />;
 };
 
-export const FileRow: React.FC<Omit<RowProps, "type">> = (props) => (
+export const FileRow = (props: Omit<RowProps, "type">) => (
   <BaseRow {...props} type="file" />
 );
 
-export const LinkRow: React.FC<Omit<RowProps, "type">> = (props) => (
+export const LinkRow = (props: Omit<RowProps, "type">) => (
   <BaseRow {...props} type="link" />
 );
 

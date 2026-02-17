@@ -1,9 +1,9 @@
-import type { Feed, PluginInstance } from "@fnndsc/chrisapi";
 import { Tooltip } from "@patternfly/react-core";
 import { type CSSProperties, useCallback, useEffect, useState } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { elipses } from "../../api/common";
+import type { PluginInstance } from "../../api/types";
 import { useAppDispatch } from "../../store/hooks";
 import {
   getSelectedPlugin,
@@ -163,8 +163,8 @@ export default () => {
   const TitleComponent = (
     <CustomTitle color="white">
       <AnalysisIcon style={{ marginRight: "0.25em" }} />
-      <Tooltip content={feed?.data.name}>
-        <span>{feed ? elipses(feed?.data.name, 40) : ""}</span>
+      <Tooltip content={feed?.name}>
+        <span>{feed ? elipses(feed?.name, 40) : ""}</span>
       </Tooltip>
     </CustomTitle>
   );

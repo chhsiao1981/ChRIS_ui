@@ -1,5 +1,10 @@
 import api from "../api";
-import type { FileBrowserFolder, ID } from "../types";
+import type {
+  FileBrowserFolder,
+  FileBrowserFolderFile,
+  FileBrowserFolderLinkFile,
+  ID,
+} from "../types";
 
 export const getFileBrowserFolders = (path: string) =>
   api<FileBrowserFolder[]>({
@@ -15,4 +20,31 @@ export const getFileBrowserChildren = (
   api<FileBrowserFolder[]>({
     endpoint: `/filebrowser/${theID}/children/`,
     params: { offset, limit },
+  });
+
+export const updateFileBrowserFolderPath = (theID: ID, path: string) =>
+  api<FileBrowserFolder>({
+    endpoint: `/filebrowser/${theID}/`,
+    method: "put",
+    json: {
+      path,
+    },
+  });
+
+export const updateFileBrowserFolderFilePath = (theID: ID, path: string) =>
+  api<FileBrowserFolderFile>({
+    endpoint: `/filebrowser/files/${theID}/`,
+    method: "put",
+    json: {
+      path,
+    },
+  });
+
+export const updateFileBrowserFolderLinkFilePath = (theID: ID, path: string) =>
+  api<FileBrowserFolderLinkFile>({
+    endpoint: `/filebrowser/linkfiles/${theID}/`,
+    method: "put",
+    json: {
+      path,
+    },
   });

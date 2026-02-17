@@ -2,8 +2,11 @@ import type {
   DispatchFuncMap,
   ThunkModuleToFunc,
 } from "@chhsiao1981/use-thunk";
-import type { Feed, FeedList, PublicFeedList } from "@fnndsc/chrisapi";
+import type { PublicFeedList } from "@fnndsc/chrisapi";
+import status from "../../../node_modules.docker/antd/es/dropdown/style/status";
 import ChrisAPIClient from "../../api/chrisapiclient";
+import { getFeed, getFeeds } from "../../api/serverApi";
+import type { Feed, ID } from "../../api/types";
 import type * as DoDrawer from "../../reducers/drawer";
 import type { ActionType } from "../../reducers/drawer";
 
@@ -41,83 +44,43 @@ export const onToggle = (
 };
 
 export const fetchFeeds = async (filterState: any) => {
-  const client = ChrisAPIClient.getClient();
+  const offset = filterState.perPage * (filterState.page - 1);
 
-  const feedsList: FeedList = await client.getFeeds({
-    limit: +filterState.perPage,
-    offset: filterState.perPage * (filterState.page - 1),
-    [filterState.searchType]: filterState.search,
-  });
-
-  let feeds: Feed[] = [];
-
-  if (feedsList.getItems()) {
-    feeds = feedsList.getItems() as Feed[];
+  const { status, data, errmsg } = await getFeeds(
+    filterState.searchType,
+    filterState.search,
+    offset,
+    filterState.perPage,
+  );
+  if (!data) {
+    return {
+      feeds: [],
+    };
   }
-
+  const feeds = data;
   return {
     feeds,
-    totalFeedsCount: feedsList.totalCount,
+    totalFeedCount: 0,
   };
 };
 
 export const fetchPublicFeeds = async (filterState: any) => {
-  const offset = filterState.perPage * (filterState.page - 1);
-  const client = ChrisAPIClient.getClient();
-
-  const feedsList: PublicFeedList = await client.getPublicFeeds({
-    limit: +filterState.perPage,
-    offset,
-    [filterState.searchType]: filterState.search,
-  });
-
-  let feeds: Feed[] = [];
-
-  if (feedsList.getItems()) {
-    feeds = feedsList.getItems() as Feed[];
-  }
-
-  return {
-    feeds,
-    totalFeedsCount: feedsList.totalCount,
-  };
+  return await fetchFeeds(filterState);
 };
 
-export async function fetchAuthenticatedFeed(id: number) {
+export const fetchAuthenticatedFeed = async (id: ID) => {
   if (!id) return;
 
-  try {
-    const client = ChrisAPIClient.getClient();
-    const feed = await client.getFeed(id);
-
-    if (!feed) {
-      throw new Error(
-        "You do not permissions to view this feed. Redirecting...",
-      );
-    }
-    return feed;
-  } catch (error) {
-    // biome-ignore lint/complexity/noUselessCatch: <explanation>
-    throw error;
+  const { status, data: feed, errmsg } = await getFeed(id);
+  if (!feed) {
+    return;
   }
-}
+  return feed;
+};
 
-export async function fetchPublicFeed(id: number) {
-  if (!id) return;
-  try {
-    const client = ChrisAPIClient.getClient();
-    const publicFeed = await client.getPublicFeeds({ id });
-
-    const items = publicFeed?.getItems();
-    if (items && items.length > 0) {
-      return items[0] as Feed;
-    }
-    throw new Error("Failed to fetch this feed...");
-  } catch (error) {
-    // biome-ignore lint/complexity/noUselessCatch: <explanation>
-    throw error;
-  }
-}
+export const fetchPublicFeed = async (id: ID) => {
+  return await fetchAuthenticatedFeed(id);
+};
 
 export interface PluginInstanceDetails {
   progress: number;
@@ -136,7 +99,7 @@ export const getPluginInstanceDetails = (feed: Feed): PluginInstanceDetails => {
     finished_jobs = 0,
     errored_jobs = 0,
     cancelled_jobs = 0,
-  } = feed.data;
+  } = feed;
 
   // 1) Sum all jobs
   const totalJobs =

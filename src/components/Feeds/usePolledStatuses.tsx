@@ -1,12 +1,13 @@
-import type { PluginInstance } from "@fnndsc/chrisapi";
 import { useQueries } from "@tanstack/react-query";
 import React from "react";
+import { getPluginInstance } from "../../api/serverApi/pluginInstance";
+import type { ID, PluginInstance } from "../../api/types";
 
 export function usePollAllPluginStatuses(
   pluginInstances: PluginInstance[],
   totalCount: number,
 ) {
-  const [statuses, setStatuses] = React.useState<{ [id: number]: string }>({});
+  const [statuses, setStatuses] = React.useState<{ [id: ID]: string }>({});
 
   const shouldStartPolling = React.useMemo(
     () => pluginInstances.length === totalCount,
@@ -15,19 +16,22 @@ export function usePollAllPluginStatuses(
 
   const incompletePlugins = React.useMemo(() => {
     return pluginInstances.filter((inst) => {
-      const knownStatus = statuses[inst.data.id] || inst.data.status;
+      const knownStatus = statuses[inst.id] || inst.status;
       return !isTerminalStatus(knownStatus);
     });
   }, [pluginInstances, statuses]);
 
   useQueries({
     queries: incompletePlugins.map((instance) => {
-      const id = instance.data.id;
+      const id = instance.id;
       return {
         queryKey: ["pluginInstanceStatus", id],
         queryFn: async () => {
-          const details = await instance.get();
-          const latestStatus = details.data.status as string;
+          const { status, data: details, errmsg } = await getPluginInstance(id);
+          if (!details) {
+            return;
+          }
+          const latestStatus = details.status as string;
           setStatuses((prev) => ({
             ...prev,
             [id]: latestStatus,
