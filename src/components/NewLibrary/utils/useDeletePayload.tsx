@@ -8,7 +8,7 @@ import axios from "axios";
 import { useState } from "react";
 import ChrisAPIClient from "../../../api/chrisapiclient";
 import * as DoCart from "../../../reducers/cart";
-import type { SelectionPayload } from "../../../store/cart/types";
+import type { SelectionPayload } from "../../../reducers/types";
 import { type OriginState, useOperationsContext } from "../context";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;

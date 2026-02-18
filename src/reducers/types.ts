@@ -1,4 +1,9 @@
-import type { Feed } from "../api/types";
+import type {
+  Feed,
+  FileBrowserFolder,
+  FileBrowserFolderFile,
+  FileBrowserFolderLinkFile,
+} from "../api/types";
 
 export enum Role {
   Guest = "a guest",
@@ -63,4 +68,15 @@ export interface FeedCreationStatus {
   type: string;
   folder_path: string;
   feed_id: number;
+}
+
+export type PayloadTypes =
+  | FileBrowserFolder
+  | FileBrowserFolderFile
+  | FileBrowserFolderLinkFile;
+
+export interface SelectionPayload {
+  path: string;
+  type: string;
+  payload: PayloadTypes;
 }

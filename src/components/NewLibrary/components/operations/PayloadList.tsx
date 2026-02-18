@@ -6,7 +6,7 @@ import {
 import { Chip, ChipGroup } from "@patternfly/react-core";
 import { getFileName } from "../../../../api/common";
 import type * as DoCart from "../../../../reducers/cart";
-import type { SelectionPayload } from "../../../../store/cart/types";
+import type { SelectionPayload } from "../../../../reducers/types";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 

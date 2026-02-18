@@ -20,8 +20,8 @@ import type {
   FileBrowserFolderLinkFile,
 } from "../../../api/types";
 import * as DoCart from "../../../reducers/cart";
+import type { SelectionPayload } from "../../../reducers/types";
 import { createFeed as createFeedSaga } from "../../../store/cart/downloadSaga";
-import type { SelectionPayload } from "../../../store/cart/types";
 import { notification } from "../../Antd";
 import { getFolderName } from "../components/FolderCard";
 import type { AdditionalValues } from "../components/Operations";

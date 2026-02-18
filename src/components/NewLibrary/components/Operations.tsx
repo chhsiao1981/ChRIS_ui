@@ -15,14 +15,17 @@ import type { DefaultError } from "@tanstack/react-query";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router";
 import type { FileBrowserFolder } from "../../../api/types/fileBrowser";
-import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { Alert as AntdAlert } from "../../Antd";
 import type { OriginState } from "../context";
 import { type ModalState, useFolderOperations } from "../utils/useOperations";
 import LayoutSwitch from "./LayoutSwitch";
 import "./Operations.css";
-import type { ThunkModuleToFunc, UseThunk } from "@chhsiao1981/use-thunk";
-import type * as DoCart from "../../../reducers/cart";
+import {
+  getState,
+  type ThunkModuleToFunc,
+  type UseThunk,
+} from "@chhsiao1981/use-thunk";
+import * as DoCart from "../../../reducers/cart";
 import { AddNodeProvider } from "../../AddNode/context";
 import { CreateFeedProvider } from "../../CreateFeed/context";
 import { PipelineProvider } from "../../PipelinesCopy/context";
@@ -70,7 +73,6 @@ export default (props: Props) => {
     useCart,
   } = props;
   const location = useLocation();
-  const dispatch = useAppDispatch();
 
   const isFeedsTable = true;
 
@@ -96,81 +98,68 @@ export default (props: Props) => {
 
   console.info("Operations: modalState:", modalState);
 
-  const selectedPaths = useAppSelector((state) => state.cart.selectedPaths);
+  const [classStateCart, _doCart] = useCart;
+  const cart = getState(classStateCart) || DoCart.defaultState;
+  const { selectedPaths } = cart;
+
   const selectedPathsCount = selectedPaths.length;
 
-  const toolbarItems = useMemo(
-    () => (
-      <Fragment>
-        {contextHolder}
-        <ToolbarItem>
-          <UploadData handleOperations={handleOperations} />
-          {userRelatedError && (
-            <AntdAlert
-              style={{ marginLeft: "1rem" }}
-              type="error"
-              description={userRelatedError}
-              closable
-              onClose={() => setUserRelatedError("")}
-            />
-          )}
-        </ToolbarItem>
-
-        <ToolbarItem>
-          <CreateFeedProvider>
-            <PipelineProvider>
-              <AddNodeProvider>
-                <CreateAnalysis
-                  handleOperations={handleOperations}
-                  count={selectedPathsCount}
-                  isStaff={isStaff}
-                />
-              </AddNodeProvider>
-            </PipelineProvider>
-          </CreateFeedProvider>
-
-          <Download
-            handleOperations={handleOperations}
-            count={selectedPathsCount}
+  const toolbarItems = (
+    <Fragment>
+      {contextHolder}
+      <ToolbarItem>
+        <UploadData handleOperations={handleOperations} />
+        {userRelatedError && (
+          <AntdAlert
+            style={{ marginLeft: "1rem" }}
+            type="error"
+            description={userRelatedError}
+            closable
+            onClose={() => setUserRelatedError("")}
           />
+        )}
+      </ToolbarItem>
 
-          <Merge
-            handleOperations={handleOperations}
-            count={selectedPathsCount}
-          />
+      <ToolbarItem>
+        <CreateFeedProvider>
+          <PipelineProvider>
+            <AddNodeProvider>
+              <CreateAnalysis
+                handleOperations={handleOperations}
+                count={selectedPathsCount}
+                isStaff={isStaff}
+                useCart={useCart}
+              />
+            </AddNodeProvider>
+          </PipelineProvider>
+        </CreateFeedProvider>
 
-          <Share
-            handleOperations={handleOperations}
-            count={selectedPathsCount}
-          />
+        <Download
+          handleOperations={handleOperations}
+          count={selectedPathsCount}
+        />
 
-          <Delete
-            handleOperations={handleOperations}
-            count={selectedPathsCount}
-          />
-        </ToolbarItem>
+        <Merge handleOperations={handleOperations} count={selectedPathsCount} />
 
-        <ToolbarItem>
-          <Rename
-            handleOperations={handleOperations}
-            count={selectedPathsCount}
-          />
-        </ToolbarItem>
+        <Share handleOperations={handleOperations} count={selectedPathsCount} />
 
-        <ToolbarItem>
-          <PayloadList selectedPaths={selectedPaths} useCart={useCart} />
-        </ToolbarItem>
-      </Fragment>
-    ),
-    [
-      contextHolder,
-      userRelatedError,
-      selectedPaths,
-      selectedPathsCount,
-      dispatch,
-      handleOperations,
-      setUserRelatedError,
-    ],
+        <Delete
+          handleOperations={handleOperations}
+          count={selectedPathsCount}
+        />
+      </ToolbarItem>
+
+      <ToolbarItem>
+        <Rename
+          handleOperations={handleOperations}
+          count={selectedPathsCount}
+        />
+      </ToolbarItem>
+
+      <ToolbarItem>
+        <PayloadList selectedPaths={selectedPaths} useCart={useCart} />
+      </ToolbarItem>
+    </Fragment>
   );
 
   return (

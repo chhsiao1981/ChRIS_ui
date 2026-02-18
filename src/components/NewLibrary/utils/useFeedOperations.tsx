@@ -8,7 +8,7 @@ import { useMemo } from "react";
 import { getFileName } from "../../../api/common";
 import { createFeedWithFilepaths, getFeed } from "../../../api/serverApi";
 import * as DoCart from "../../../reducers/cart";
-import type { SelectionPayload } from "../../../store/cart/types";
+import type { SelectionPayload } from "../../../reducers/types";
 import { type OriginState, useOperationsContext } from "../context";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;

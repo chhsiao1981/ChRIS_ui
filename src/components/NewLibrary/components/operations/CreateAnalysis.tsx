@@ -1,4 +1,9 @@
 import {
+  getState,
+  type ThunkModuleToFunc,
+  type UseThunk,
+} from "@chhsiao1981/use-thunk";
+import {
   Modal,
   ModalVariant,
   Wizard,
@@ -6,13 +11,13 @@ import {
   WizardStep,
 } from "@patternfly/react-core";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useContext, useState } from "react";
+import { useContext, useState } from "react";
 import { catchError } from "../../../../api/common";
 import { getFeed, getPluginInstances } from "../../../../api/serverApi";
 import type { PluginInstance } from "../../../../api/types";
+import * as DoCart from "../../../../reducers/cart";
+import type { SelectionPayload } from "../../../../reducers/types";
 import { MainRouterContext } from "../../../../routes";
-import type { SelectionPayload } from "../../../../store/cart/types";
-import { useAppSelector } from "../../../../store/hooks";
 import { AddNodeContext } from "../../../AddNode/context";
 import BasicInformation from "../../../CreateFeed/BasicInformation";
 import { CreateFeedContext } from "../../../CreateFeed/context";
@@ -25,14 +30,19 @@ import PipelinesCopy from "../../../PipelinesCopy";
 import { PipelineContext } from "../../../PipelinesCopy/context";
 import OperationButton from "./OperationButton";
 
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+
 type Props = {
   handleOperations: (operationKey: string) => void;
   count: number;
   isStaff: boolean;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 export default (props: Props) => {
-  const { count, isStaff } = props;
-  const { selectedPaths } = useAppSelector((state) => state.cart);
+  const { count, isStaff, useCart } = props;
+  const [classStateCart, _doCart] = useCart;
+  const cart = getState(classStateCart) || DoCart.defaultState;
+  const { selectedPaths } = cart;
 
   const queryClient = useQueryClient();
   const router = useContext(MainRouterContext);
@@ -205,7 +215,13 @@ export default (props: Props) => {
       pluginInstances.data,
     );
     pluginInstances.data.sort((a: PluginInstance, b: PluginInstance) => {
-      return b.id - a.id;
+      if (b.id < a.id) {
+        return -1;
+      } else if (b.id > a.id) {
+        return 1;
+      } else {
+        return 0;
+      }
     });
     const { output_path: filename } = pluginInstances.data[0];
 
@@ -227,8 +243,7 @@ export default (props: Props) => {
     return lastChRISFile;
   };
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-  const handleOperations = useCallback(() => {
+  const handleOperations = () => {
     console.info(
       "CreateAnalysis.handleOperations: start: selectedPaths:",
       selectedPaths,
@@ -256,6 +271,7 @@ export default (props: Props) => {
       .map(pathInfoToChRISFiles)
       .map((eachPromise) => Promise.resolve(eachPromise));
 
+    // biome-ignore lint/suspicious/useIterableCallbackReturn: always return void
     resolvedPromises.map((eachPromise) => {
       eachPromise.then((chrisFile) => {
         console.info("CreateAnalysis.handleOperations: chrisFile:", chrisFile);
@@ -272,7 +288,7 @@ export default (props: Props) => {
         });
       });
     });
-  }, [selectedPaths]);
+  };
 
   const enableSave = !!(
     dataCreateFeed.chrisFiles.length > 0 || typeof pluginMeta !== "undefined"

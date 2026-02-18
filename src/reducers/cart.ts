@@ -11,7 +11,7 @@ import type {
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
 } from "../api/types/fileBrowser";
-import type { SelectionPayload } from "../store/cart/types";
+import type { SelectionPayload } from "./types";
 import {
   type DownloadStatus,
   type DownloadStatusObject,
