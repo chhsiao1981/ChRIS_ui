@@ -1,4 +1,3 @@
-import type { PluginMeta } from "@fnndsc/chrisapi";
 import {
   Accordion,
   AccordionContent,
@@ -13,6 +12,7 @@ import type React from "react";
 import { useCallback, useContext, useRef, useState } from "react";
 import ChrisAPIClient from "../../api/chrisapiclient";
 import { fetchResource } from "../../api/common";
+import type { PluginMeta } from "../../api/types";
 import { Alert } from "../Antd";
 import { EmptyStateComponent, SpinContainer } from "../Common";
 import { ThemeContext } from "../DarkTheme/useTheme";
@@ -27,15 +27,14 @@ import {
 const BasicConfiguration: React.FC<BasicConfigurationProps> = ({
   selectedPlugin,
 }) => {
-  const pluginName =
-    selectedPlugin.data.title || selectedPlugin.data.plugin_name;
+  const pluginName = selectedPlugin.title || selectedPlugin.plugin_name;
 
   return (
     <div className="screen-one">
       <Title headingLevel="h1">Plugin Selection</Title>
       <FormGroup label="Parent node:" fieldId="parent-node">
         <TextInput
-          value={`${pluginName} v.${selectedPlugin.data.plugin_version}`}
+          value={`${pluginName} v.${selectedPlugin.plugin_version}`}
           aria-label="Selected Plugin Name"
           readOnly
         />
@@ -65,7 +64,7 @@ const PluginSelect: React.FC = () => {
         params,
         client.getPluginMetas.bind(client),
       );
-      return pluginMetas?.filter((pluginMeta) => pluginMeta.data.type !== "fs");
+      return pluginMetas?.filter((pluginMeta) => pluginMeta.type !== "fs");
     } catch (error) {
       // biome-ignore lint/complexity/noUselessCatch: <explanation>
       throw error;
@@ -131,7 +130,7 @@ const PluginList: React.FC<{ pluginMetas: PluginMeta[] }> = ({
   // Filter plugins based on the filter input
   const matchesFilter = useCallback(
     (pluginMeta: PluginMeta) =>
-      pluginMeta.data.name.toLowerCase().includes(filter.toLowerCase().trim()),
+      pluginMeta.name.toLowerCase().includes(filter.toLowerCase().trim()),
     [filter],
   );
 
@@ -153,11 +152,11 @@ const PluginList: React.FC<{ pluginMetas: PluginMeta[] }> = ({
       />
 
       {pluginMetas
-        .sort((a, b) => a.data.name.localeCompare(b.data.name))
+        .sort((a, b) => a.name.localeCompare(b.name))
         .filter(matchesFilter)
         .map((item) => {
-          const { id, name, title } = item.data;
-          const isSelected = pluginMeta && name === pluginMeta.data.name;
+          const { id, name, title } = item;
+          const isSelected = pluginMeta && name === pluginMeta.name;
           return (
             <li
               key={id}

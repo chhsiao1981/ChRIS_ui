@@ -6,7 +6,6 @@ import {
   WizardStep,
 } from "@patternfly/react-core";
 import { useCallback, useContext } from "react";
-import { catchError } from "../../api/common";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { getNodeOperations } from "../../store/plugin/pluginSlice";
 import type { ApplicationState } from "../../store/root/applicationState";
@@ -18,7 +17,7 @@ import {
 import BasicConfiguration from "./BasicConfiguration";
 import GuidedConfig from "./GuidedConfig";
 import "./add-node.css";
-import ChrisAPIClient from "../../api/chrisapiclient";
+import { createPluginInstance } from "../../api/serverApi";
 import type { PluginInstance } from "../../api/types";
 import { AddNodeContext } from "./context";
 import { Types } from "./types";
@@ -76,30 +75,30 @@ const AddNode = ({
       return;
     }
 
-    try {
-      const parameterInput = await getParameterInput(
-        dropdownInput,
-        requiredInput,
-        plugin,
-        selectedComputeEnv,
-        sanitizedInput,
-        selectedPlugin,
-      );
+    const parameterInput = await getParameterInput(
+      dropdownInput,
+      requiredInput,
+      plugin,
+      selectedComputeEnv,
+      sanitizedInput,
+      selectedPlugin,
+    );
 
-      const client = ChrisAPIClient.getClient();
-      const instance = await client.createPluginInstance(plugin.data.id, {
-        previous_id: selectedPlugin.data.id,
-        ...parameterInput,
-      });
-
-      if (instance) {
-        addNodeLocally(instance);
-        toggleOpen();
-      }
-    } catch (error: any) {
-      const errObj = catchError(error);
-      nodeDispatch({ type: Types.SetError, payload: { error: errObj } });
+    const {
+      status,
+      data: instance,
+      errmsg,
+    } = await createPluginInstance(plugin.id, {
+      previous_id: selectedPlugin.data.id,
+      ...parameterInput,
+    });
+    if (!instance) {
+      nodeDispatch({ type: Types.SetError, payload: { error: errmsg } });
+      return;
     }
+
+    addNodeLocally(instance);
+    toggleOpen();
   }, [
     plugin,
     selectedPlugin,

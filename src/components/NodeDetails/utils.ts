@@ -2,14 +2,7 @@ import { CheckIcon } from "@patternfly/react-icons";
 import ClockIcon from "@patternfly/react-icons/dist/esm/icons/clock-icon";
 import InProgress from "@patternfly/react-icons/dist/esm/icons/in-progress-icon";
 import TimesCircleIcon from "@patternfly/react-icons/dist/esm/icons/times-circle-icon";
-
-/** Example label interface that might come back from the server. */
-export interface PluginDetails {
-  data: {
-    status: string; // e.g. "waiting", "started", "cancelled", ...
-    plugin_type: string; // e.g. "fs", "ds", ...
-  };
-}
+import type { PluginInstance } from "../../api/types";
 
 /** Constants that help unify “finished” and “error” states. */
 export const ERROR_STATUSES = ["finishedWithError", "cancelled"] as const;
@@ -70,13 +63,13 @@ function getEndState(pluginStatus: string): string {
  * Helper to see if we are 'waiting' or not.
  */
 function getWaitingStatus(
-  pluginDetails: PluginDetails,
+  pluginDetails: PluginInstance,
   currentLabel: number,
   previousStatus: string,
 ): boolean {
   // If it's an 'fs' plugin, wait after index 0.
   // Otherwise only wait if the previous plugin ended successfully.
-  return pluginDetails.data.plugin_type === "fs"
+  return pluginDetails.plugin_type === "fs"
     ? currentLabel > 0
     : currentLabel > 0 && previousStatus === "finishedSuccessfully";
 }
@@ -140,7 +133,7 @@ function getStepIcon(args: {
  */
 export function getStatusLabels(
   labels: PluginStatusLabels,
-  pluginDetails: PluginDetails,
+  pluginDetails: PluginInstance,
   previousStatus: string,
 ) {
   // Each item represents how we want to display that step in the UI.
@@ -155,7 +148,7 @@ export function getStatusLabels(
 
   const status: StatusItem[] = [];
 
-  const pluginStatus = pluginDetails.data.status;
+  const pluginStatus = pluginDetails.status;
   const startState = getStartState(pluginStatus);
   const endState = getEndState(pluginStatus);
 

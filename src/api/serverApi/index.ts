@@ -19,6 +19,7 @@ import { createPipeline, getPipelines } from "./pipeline";
 import { searchPluginsByName } from "./plugin";
 import {
   createPluginInstance,
+  createPluginInstanceByDirs,
   getPluginInstances,
   getWorkflowPluginInstances,
 } from "./pluginInstance";
@@ -43,6 +44,7 @@ export {
   getPluginInstances,
   getWorkflowPluginInstances,
   createPluginInstance,
+  createPluginInstanceByDirs,
   getLinkMap,
   getFeed,
   getFeeds,

@@ -7,10 +7,10 @@ import {
   uploadWrapper,
 } from "../../api/common";
 import {
+  createPluginInstanceByDirs,
   createWorkflow,
   getFeed,
   searchPluginsByName,
-  createPluginInstance as serverCreatePluginInstance,
   updateFeedName,
 } from "../../api/serverApi";
 import type { AddNodeState, InputType } from "../AddNode/types";
@@ -39,7 +39,7 @@ const createFeedCore = async (
 
   const theDirs = dirpath.map((each) => each.filename);
 
-  const createdInstance = await serverCreatePluginInstance(dircopy.id, theDirs);
+  const createdInstance = await createPluginInstanceByDirs(dircopy.id, theDirs);
 
   console.info(
     "createFeedCore: after serverCreatePluginInstance: createdInstance:",

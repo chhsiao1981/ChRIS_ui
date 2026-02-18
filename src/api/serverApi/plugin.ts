@@ -7,12 +7,12 @@ import type {
   PluginParameter,
 } from "../types";
 
-export const searchPluginsByName = (packageName: string) =>
+export const searchPluginsByName = (name: string) =>
   api<List<Plugin>>({
     endpoint: "/plugins/search/",
     method: "get",
     query: {
-      name: packageName,
+      name,
     },
   });
 
@@ -34,4 +34,14 @@ export const getPluginComputeResources = (
   api<ComputeResource[]>({
     endpoint: `/plugins/${pluginID}/computeresources/`,
     query: { limit, offset },
+  });
+
+export const getPluginsByPluginMeta = (
+  metaID: ID,
+  offset: number = 0,
+  limit: number = 1000,
+) =>
+  api<Plugin[]>({
+    endpoint: `/plugins/metas/${metaID}/plugins/`,
+    query: { offset, limit },
   });

@@ -28,6 +28,17 @@ export interface PluginInstance {
   output_path: string;
   status: PluginInstanceStatus;
   pipeline_id: ID;
+  pipeline_name: string;
+  workflow_id: ID;
+  summary: string;
+  raw: string;
+  owner_username: string;
+  cpu_limit: number;
+  memory_limit: number;
+  number_of_workers: number;
+  gpu_limit: number;
+  size: number;
+  error_code: string;
 }
 
 export interface PluginInstanceParameter {

@@ -1,6 +1,6 @@
 import api, { type ApiResult } from "../api";
 import type { Feed, ID } from "../types";
-import { createPluginInstance } from "./pluginInstance";
+import { createPluginInstanceByDirs } from "./pluginInstance";
 
 export const getFeed = (dataID: ID) =>
   api<Feed>({
@@ -53,7 +53,10 @@ export const createFeedWithFilepaths = async (
   tags?: string[],
   isPublic: boolean = false,
 ): Promise<ApiResult<Feed>> => {
-  const { status, data, errmsg } = await createPluginInstance(1, filepaths);
+  const { status, data, errmsg } = await createPluginInstanceByDirs(
+    1,
+    filepaths,
+  );
   if (!data) {
     return {
       errmsg,

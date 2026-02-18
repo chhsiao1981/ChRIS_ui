@@ -1,27 +1,33 @@
+import pagination from "antd/es/pagination";
+import { fold } from "../../../../node_modules.docker/fp-ts/es6/Tree";
+import { children } from "../../../../node_modules.docker/happy-dom/cjs/PropertySymbol";
+import ChrisAPIClient from "../../../api/chrisapiclient";
+import {
+  getFileBrowserChildren,
+  getFileBrowserFolders,
+} from "../../../api/serverApi/filebrowser";
 import type {
   FileBrowserFolder,
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
-} from "@fnndsc/chrisapi";
-import ChrisAPIClient from "../../../api/chrisapiclient";
+} from "../../../api/types";
 
 export default async (computedPath: string, pageNumber?: number) => {
   const client = ChrisAPIClient.getClient();
 
-  const pagination = {
-    limit: pageNumber ? pageNumber * 50 : 100,
-    offset: 0,
-  };
-
   const errorMessages: string[] = [];
 
   try {
-    const folderList = await client.getFileBrowserFolders({
-      path: computedPath,
-    });
+    const { status, data, errmsg } = await getFileBrowserFolders(computedPath);
+    const folders = data || [];
+    if (!folders.length) {
+      return;
+    }
+    const folder = folders[0];
+    if (!folder) {
+      return;
+    }
 
-    const folders = folderList.getItems();
-    let subFoldersMap: FileBrowserFolder[] = [];
     let linkFilesMap: FileBrowserFolderLinkFile[] = [];
     let filesMap: FileBrowserFolderFile[] = [];
     const initialPaginateValue = {
@@ -32,46 +38,50 @@ export default async (computedPath: string, pageNumber?: number) => {
     let foldersPagination = initialPaginateValue;
     let linksPagination = initialPaginateValue;
 
-    if (folders) {
-      const folder = folders[0];
+    const limit = pageNumber ? pageNumber * 50 : 100;
+    const pagination = {
+      limit,
+      offset: 0,
+    };
 
-      if (folder) {
-        // Fetch children, link files, and folder files with individual try-catch blocks
-        try {
-          const children = await folder.getChildren(pagination);
-          subFoldersMap = children.getItems();
-          foldersPagination = {
-            totalCount: children.totalCount,
-            hasNextPage: children.hasNextPage,
-          };
-        } catch (error) {
-          console.error("Error fetching folder children:", error);
-          errorMessages.push("Failed to fetch subfolders.");
-        }
+    try {
+      const {
+        status: _status2,
+        data,
+        errmsg: _errmsg2,
+      } = await getFileBrowserChildren(folder.id);
 
-        try {
-          const linkFiles = await folder.getLinkFiles(pagination);
-          linkFilesMap = linkFiles.getItems();
-          linksPagination = {
-            totalCount: linkFiles.totalCount,
-            hasNextPage: linkFiles.hasNextPage,
-          };
-        } catch (error) {
-          console.error("Error fetching link files:", error);
-          errorMessages.push("Failed to fetch link files.");
-        }
+      const subFoldersMap = data || [];
+      foldersPagination = {
+        totalCount: 0,
+        hasNextPage: subFoldersMap.length === limit,
+      };
+    } catch (error) {
+      console.error("Error fetching folder children:", error);
+      errorMessages.push("Failed to fetch subfolders.");
+    }
 
-        try {
-          const folderFiles = await folder.getFiles(pagination);
-          filesMap = folderFiles.getItems();
-          filesPagination = {
-            totalCount: folderFiles.totalCount,
-            hasNextPage: folderFiles.hasNextPage,
-          };
-        } catch (error) {
-          errorMessages.push("Failed to fetch files.");
-        }
-      }
+    try {
+      const linkFiles = await folder.getLinkFiles(pagination);
+      linkFilesMap = linkFiles.getItems();
+      linksPagination = {
+        totalCount: linkFiles.totalCount,
+        hasNextPage: linkFiles.hasNextPage,
+      };
+    } catch (error) {
+      console.error("Error fetching link files:", error);
+      errorMessages.push("Failed to fetch link files.");
+    }
+
+    try {
+      const folderFiles = await folder.getFiles(pagination);
+      filesMap = folderFiles.getItems();
+      filesPagination = {
+        totalCount: folderFiles.totalCount,
+        hasNextPage: folderFiles.hasNextPage,
+      };
+    } catch (error) {
+      errorMessages.push("Failed to fetch files.");
     }
 
     return {

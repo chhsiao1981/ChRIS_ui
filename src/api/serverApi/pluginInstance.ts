@@ -29,14 +29,24 @@ export const getWorkflowPluginInstances = (
     },
   });
 
-export const createPluginInstance = (packageID: ID, theDirs: string[]) =>
+export const createPluginInstanceByDirs = (theID: ID, theDirs: string[]) =>
   api<PluginInstance>({
-    endpoint: `/plugins/${packageID}/instances/`,
+    endpoint: `/plugins/${theID}/instances/`,
     method: "post",
     json: {
       previous_id: null,
       dir: theDirs.join(","),
     },
+  });
+
+export const createPluginInstance = (
+  pluginID: ID,
+  pluginInstance: Partial<PluginInstance>,
+) =>
+  api<PluginInstance>({
+    endpoint: `/plugins/${pluginID}/instances/`,
+    method: "post",
+    json: pluginInstance,
   });
 
 export const getPluginInstanceParameters = (

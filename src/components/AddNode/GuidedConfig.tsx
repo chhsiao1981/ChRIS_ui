@@ -1,10 +1,3 @@
-import type {
-  Plugin,
-  PluginInstanceList,
-  PluginInstanceParameter,
-  PluginMetaPluginList,
-  PluginParameter,
-} from "@fnndsc/chrisapi";
 import {
   Button,
   Card,
@@ -28,15 +21,16 @@ import {
   Tooltip,
 } from "@patternfly/react-core";
 import { useMutation } from "@tanstack/react-query";
-import { isEmpty } from "lodash";
 import React, { useContext, useEffect, useState } from "react";
 import { v4 } from "uuid";
-import {
-  catchError,
-  customQuote,
-  fetchResource,
-  needsQuoting,
-} from "../../api/common";
+import { customQuote, fetchResource, needsQuoting } from "../../api/common";
+import { getPluginsByPluginMeta } from "../../api/serverApi/plugin";
+import type {
+  Plugin,
+  PluginInstance,
+  PluginInstanceParameter,
+  PluginParameter,
+} from "../../api/types";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { fetchParamsAndComputeEnv } from "../../store/plugin/pluginSlice";
 import { ClipboardCopyFixed, ErrorAlert } from "../Common";
@@ -86,40 +80,39 @@ const GuidedConfig = () => {
 
   useEffect(() => {
     const fetchPluginVersions = async () => {
-      try {
-        // Todo: Use an already available helper here from the Store component
-        const pluginList: PluginMetaPluginList | undefined =
-          await pluginMeta?.getPlugins({
-            limit: 1000,
-          });
-
-        if (pluginList) {
-          const pluginItems = pluginList.getItems() as unknown as Plugin[];
-          setPlugins(pluginItems);
-          const plugin = pluginItems[0];
-          // Select the first plugin in the list as default
-          nodeDispatch({
-            type: Types.SetSelectedPluginFromMeta,
-            payload: {
-              plugin,
-            },
-          });
-
-          // Fetch the parameters for this particular plugin to display as a form.
-          dispatch(fetchParamsAndComputeEnv(plugin));
-        }
-      } catch (e) {
-        const error_message = catchError(e).error_message;
+      // Todo: Use an already available helper here from the Store component
+      if (!pluginMeta) {
+        return;
+      }
+      const { status, data, errmsg } = await getPluginsByPluginMeta(
+        pluginMeta.id,
+      );
+      if (errmsg) {
         nodeDispatch({
           type: Types.SetError,
           payload: {
-            error: !isEmpty(error_message)
-              ? error_message
-              : "Failed to fetch plugin versions.",
+            error: errmsg,
           },
         });
+        return;
       }
+      const pluginList = data || [];
+
+      const pluginItems = pluginList;
+      setPlugins(pluginItems);
+      const plugin = pluginItems[0];
+      // Select the first plugin in the list as default
+      nodeDispatch({
+        type: Types.SetSelectedPluginFromMeta,
+        payload: {
+          plugin,
+        },
+      });
+
+      // Fetch the parameters for this particular plugin to display as a form.
+      dispatch(fetchParamsAndComputeEnv(plugin));
     };
+
     fetchPluginVersions();
   }, [dispatch, pluginMeta, nodeDispatch]);
 
@@ -176,7 +169,7 @@ const GuidedConfig = () => {
     // Component to render required parameters
     return params.map((param) => {
       return (
-        <div key={param.data.id}>
+        <div key={param.id}>
           <RequiredParam param={param} id={v4()} />
         </div>
       );
@@ -186,7 +179,6 @@ const GuidedConfig = () => {
   const renderDropdowns = () => {
     // Component to render optional parameters
     return componentList.map((id, index) => {
-      // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
       return <SimpleDropdown key={index} params={params} id={id} />;
     });
   };
@@ -330,7 +322,7 @@ const CheckboxComponent = () => {
 
   const handleCheckboxChange = async () => {
     // Todo: This list needs to use a helper and be paginated
-    const pluginInstanceList: PluginInstanceList | undefined =
+    const pluginInstanceList: PluginInstance[] | undefined =
       await selectedPluginFromMeta?.getPluginInstances({
         limit: 1000,
       });

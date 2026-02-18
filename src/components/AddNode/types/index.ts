@@ -3,7 +3,7 @@ import type {
   PluginInstance,
   PluginMeta,
   PluginParameter,
-} from "@fnndsc/chrisapi";
+} from "../../../api/types";
 import type * as DoUser from "../../../reducers/user";
 
 export interface InputIndex {

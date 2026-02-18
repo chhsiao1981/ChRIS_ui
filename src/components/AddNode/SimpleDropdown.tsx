@@ -1,4 +1,3 @@
-import type { PluginParameter } from "@fnndsc/chrisapi";
 import {
   Button,
   Dropdown,
@@ -9,6 +8,7 @@ import {
 } from "@patternfly/react-core";
 import React, { useContext, useEffect } from "react";
 import { v4 } from "uuid";
+import type { PluginParameter } from "../../api/types";
 import { CloseIcon } from "../Icons";
 import { AddNodeContext } from "./context";
 import type { SimpleDropdownProps, SimpleDropdownState } from "./types";
@@ -64,9 +64,9 @@ const SimpleDropdown = ({ id, params }: SimpleDropdownProps) => {
   };
 
   const handleClick = (param: PluginParameter) => {
-    const flag = param.data.flag;
-    const placeholder = param.data.help;
-    const type = param.data.type;
+    const flag = param.flag;
+    const placeholder = param.help;
+    const type = param.type;
 
     if (params && params.dropdown.length > 0) {
       dispatch({
@@ -122,21 +122,18 @@ const SimpleDropdown = ({ id, params }: SimpleDropdownProps) => {
   const dropdownItems = () => {
     const useParam = findUsedParam();
     const parameters = params?.dropdown
-      .filter(
-        (param) =>
-          param.data.optional === true && !useParam.has(param.data.flag),
-      )
+      .filter((param) => param.optional === true && !useParam.has(param.flag))
       .map((param) => {
         return (
           <DropdownItem
-            key={param.data.id}
+            key={param.id}
             onClick={() => handleClick(param)}
             className="plugin-configuration__parameter"
-            value={param.data.flag}
-            name={param.data.help}
+            value={param.flag}
+            name={param.help}
             style={{ fontFamily: "monospace" }}
           >
-            {param.data.flag}
+            {param.flag}
           </DropdownItem>
         );
       });

@@ -16,7 +16,7 @@ import type {
 } from "../../api/types";
 import { useAppSelector } from "../../store/hooks";
 import { SpinContainer } from "../Common";
-import { isPlVisualDataset } from "../DatasetRedirect/getDatasets";
+import { isPlVisualDataset } from "../DatasetRedirect/isPlVisualDataset";
 import FeedNote from "../FeedDetails/FeedNote";
 import { CalendarAltIcon, PreviewIcon } from "../Icons";
 import "./NodeDetails.css";
