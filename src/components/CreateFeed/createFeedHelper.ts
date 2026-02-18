@@ -1,4 +1,3 @@
-import type { Plugin, PluginInstance, PluginParameter } from "@fnndsc/chrisapi";
 import { collectionJsonToJson } from "../../api/api";
 import ChrisAPIClient from "../../api/chrisapiclient";
 import {
@@ -13,6 +12,12 @@ import {
   searchPluginsByName,
   updateFeedName,
 } from "../../api/serverApi";
+import type {
+  ID,
+  Plugin,
+  PluginInstance,
+  PluginParameter,
+} from "../../api/types";
 import type { AddNodeState, InputType } from "../AddNode/types";
 import { unpackParametersIntoObject } from "../AddNode/utils";
 import type { PipelineState } from "../PipelinesCopy/context";
@@ -24,16 +29,20 @@ const createFeedCore = async (
   fullFeedName: string,
   pipelineState: PipelineState,
 ) => {
-  const searchPluginsResult = await searchPluginsByName("pl-dircopy");
+  const {
+    status,
+    data: searchPluginsResult,
+    errmsg,
+  } = await searchPluginsByName("pl-dircopy");
   console.info(
     "createFeedCore: after searchPluginsByName: searchPluginsResult:",
     searchPluginsResult,
   );
-  if (!searchPluginsResult || !searchPluginsResult.data) {
+  if (!searchPluginsResult) {
     throw new Error("Failed to find pl-dircopy. Is pl-dircopy installed? ");
   }
 
-  const dircopy = searchPluginsResult.data[0];
+  const dircopy = searchPluginsResult.list[0];
 
   console.info("createFeedCore: dircopy:", dircopy);
 
@@ -53,7 +62,7 @@ const createFeedCore = async (
   const { pipelineToAdd, computeInfo, titleInfo, selectedPipeline } =
     pipelineState;
 
-  const pipelineID = pipelineToAdd?.data.id;
+  const pipelineID = pipelineToAdd?.id || "";
   const pipeline = selectedPipeline?.[pipelineID];
 
   console.info(
@@ -78,10 +87,10 @@ const createFeedCore = async (
       "createFeedCore: pluginPipings:",
       pluginPipings,
       "params:",
-      parameters.data,
+      parameters,
     );
 
-    const nodes_info = computeWorkflowNodesInfo(pluginPipings, parameters.data);
+    const nodes_info = computeWorkflowNodesInfo(pluginPipings, parameters);
 
     for (const node of nodes_info) {
       // Set compute info
@@ -245,7 +254,7 @@ export const createFeedInstanceWithFS = async (state: AddNodeState) => {
       );
 
       const { feed } = await createPluginInstance(
-        selectedPlugin.data.id,
+        selectedPlugin.id,
         parameterInput,
       );
       return feed;
@@ -308,8 +317,8 @@ export const getRequiredObject = async (
     );
 
     for (let i = 0; i < params.length; i++) {
-      const flag = params[i].data.flag;
-      const defaultValue = params[i].data.default;
+      const flag = params[i].flag;
+      const defaultValue = params[i].default;
       if (Object.keys(nodeParameter).includes(flag)) {
         let value: string | boolean = stripQuotes(nodeParameter[flag].value);
         const type = nodeParameter[flag].type;
@@ -323,7 +332,7 @@ export const getRequiredObject = async (
         } else if (value === "" || value === "undefined") {
           value = defaultValue;
         }
-        mappedParameter[params[i].data.name] = value;
+        mappedParameter[params[i].name] = value;
       }
     }
 
@@ -331,7 +340,7 @@ export const getRequiredObject = async (
     if (selected) {
       parameterInput = {
         ...mappedParameter,
-        previous_id: selected.data.id as number,
+        previous_id: selected.id,
       };
     } else {
       parameterInput = {
@@ -372,13 +381,13 @@ export const sanitizeAdvancedConfig = (
 };
 
 export const createPluginInstance = async (
-  pluginId: number,
+  pluginId: ID,
   parameterInput: Record<string, any>,
 ) => {
   const client = ChrisAPIClient.getClient();
   const pluginInstance = await client.createPluginInstance(
+    // @ts-expect-error client
     pluginId,
-    //@ts-expect-error
     parameterInput,
   );
   const feed = await pluginInstance.getFeed();

@@ -1,19 +1,20 @@
-import type { Pipeline, PluginPiping } from "@fnndsc/chrisapi";
 import { Button, TextInput } from "@patternfly/react-core";
 import { useContext, useEffect, useState } from "react";
+import type { Pipeline, Piping } from "../../api/types";
 import { Alert, Form, Space } from "../Antd";
 import { PipelineContext, Types } from "./context";
 
-type OwnProps = {
+type Props = {
   currentPipeline: Pipeline;
 };
 
-function TitleChange({ currentPipeline }: OwnProps) {
+export default (props: Props) => {
+  const { currentPipeline } = props;
   const { state, dispatch } = useContext(PipelineContext);
   const [value, setValue] = useState("");
   const [error, setError] = useState("");
   const { currentlyActiveNode, titleInfo, selectedPipeline } = state;
-  const { id } = currentPipeline.data;
+  const { id } = currentPipeline;
 
   const activeNode = currentlyActiveNode?.[id];
   const pluginPipings = selectedPipeline?.[id].pluginPipings;
@@ -24,7 +25,7 @@ function TitleChange({ currentPipeline }: OwnProps) {
     fetchTitle(activeNode, pluginPipings);
   }, [activeNode, pluginPipings]); // Add dependencies based on when you want to refetch the title
 
-  function fetchTitle(activeNode?: string, pluginPipings?: PluginPiping[]) {
+  function fetchTitle(activeNode?: string, pluginPipings?: Piping[]) {
     try {
       if (pluginPipings && activeNode) {
         if (userEnteredTitle) {
@@ -32,9 +33,9 @@ function TitleChange({ currentPipeline }: OwnProps) {
           setValue(title);
         }
         const currentPiping = pluginPipings.find(
-          (piping) => piping.data.id === activeNode,
+          (piping) => piping.id === activeNode,
         );
-        setValue(currentPiping?.data.title); // Ensure a default value
+        setValue(currentPiping?.title || ""); // Ensure a default value
       }
     } catch (error) {
       throw new Error("Failed to fetch title");
@@ -76,6 +77,4 @@ function TitleChange({ currentPipeline }: OwnProps) {
       {error && <Alert closable type="error" description={error} />}
     </>
   );
-}
-
-export default TitleChange;
+};

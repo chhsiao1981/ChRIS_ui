@@ -1,3 +1,4 @@
+/*
 import type { FileBrowserFolderFile } from "@fnndsc/chrisapi";
 import { Button } from "@patternfly/react-core";
 import AiOutlineExpand from "@patternfly/react-icons/dist/esm/icons/expand-alt-icon";
@@ -8,21 +9,26 @@ import { useFeedBrowser } from "../FeedOutputBrowser/useFeedBrowser";
 import CrvFileSelect from "./CrvFileSelect";
 import FsmFileSelect from "./PrimaryFileSelect";
 import "./xtk-viewer.css";
+*/
 
 // XXX X and dat in xtk are loaded in from script file.
+/*
 declare const X: any;
 declare const dat: any;
+*/
 
 export type ViewerMode = "volume" | "mesh" | "other";
-type VolumeMode = "3D" | "2D";
+//type VolumeMode = "3D" | "2D";
 
+/*
 const getFileType = (file?: FileBrowserFolderFile) =>
   file?.data.fname.split(".").slice(-1)[0];
 
 const getFileData = async (file: FileBrowserFolderFile) =>
   (await file.getFileBlob())?.arrayBuffer();
+*/
 
-export function getXtkFileMode(fileType?: string): ViewerMode | undefined {
+export const getXtkFileMode = (fileType?: string): ViewerMode | undefined => {
   const volumeExtensions = ["mgz", "dcm"];
   const meshExtensions = ["fsm", "smoothwm", "pial"];
   const otherExtensions = ["crv"];
@@ -38,15 +44,18 @@ export function getXtkFileMode(fileType?: string): ViewerMode | undefined {
   if (otherExtensions.includes(fileType)) {
     return "other";
   }
-}
+};
 
+/*
 function getPrimaryFileMode(
   file: FileBrowserFolderFile,
 ): ViewerMode | undefined {
   const fileType = getFileType(file);
   return getXtkFileMode(fileType);
 }
+*/
 
+/*
 const XtkViewer = () => {
   const selectedFile = useAppSelector((state) => state.explorer.selectedFile);
   const selectedFileType = getFileType(selectedFile);
@@ -324,3 +333,4 @@ const XtkViewer = () => {
 };
 
 export default XtkViewer;
+*/

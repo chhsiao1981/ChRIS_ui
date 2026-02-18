@@ -1,8 +1,7 @@
 import type Client from "@fnndsc/chrisapi";
-import type { ComputeResource, Plugin, PluginMeta } from "@fnndsc/chrisapi";
 import axios from "axios";
 import { fetchResource } from "../../api/common";
-import type { Plugin as PluginType } from "../../api/types";
+import type { ComputeResource, Plugin, PluginMeta } from "../../api/types";
 
 type Params = {
   [key: string]: string | number;
@@ -37,7 +36,7 @@ export const fetchPluginMetas = async (client: Client, params?: Params) => {
 /**
  * Fetches plugins associated with a specific plugin metadata.
  * @param {PluginMeta} pluginMeta - The plugin metadata object.
- * @returns {Promise<PluginType[]>} - A promise that resolves to an array of plugins.
+ * @returns {Promise<Plugin[]>} - A promise that resolves to an array of plugins.
  * @throws Will throw an error if fetching plugins associated with the metadata fails.
  */
 export const fetchPluginForMeta = async (pluginMeta: PluginMeta) => {
@@ -50,7 +49,7 @@ export const fetchPluginForMeta = async (pluginMeta: PluginMeta) => {
 
   try {
     const { resource: plugins } = await fetchResource(defaultParams, boundFn);
-    return plugins as PluginType[];
+    return plugins as Plugin[];
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(error.message);
@@ -81,13 +80,13 @@ export const uploadPipelineSourceFile = async (client: Client, file: File) => {
 /**
  * Installs a plugin using admin credentials.
  * @param {string} adminCred - The admin credentials for authentication.
- * @param {PluginType} pluginToInstall - The plugin to be installed.
+ * @param {Plugin} pluginToInstall - The plugin to be installed.
  * @returns {Promise<any>} - A promise that resolves with the installation response data.
  * @throws Will throw an error if the plugin installation fails.
  */
 export const handleInstallPlugin = async (
   adminCred: string,
-  pluginToInstall: PluginType,
+  pluginToInstall: Plugin,
   computeResource: ComputeResource[],
 ) => {
   const adminURL = import.meta.env.VITE_CHRIS_UI_URL.replace(
@@ -100,9 +99,7 @@ export const handleInstallPlugin = async (
   }
 
   // Extract the name from the computeResource object
-  const computeResourceNameList = computeResource
-    .map((r) => r.data.name)
-    .join(",");
+  const computeResourceNameList = computeResource.map((r) => r.name).join(",");
 
   // Construct the body for the POST request
   const pluginData = {
@@ -147,7 +144,7 @@ export const handleInstallPlugin = async (
  * @param {Client} storeClient - The ChRIS store client.
  * @param {string} pluginMetaName - The name of the plugin metadata.
  * @param {string} pluginMetaVersion - The version of the plugin metadata.
- * @returns {Promise<PluginType>} - A promise that resolves to the selected plugin.
+ * @returns {Promise<Plugin>} - A promise that resolves to the selected plugin.
  * @throws Will throw an error if the plugin or its metadata is not found.
  */
 export const fetchPluginMetasFromStore = async (
@@ -177,7 +174,7 @@ export const fetchPluginMetasFromStore = async (
 
   const selectedPlugin = plugins.find(
     // @ts-expect-error
-    (plugin: PluginType) => plugin.data.version === pluginMetaVersion,
+    (plugin: Plugin) => plugin.data.version === pluginMetaVersion,
   );
   if (!selectedPlugin) {
     throw new Error(

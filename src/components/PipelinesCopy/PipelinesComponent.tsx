@@ -1,5 +1,5 @@
-import type { Pipeline } from "@fnndsc/chrisapi";
 import { Grid, GridItem } from "@patternfly/react-core";
+import type { Pipeline } from "../../api/types";
 import CodeBlockComponent from "./CodeBlockComponent";
 import ComputeListForSingleCompute from "./ComputeListForSingleCompute";
 import TitleChange from "./TitleChange";

@@ -1,4 +1,3 @@
-import type { Feed } from "@fnndsc/chrisapi";
 import {
   Button,
   Modal,
@@ -11,6 +10,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
 import { useContext } from "react";
 import { catchError } from "../../api/common";
+import type { Feed } from "../../api/types";
 import { MainRouterContext } from "../../routes";
 import { AddNodeContext } from "../AddNode/context";
 import { notification } from "../Antd";

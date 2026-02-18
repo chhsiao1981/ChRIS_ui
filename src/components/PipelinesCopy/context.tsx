@@ -1,6 +1,7 @@
 import { createContext, useReducer } from "react";
 import type {
   ComputeResource,
+  ID,
   Pipeline,
   Piping,
   PipingDefaultParameter,
@@ -90,7 +91,7 @@ type GeneralCompute = {
 
 export interface PipelineState {
   selectedPipeline?: {
-    [key: string]: PerPipelinePayload;
+    [key: ID]: PerPipelinePayload;
   };
   computeInfo?: ComputeInfoState;
   generalCompute?: GeneralCompute;

@@ -1,4 +1,3 @@
-import type { PluginMeta } from "@fnndsc/chrisapi";
 import {
   Button,
   ButtonVariant,
@@ -11,6 +10,7 @@ import {
 } from "@patternfly/react-core";
 import debounce from "lodash/debounce";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import type { PluginMeta } from "../../api/types";
 import { AddNodeContext } from "../AddNode/context";
 import { Types as AddNodeTypes } from "../AddNode/types";
 import { notification } from "../Antd";
@@ -64,7 +64,7 @@ const DataPacks = ({ next }: { next: () => any }) => {
 
   useEffect(() => {
     if (pluginMeta) {
-      setCurrentPluginId(pluginMeta.data.id);
+      setCurrentPluginId(pluginMeta.id);
     } else {
       setCurrentPluginId(-1);
     }
@@ -102,7 +102,7 @@ const DataPacks = ({ next }: { next: () => any }) => {
 
       notification.info({
         message: "Plugin Selected",
-        description: `${plugin.data.name} plugin unselected`,
+        description: `${plugin.name} plugin unselected`,
         duration: 1,
       });
 
@@ -192,7 +192,7 @@ const DataPacks = ({ next }: { next: () => any }) => {
 
       <div>
         {fsPlugins.map((plugin) => {
-          const { name, title, id } = plugin.data;
+          const { name, title, id } = plugin;
           return (
             <>
               <Radio
@@ -207,7 +207,7 @@ const DataPacks = ({ next }: { next: () => any }) => {
                 onChange={(_event, checked: boolean) =>
                   handleOnChange(checked, plugin)
                 }
-                checked={currentPluginId === plugin.data.id}
+                checked={currentPluginId === plugin.id}
               />
             </>
           );

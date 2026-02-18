@@ -3,6 +3,7 @@ import type { HierarchyPointNode } from "d3-hierarchy";
 import { select } from "d3-selection";
 import React, { useContext, useEffect, useRef } from "react";
 import { fetchComputeInfo, type TreeNode } from "../../api/common";
+import type { ID } from "../../api/types";
 import { Alert } from "../Antd";
 import { stringToColour } from "../CreateFeed/utils";
 import { ThemeContext } from "../DarkTheme/useTheme";
@@ -19,7 +20,7 @@ type NodeProps = {
   position: Point;
   orientation: string;
 
-  currentPipelineId: number;
+  currentPipelineId: ID;
 };
 
 const setNodeTransform = (orientation: string, position: Point) => {
@@ -66,9 +67,11 @@ const NodeData = (props: NodeProps) => {
     select(textRef.current).attr("transform", "translate(-30, 30)");
   };
 
+  // XXX unsure why we need computeId
   const computeId = data.previous_id
     ? data.id -
-      (selectedPipeline?.[currentPipelineId]?.pluginPipings?.[0]?.data?.id || 0)
+      // @ts-expect-error id is number.
+      (selectedPipeline?.[currentPipelineId]?.pluginPipings?.[0]?.id || 0)
     : 0;
 
   useEffect(() => {

@@ -1,15 +1,15 @@
-import type { ComputeResource } from "@fnndsc/chrisapi";
+import type { ComputeResource } from "../../api/types";
 import { Avatar, Checkbox, List } from "../Antd";
 import { stringToColour } from "../CreateFeed/utils";
 
-type OwnProps = {
+type Props = {
   computeResources: ComputeResource[];
   currentlyActive?: string;
   showCheckbox?: boolean;
   handleComputeChange?: (compute: string) => void;
 };
 
-function ListCompute(props: OwnProps) {
+export default (props: Props) => {
   const {
     computeResources,
     currentlyActive,
@@ -35,21 +35,21 @@ function ListCompute(props: OwnProps) {
                           marginRight: "0.5em",
                         }}
                         onClick={() => {
-                          handleComputeChange?.(item.data.name);
+                          handleComputeChange?.(item.name);
                         }}
-                        checked={currentlyActive === item.data.name}
+                        checked={currentlyActive === item.name}
                       />
                     )}
 
                     <Avatar
                       style={{
-                        background: `${stringToColour(item.data.name)}`,
+                        background: `${stringToColour(item.name)}`,
                       }}
                     />
                   </>
                 }
-                title={item.data.name}
-                description={item.data.description}
+                title={item.name}
+                description={item.description}
               />
             </List.Item>
           );
@@ -57,6 +57,4 @@ function ListCompute(props: OwnProps) {
       />
     </>
   );
-}
-
-export default ListCompute;
+};

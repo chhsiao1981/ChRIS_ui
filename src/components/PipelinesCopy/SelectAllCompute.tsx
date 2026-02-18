@@ -1,4 +1,3 @@
-import type { ComputeResource, Pipeline } from "@fnndsc/chrisapi";
 import {
   MenuToggle,
   type MenuToggleElement,
@@ -11,17 +10,19 @@ import React, { useContext } from "react";
 import { useLocation } from "react-router";
 import ChrisAPIClient from "../../api/chrisapiclient";
 import { fetchResource } from "../../api/common";
+import type { ComputeResource, Pipeline } from "../../api/types";
 import { Avatar } from "../Antd";
 import { stringToColour } from "../CreateFeed/utils";
 import { PipelineContext, Types } from "./context";
 
-type OwnProps = {
+type Props = {
   pipeline: Pipeline;
 };
 
-function SelectAllCompute({ pipeline }: OwnProps) {
+export default (props: Props) => {
+  const { pipeline } = props;
   const location = useLocation();
-  const { id } = pipeline.data;
+  const { id } = pipeline;
   const { state, dispatch } = useContext(PipelineContext);
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -114,17 +115,17 @@ function SelectAllCompute({ pipeline }: OwnProps) {
           data.resource.map((resource) => {
             return (
               <SelectOption
-                isSelected={resource.data.name === selectedItem}
-                value={resource.data.name}
-                key={resource.data.name}
+                isSelected={resource.name === selectedItem}
+                value={resource.name}
+                key={resource.name}
               >
                 <Avatar
                   style={{
-                    background: `${stringToColour(resource.data.name)}`,
+                    background: `${stringToColour(resource.name)}`,
                     marginRight: "0.5em",
                   }}
                 />
-                <span>{resource.data.name}</span>
+                <span>{resource.name}</span>
               </SelectOption>
             );
           })
@@ -139,6 +140,4 @@ function SelectAllCompute({ pipeline }: OwnProps) {
       </SelectList>
     </Select>
   );
-}
-
-export default SelectAllCompute;
+};

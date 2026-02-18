@@ -2,9 +2,6 @@ import type {
   DispatchFuncMap,
   ThunkModuleToFunc,
 } from "@chhsiao1981/use-thunk";
-import type { PublicFeedList } from "@fnndsc/chrisapi";
-import status from "../../../node_modules.docker/antd/es/dropdown/style/status";
-import ChrisAPIClient from "../../api/chrisapiclient";
 import { getFeed, getFeeds } from "../../api/serverApi";
 import type { Feed, ID } from "../../api/types";
 import type * as DoDrawer from "../../reducers/drawer";

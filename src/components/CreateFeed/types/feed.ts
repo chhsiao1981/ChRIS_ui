@@ -1,5 +1,5 @@
-import type { Tag } from "@fnndsc/chrisapi";
 import type { DataNode, EventDataNode, Key } from "rc-tree/lib/interface";
+import type { Tag } from "../../../api/types";
 
 type ActionMap<M extends { [index: string]: any }> = {
   [Key in keyof M]: M[Key] extends undefined

@@ -6,7 +6,7 @@ import type {
   ID,
 } from "../types";
 
-export const getFileBrowserFolders = (path: string) =>
+export const getFileBrowserFoldersByPath = (path: string) =>
   api<FileBrowserFolder[]>({
     endpoint: "/filebrowser/search/",
     params: { path },
@@ -14,11 +14,31 @@ export const getFileBrowserFolders = (path: string) =>
 
 export const getFileBrowserChildren = (
   theID: ID,
-  offset: number = 0,
+  offset: number = 0,   
   limit: number = 20,
 ) =>
   api<FileBrowserFolder[]>({
     endpoint: `/filebrowser/${theID}/children/`,
+    params: { offset, limit },
+  });
+
+export const getFileBrowserFiles = (
+  theID: ID,
+  offset: number = 0,
+  limit: number = 20,
+) =>
+  api<FileBrowserFolderFile[]>({
+    endpoint: `/filebrowser/${theID}/files/`,
+    params: { offset, limit },
+  });
+
+export const getFileBrowserLinkFiles = (
+  theID: ID,
+  offset: number = 0,
+  limit: number = 20,
+) =>
+  api<FileBrowserFolderLinkFile[]>({
+    endpoint: `/filebrowser/${theID}/linkfiles/`,
     params: { offset, limit },
   });
 

@@ -1,6 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { STATUS_OK } from "../../../../api/constants";
-import { getFileBrowserFolders } from "../../../../api/serverApi/filebrowser";
+import { getFileBrowserFoldersByPath } from "../../../../api/serverApi/filebrowser";
 import type {
   FileBrowserFolder,
   FileBrowserFolderFile,
@@ -58,7 +58,7 @@ export async function fetchFolders(
       } else {
         // Otherwise fetch the folder list
         const { status, data, errmsg } =
-          await getFileBrowserFolders(computedPath);
+          await getFileBrowserFoldersByPath(computedPath);
         if (status !== STATUS_OK) {
           return null;
         }
