@@ -24,9 +24,9 @@ import {
   startDownload,
 } from "./cartSlice";
 import {
+  type CartSelectionPayload,
   DownloadTypes,
   type PayloadTypes,
-  type SelectionPayload,
 } from "./types";
 
 export function* setStatus(
@@ -199,7 +199,7 @@ function* downloadFolder(
 }
 
 function* handleIndividualDownload(
-  path: SelectionPayload,
+  path: CartSelectionPayload,
   username: string,
   pipelineType: string,
 ) {

@@ -8,7 +8,7 @@ import axios from "axios";
 import { useState } from "react";
 import ChrisAPIClient from "../../../api/chrisapiclient";
 import * as DoCart from "../../../reducers/cart";
-import type { SelectionPayload } from "../../../reducers/types";
+import type { CartSelectionPayload } from "../../../reducers/types";
 import { type OriginState, useOperationsContext } from "../context";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
@@ -23,7 +23,7 @@ const useDeletePayload = (origin: OriginState, api: any) => {
   const { handleOrigin, invalidateQueries } = useOperationsContext();
   const [notificationKey, setNotificationKey] = useState<string | null>(null);
 
-  const handleDelete = async (paths: SelectionPayload[]) => {
+  const handleDelete = async (paths: CartSelectionPayload[]) => {
     handleOrigin(origin);
     const errors: DeletionErrors = [];
     const successfulPaths: string[] = [];
@@ -60,7 +60,7 @@ const useDeletePayload = (origin: OriginState, api: any) => {
   };
 
   const mutation = useMutation({
-    mutationFn: (paths: SelectionPayload[]) => handleDelete(paths),
+    mutationFn: (paths: CartSelectionPayload[]) => handleDelete(paths),
     onMutate: () => {
       const key = `open${Date.now()}`;
       setNotificationKey(key);

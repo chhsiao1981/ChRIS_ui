@@ -70,13 +70,13 @@ export interface FeedCreationStatus {
   feed_id: number;
 }
 
-export type PayloadTypes =
+export type CartPayloadTypes =
   | FileBrowserFolder
   | FileBrowserFolderFile
   | FileBrowserFolderLinkFile;
 
-export interface SelectionPayload {
+export interface CartSelectionPayload {
   path: string;
   type: string;
-  payload: PayloadTypes;
+  payload: CartPayloadTypes;
 }

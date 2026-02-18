@@ -20,7 +20,7 @@ import type {
   FileBrowserFolderLinkFile,
 } from "../../../api/types";
 import * as DoCart from "../../../reducers/cart";
-import type { SelectionPayload } from "../../../reducers/types";
+import type { CartSelectionPayload } from "../../../reducers/types";
 import { createFeed as createFeedSaga } from "../../../store/cart/downloadSaga";
 import { notification } from "../../Antd";
 import { getFolderName } from "../components/FolderCard";
@@ -440,7 +440,7 @@ export const useFolderOperations = (
   };
 
   // Get the feed name for a single path
-  const getFeedNameForSinglePath = (selectedPayload: SelectionPayload) => {
+  const getFeedNameForSinglePath = (selectedPayload: CartSelectionPayload) => {
     const { payload } = selectedPayload;
     // @ts-expect-error taking care of type differences.
     const name = payload.path || payload.fname;

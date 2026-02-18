@@ -7,7 +7,7 @@ import {
 import { Tooltip } from "@patternfly/react-core";
 import { useRef, useState } from "react";
 import * as DoCart from "../../../reducers/cart";
-import type { PayloadTypes } from "../../../store/cart/types";
+import type { CartPayloadTypes } from "../../../reducers/types";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
@@ -58,7 +58,7 @@ export default () => {
       | React.TouchEvent
       | React.KeyboardEvent
       | React.PointerEvent,
-    payload: PayloadTypes,
+    payload: CartPayloadTypes,
     pathForCart: string,
     type: string,
   ) => {
@@ -75,7 +75,7 @@ export default () => {
 
   // Common logic for handling Ctrl+Click
   function handleCtrlClick(
-    payload: PayloadTypes,
+    payload: CartPayloadTypes,
     pathForCart: string,
     type: string,
   ) {
@@ -91,7 +91,7 @@ export default () => {
 
   function handlePointerEvent(
     e: React.PointerEvent | React.KeyboardEvent,
-    payload: PayloadTypes,
+    payload: CartPayloadTypes,
     pathForCart: string,
     type: string,
     optionalCallback?: () => void,
@@ -173,7 +173,7 @@ export default () => {
   // Keep original handleOnClick specifically for context menu
   function handleOnClick(
     e: React.MouseEvent | React.TouchEvent | React.KeyboardEvent,
-    payload: PayloadTypes,
+    payload: CartPayloadTypes,
     pathForCart: string,
     type: string,
     optionalCallback?: () => void,

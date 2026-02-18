@@ -8,7 +8,7 @@ import {
   type FileUploadObject,
   type FolderUpload,
   type FolderUploadObject,
-} from "../../../store/cart/types";
+} from "../../../reducers/types";
 import { Drawer, List, Popconfirm, Space } from "../../Antd";
 import { DotsIndicator, EmptyStateComponent } from "../../Common";
 import { CheckCircleIcon, CloseIcon, FileIcon, FolderIcon } from "../../Icons";

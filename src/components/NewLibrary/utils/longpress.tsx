@@ -16,7 +16,7 @@ import type {
   FileBrowserFolderLinkFile,
 } from "../../../api/types";
 import * as DoCart from "../../../reducers/cart";
-import type { PayloadTypes } from "../../../store/cart/types";
+import type { CartPayloadTypes } from "../../../reducers/types";
 import { FolderIcon } from "../../Icons";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
@@ -64,7 +64,7 @@ export default () => {
 
   const handleOnClick = (
     e: React.MouseEvent | React.TouchEvent | React.KeyboardEvent,
-    payload: PayloadTypes,
+    payload: CartPayloadTypes,
     pathForCart: string,
     type: string,
     optionalCallback?: () => void,

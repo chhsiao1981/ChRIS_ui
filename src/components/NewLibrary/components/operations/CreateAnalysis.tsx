@@ -16,7 +16,7 @@ import { catchError } from "../../../../api/common";
 import { getFeed, getPluginInstances } from "../../../../api/serverApi";
 import type { PluginInstance } from "../../../../api/types";
 import * as DoCart from "../../../../reducers/cart";
-import type { SelectionPayload } from "../../../../reducers/types";
+import type { CartSelectionPayload } from "../../../../reducers/types";
 import { MainRouterContext } from "../../../../routes";
 import { AddNodeContext } from "../../../AddNode/context";
 import BasicInformation from "../../../CreateFeed/BasicInformation";
@@ -188,7 +188,7 @@ export default (props: Props) => {
     }
   };
 
-  const pathInfoToFeedID = (pathInfo: SelectionPayload): number => {
+  const pathInfoToFeedID = (pathInfo: CartSelectionPayload): number => {
     // home/chris/feeds/feed_14
     const thePathList = pathInfo.path.split("/");
     const feedID = Number.parseInt(
@@ -236,7 +236,7 @@ export default (props: Props) => {
     return { name, filename, theID: id, createDateTime };
   };
 
-  const pathInfoToChRISFiles = async (pathInfo: SelectionPayload) => {
+  const pathInfoToChRISFiles = async (pathInfo: CartSelectionPayload) => {
     const feedID = pathInfoToFeedID(pathInfo);
     const lastChRISFile = await feedIDToLastChRISFile(feedID);
 

@@ -1,9 +1,9 @@
 // cartSlice.ts
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type {
+  CartSelectionPayload,
   ICartState,
   OperationPayload,
-  SelectionPayload,
   UploadPayload,
 } from "./types";
 import { DownloadTypes } from "./types";
@@ -28,10 +28,10 @@ const cartSlice = createSlice({
     startUpload(state, _action: PayloadAction<UploadPayload>) {
       state.openCart = true;
     },
-    setSelectedPaths(state, action: PayloadAction<SelectionPayload>) {
+    setSelectedPaths(state, action: PayloadAction<CartSelectionPayload>) {
       state.selectedPaths.push(action.payload);
     },
-    setBulkSelectedPaths(state, action: PayloadAction<SelectionPayload[]>) {
+    setBulkSelectedPaths(state, action: PayloadAction<CartSelectionPayload[]>) {
       state.selectedPaths.push(...action.payload);
     },
     clearSelectedPaths(state, action: PayloadAction<string>) {
@@ -168,7 +168,7 @@ const cartSlice = createSlice({
         );
       }
     },
-    removeSelectedPayload(state, action: PayloadAction<SelectionPayload>) {
+    removeSelectedPayload(state, action: PayloadAction<CartSelectionPayload>) {
       state.selectedPaths = state.selectedPaths.filter(
         (currentPayload) => currentPayload.path !== action.payload.path,
       );

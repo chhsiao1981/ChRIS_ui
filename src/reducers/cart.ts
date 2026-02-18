@@ -11,7 +11,7 @@ import type {
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
 } from "../api/types/fileBrowser";
-import type { SelectionPayload } from "./types";
+import type { CartSelectionPayload } from "./types";
 import {
   type DownloadStatus,
   type DownloadStatusObject,
@@ -26,7 +26,7 @@ export const myClass = "chris-ui/cart";
 
 export interface State extends rState {
   currentLayout: string;
-  selectedPaths: SelectionPayload[];
+  selectedPaths: CartSelectionPayload[];
   openCart: boolean;
   folderDownloadStatus: DownloadStatus;
   fileDownloadStatus: DownloadStatus;
@@ -74,7 +74,7 @@ export const startUpload = (
 
 export const startDownload = (
   myID: string,
-  paths: SelectionPayload[],
+  paths: CartSelectionPayload[],
   username: string,
 ): Thunk<State> => {
   return (dispatch, _) => {};
@@ -90,7 +90,7 @@ export const cancelUpload = (
 
 export const startAnonymize = (
   myID: string,
-  paths: SelectionPayload[],
+  paths: CartSelectionPayload[],
   username: string,
 ): Thunk<State> => {
   return (dispatch, _) => {};
@@ -98,7 +98,7 @@ export const startAnonymize = (
 
 export const setSelectedPaths = (
   myID: string,
-  path: SelectionPayload,
+  path: CartSelectionPayload,
 ): Thunk<State> => {
   return (dispatch, getClassState) => {
     const classState = getClassState();
@@ -115,7 +115,7 @@ export const setSelectedPaths = (
 
 export const setBulkSelectedPaths = (
   myID: string,
-  paths: SelectionPayload[],
+  paths: CartSelectionPayload[],
 ): Thunk<State> => {
   return (dispatch, getClassState) => {
     const classState = getClassState();
@@ -366,7 +366,7 @@ export const setFolderUploadStatus = (
 
 export const removeSelectedPayload = (
   myID: string,
-  payload: SelectionPayload,
+  payload: CartSelectionPayload,
 ): Thunk<State> => {
   return (dispatch, getClassState) => {
     const classState = getClassState();
@@ -510,7 +510,7 @@ const downloadFolder = (
 
 const downloadEach = (
   myID: string,
-  path: SelectionPayload,
+  path: CartSelectionPayload,
   username: string,
   pipelineType: string,
 ): Thunk<State> => {

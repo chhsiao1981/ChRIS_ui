@@ -8,7 +8,7 @@ import { useMemo } from "react";
 import { getFileName } from "../../../api/common";
 import { createFeedWithFilepaths, getFeed } from "../../../api/serverApi";
 import * as DoCart from "../../../reducers/cart";
-import type { SelectionPayload } from "../../../reducers/types";
+import type { CartSelectionPayload } from "../../../reducers/types";
 import { type OriginState, useOperationsContext } from "../context";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
@@ -25,7 +25,7 @@ const useFeedOperations = (
   const { selectedPaths } = cart;
 
   const giveMePaths = useMemo(() => {
-    return selectedPaths.map((payload: SelectionPayload) => payload.path);
+    return selectedPaths.map((payload: CartSelectionPayload) => payload.path);
   }, [selectedPaths]);
 
   const handleDuplicate = async () => {
