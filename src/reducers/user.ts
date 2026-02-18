@@ -7,7 +7,6 @@ import {
   type Thunk,
   type ThunkModuleToFunc,
 } from "@chhsiao1981/use-thunk";
-import user from "@fnndsc/chrisapi/dist/types/user";
 import queryString from "query-string";
 import { Cookies } from "react-cookie";
 import { refreshCookie } from "../api/api";
@@ -20,7 +19,6 @@ import {
   getUserID,
   getUserInfo,
 } from "../api/serverApi";
-import type { User } from "../api/types/user";
 import type * as DoDataTag from "./dataTag";
 import { Role } from "./types";
 

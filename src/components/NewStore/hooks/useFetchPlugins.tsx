@@ -1,16 +1,16 @@
-import type { Plugin as ApiPlugin } from "@fnndsc/chrisapi";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import axios from "axios";
+import type { Plugin } from "../../../api/types";
 
 const LIMIT = 100;
 
 export interface PluginsResponse {
   count: number;
-  results: ApiPlugin[];
+  results: Plugin[];
 }
 
-export type StorePlugin = ApiPlugin["data"] & {
-  pluginsList: ApiPlugin[];
+export type StorePlugin = Plugin & {
+  pluginsList: Plugin[];
 };
 
 export const envOptions: Record<string, string> = {

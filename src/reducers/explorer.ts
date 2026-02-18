@@ -4,7 +4,7 @@ import {
   setData,
   type Thunk,
 } from "@chhsiao1981/use-thunk";
-import type { FileBrowserFolderFile } from "@fnndsc/chrisapi";
+import type { FileBrowserFolderFile } from "../api/types";
 
 export const myClass = "chris-ui/explorer";
 

@@ -1,9 +1,9 @@
 import {
-  createFeedWithFilepath,
+  createFeedWithFilepaths,
   getPACSSeriesListBySeriesUID,
 } from "../../api/serverApi";
 
-import type { PACSSeries } from "../../api/types.ts";
+import type { PACSSeries } from "../../api/types";
 
 export const createFeedWithSeriesInstanceUID = async (seriesUID: string) => {
   const pacsSeriesListResult = await getPACSSeriesListBySeriesUID(seriesUID);
@@ -33,7 +33,7 @@ export const createFeedWithPACSSeries = async (series: PACSSeries) => {
   const theName = `PACS-${patientID}-${studyDateStr}-${studyDescription}-${seriesDescription}`;
 
   const tags = ["pacs"];
-  return await createFeedWithFilepath(thePath, theName, tags);
+  return await createFeedWithFilepaths([thePath], theName, tags);
 };
 
 export const errorCodeIs4xx = (e: { code: number }) => {

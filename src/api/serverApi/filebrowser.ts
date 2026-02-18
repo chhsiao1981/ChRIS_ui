@@ -48,3 +48,9 @@ export const updateFileBrowserFolderLinkFilePath = (theID: ID, path: string) =>
       path,
     },
   });
+
+export const getLinkedResource = (theID: ID) => {
+  api<FileBrowserFolderFile>({
+    endpoint: `filebrowser/linkfiles/${theID}/`,
+  });
+};

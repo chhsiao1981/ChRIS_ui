@@ -3,7 +3,6 @@ import {
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
-import type { ComputeResource, Plugin } from "@fnndsc/chrisapi";
 import {
   Button,
   Grid,
@@ -17,7 +16,7 @@ import { notification } from "antd";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useCookies } from "react-cookie";
 import { createPipeline } from "../../api/serverApi";
-import type { Plugin as PkgType, UploadPipeline } from "../../api/types";
+import type { ComputeResource, Plugin, UploadPipeline } from "../../api/types";
 import * as DoUser from "../../reducers/user";
 import { SpinContainer } from "../Common";
 import { handleInstallPlugin as onInstallPlugin } from "../PipelinesCopy/utils";
@@ -104,7 +103,7 @@ export default () => {
   ) => {
     const hdr = getAuthHeaderOrPrompt(plugin, resources, false);
     if (!hdr) return;
-    const result: PkgType = await onInstallPlugin(
+    const result: Plugin = await onInstallPlugin(
       hdr,
       // @ts-expect-error
       { name: plugin.name, version: plugin.version, url: plugin.url },
@@ -151,7 +150,7 @@ export default () => {
       await postModifyComputeResource({
         adminCred: hdr,
         plugin,
-        newComputeResource: resources,
+        newComputeResources: resources,
       });
     } catch (err: any) {
       notification.error({
@@ -172,7 +171,7 @@ export default () => {
         await postModifyComputeResource({
           adminCred: hdr,
           plugin: pending.plugin as Plugin,
-          newComputeResource: pending.resources,
+          newComputeResources: pending.resources,
         });
       } else {
         const p = pending.plugin as StorePlugin;

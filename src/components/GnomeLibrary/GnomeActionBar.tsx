@@ -4,7 +4,6 @@ import {
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
-import type { FileBrowserFolderList } from "@fnndsc/chrisapi";
 import {
   Badge,
   Button,
@@ -16,6 +15,7 @@ import {
 } from "@patternfly/react-core";
 import { FileIcon, FolderIcon, TimesIcon } from "@patternfly/react-icons";
 import { useContext, useEffect, useRef, useState } from "react";
+import type { FileBrowserFolder } from "../../api/types";
 import * as DoCart from "../../reducers/cart";
 import { ThemeContext } from "../DarkTheme/useTheme";
 import {
@@ -40,7 +40,7 @@ type Props = {
   username: string;
   origin: OriginState;
   computedPath?: string;
-  folderList?: FileBrowserFolderList;
+  folderList?: FileBrowserFolder[];
 };
 
 const GnomeBulkActionBar = (props: Props) => {

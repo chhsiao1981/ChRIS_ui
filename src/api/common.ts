@@ -1,12 +1,8 @@
-import type {
-  ComputeResource,
-  PipelineList,
-  PipelinePipingDefaultParameterList as PipingDefaultParameterList,
-} from "@fnndsc/chrisapi";
 import axios, { type AxiosProgressEvent } from "axios";
 import { quote } from "shlex";
 import ChrisAPIClient from "./chrisapiclient";
 import type {
+  ComputeResource,
   Feed,
   FileBrowserFolderFile,
   Pipeline,
@@ -102,10 +98,9 @@ export const fetchPipelines = async (
   };
 
   try {
-    const registeredPipelinesList: PipelineList =
+    const registeredPipelinesList: Pipeline[] =
       await client.getPipelines(params);
-    const registeredPipelines =
-      (registeredPipelinesList.getItems() as Pipeline[]) || [];
+    const registeredPipelines = registeredPipelinesList;
 
     return {
       registeredPipelines,
@@ -175,7 +170,7 @@ interface FetchParams {
 }
 
 interface FetchResourcesResult {
-  parameters: PipingDefaultParameterList;
+  parameters: PipingDefaultParameter[];
   pluginPipings: Piping[];
   pipelinePlugins: Plugin[];
 }
@@ -212,10 +207,10 @@ export async function fetchResources(
 export const generatePipelineWithName = async (pipelineName: string) => {
   const client = ChrisAPIClient.getClient();
 
-  const pipelineInstanceList: PipelineList = await client.getPipelines({
+  const pipelineInstanceList: Pipeline[] = await client.getPipelines({
     name: pipelineName,
   });
-  const pipelineInstanceId = pipelineInstanceList.data[0].id;
+  const pipelineInstanceId = pipelineInstanceList[0].id;
   const pipelineInstance: Pipeline = (await client.getPipeline(
     pipelineInstanceId,
   )) as Pipeline;

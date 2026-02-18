@@ -111,6 +111,7 @@ export const useFolderOperations = (
   const { handleDuplicateMutation, handleMergeMutation } = useFeedOperations(
     origin,
     notificationAPI,
+    useCart,
   );
 
   // For resetting file inputs after each upload
@@ -222,7 +223,7 @@ export const useFolderOperations = (
         if (createFeed) {
           // Make the feed public or set permissions on the feed
           // If we're dealing with a feed, fetch it:
-          const feed = await fetchFeedForPath(payload.data.path);
+          const feed = await fetchFeedForPath(payload.path);
           if (feed) {
             if (additionalValues?.share.public) {
               await feed.put({ public: true });

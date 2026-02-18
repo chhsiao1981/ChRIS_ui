@@ -1,17 +1,14 @@
-import type { ComputeResource, Plugin } from "@fnndsc/chrisapi";
 import axios from "axios";
+import type { ComputeResource, Plugin } from "../../../api/types";
 
-interface ModifyResourceArgs {
+type props = {
   adminCred: string;
-  plugin: Plugin["data"];
-  newComputeResource: ComputeResource[];
-}
+  plugin: Plugin;
+  newComputeResources: ComputeResource[];
+};
 
-async function postModifyComputeResource({
-  adminCred,
-  plugin,
-  newComputeResource,
-}: ModifyResourceArgs) {
+export default async (props: props) => {
+  const { adminCred, plugin, newComputeResources } = props;
   const adminURL = import.meta.env.VITE_CHRIS_UI_URL.replace(
     "/api/v1/",
     "/chris-admin/api/v1/",
@@ -19,9 +16,7 @@ async function postModifyComputeResource({
   if (!adminURL) {
     throw new Error("Please provide a valid chris-admin URL.");
   }
-  const computeResourceList = newComputeResource
-    .map((r) => r.data.name)
-    .join(",");
+  const computeResourceList = newComputeResources.map((r) => r.name).join(",");
   const pluginData = {
     compute_names: computeResourceList,
     name: plugin.name,
@@ -35,6 +30,4 @@ async function postModifyComputeResource({
     },
   });
   return response.data;
-}
-
-export default postModifyComputeResource;
+};

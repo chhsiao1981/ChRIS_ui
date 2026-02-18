@@ -1,10 +1,10 @@
 // src/components/Store/utils/useComputeResources.ts
 
-import type { ComputeResource } from "@fnndsc/chrisapi";
 import { useQuery } from "@tanstack/react-query";
 import { notification } from "antd";
 import { useEffect } from "react";
-import ChrisAPIClient from "../../../api/chrisapiclient";
+import { getComputeResources } from "../../../api/serverApi/computeResource";
+import type { ComputeResource } from "../../../api/types";
 
 export function useComputeResources(isLoggedIn?: boolean) {
   const {
@@ -16,10 +16,9 @@ export function useComputeResources(isLoggedIn?: boolean) {
     queryKey: ["computeResources"],
     enabled: isLoggedIn,
     queryFn: async () => {
-      const client = ChrisAPIClient.getClient();
-      const compute = await client.getComputeResources({ limit: 100 });
-      const resources = compute.getItems();
-      return resources || [];
+      const { status, data, errmsg } = await getComputeResources(0, 100);
+      const computeResources = data || [];
+      return computeResources;
     },
   });
 

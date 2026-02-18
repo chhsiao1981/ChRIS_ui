@@ -46,14 +46,14 @@ export const updateFeedPublic = (dataID: ID, isPublic = true) =>
     },
   });
 
-export const createFeedWithFilepath = async (
-  filepath: string,
+export const createFeedWithFilepaths = async (
+  filepaths: string[],
   theName: string,
   // biome-ignore lint/correctness/noUnusedFunctionParameters: not using tags for now.
   tags?: string[],
   isPublic: boolean = false,
 ): Promise<ApiResult<Feed>> => {
-  const { status, data, errmsg } = await createPluginInstance(1, [filepath]);
+  const { status, data, errmsg } = await createPluginInstance(1, filepaths);
   if (!data) {
     return {
       errmsg,

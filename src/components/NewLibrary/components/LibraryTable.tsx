@@ -1,3 +1,5 @@
+//XXX seems deprecated.
+
 import {
   getState,
   type ThunkModuleToFunc,
@@ -249,12 +251,8 @@ export const LinkRow = (props: Omit<RowProps, "type">) => (
   <BaseRow {...props} type="link" />
 );
 
-const LibraryTable: React.FC<TableProps> = ({
-  data,
-  computedPath,
-  handleFolderClick,
-  useUser,
-}) => {
+export default (props: TableProps) => {
+  const { data, computedPath, handleFolderClick, useUser } = props;
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
   const { username } = user;
@@ -434,5 +432,3 @@ const LibraryTable: React.FC<TableProps> = ({
     </React.Fragment>
   );
 };
-
-export default LibraryTable;

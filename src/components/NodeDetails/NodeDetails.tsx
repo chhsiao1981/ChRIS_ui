@@ -1,9 +1,3 @@
-import type {
-  Plugin,
-  PluginInstance,
-  PluginInstanceDescendantList,
-  PluginParameterList,
-} from "@fnndsc/chrisapi";
 import {
   Button,
   ExpandableSection,
@@ -14,6 +8,12 @@ import React, { Fragment, type ReactNode } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useNavigate } from "react-router";
 import { customQuote, needsQuoting } from "../../api/common";
+import type {
+  Plugin,
+  PluginInstance,
+  PluginInstanceParameter,
+  PluginParameter,
+} from "../../api/types";
 import { useAppSelector } from "../../store/hooks";
 import { SpinContainer } from "../Common";
 import { isPlVisualDataset } from "../DatasetRedirect/getDatasets";
@@ -39,8 +39,8 @@ type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
 
 interface INodeState {
   plugin?: Plugin;
-  instanceParameters?: PluginInstanceDescendantList;
-  pluginParameters?: PluginParameterList;
+  instanceParameters?: PluginInstance[];
+  pluginParameters?: PluginParameter[];
 }
 
 function getInitialState() {
@@ -88,7 +88,7 @@ export default (props: Props) => {
         offset: 0,
       });
 
-      if (pluginParameters && instanceParameters) {
+      if (plugin && pluginParameters && instanceParameters) {
         setNodeState({
           plugin,
           instanceParameters,
@@ -145,7 +145,7 @@ export default (props: Props) => {
       fallback={
         <Button
           onClick={() => {
-            feed && navigate(`/feeds/${feed.data.id}?type='private'`);
+            feed && navigate(`/feeds/${feed.id}?type='private'`);
           }}
           variant="link"
         >
@@ -178,8 +178,8 @@ export default (props: Props) => {
               className="node-details__expandable"
             >
               <Grid className="node-details__grid">
-                {renderGridItem("Feed Name", feed?.data?.name)}
-                {renderGridItem("Feed Author", feed?.data.owner_username)}
+                {renderGridItem("Feed Name", feed?.name)}
+                {renderGridItem("Feed Author", feed?.owner_username)}
                 {selectedPlugin.data.previous_id &&
                   renderGridItem(
                     "Parent Node ID",
@@ -271,8 +271,8 @@ export default (props: Props) => {
 
 function getRuntimeString(selected: PluginInstance) {
   let runtime = 0;
-  const start = new Date(selected.data.start_date);
-  const end = new Date(selected.data.end_date);
+  const start = new Date(selected.start_date);
+  const end = new Date(selected.end_date);
   const elapsed = end.getTime() - start.getTime(); // milliseconds between start and end
   runtime += elapsed;
 
@@ -295,39 +295,33 @@ function getRuntimeString(selected: PluginInstance) {
 
 function getCommand(
   plugin: Plugin,
-  params: PluginInstanceDescendantList,
-  parameters: PluginParameterList,
+  params: PluginInstanceParameter[],
+  parameters: PluginParameter[],
 ) {
-  const { dock_image, selfexec } = plugin.data;
+  const { dock_image, selfexec } = plugin;
   const modifiedParams: {
     name?: string;
     value?: string;
   }[] = [];
 
-  let instanceParameters = [];
-  let pluginParameters = [];
-  if (params.getItems()) {
-    instanceParameters = params.getItems() as any[];
-  }
-  if (parameters.getItems()) {
-    pluginParameters = parameters.getItems() as any[];
-  }
+  const instanceParameters = params;
+  const pluginParameters = parameters;
 
   // Create a lookup map for plugin parameters to avoid O(n²) nested loop
   const pluginParamsMap = new Map();
   for (const pluginParam of pluginParameters) {
-    pluginParamsMap.set(pluginParam.data.name, pluginParam);
+    pluginParamsMap.set(pluginParam.name, pluginParam);
   }
 
   // Single pass through instance parameters - O(n) complexity
   for (const instanceParam of instanceParameters) {
-    const pluginParam = pluginParamsMap.get(instanceParam.data.param_name);
+    const pluginParam = pluginParamsMap.get(instanceParam.param_name);
 
     if (pluginParam) {
-      const isBoolean = instanceParam.data.type === "boolean";
-      const isString = instanceParam.data.type === "string";
-      const value = instanceParam.data.value;
-      const paramName = instanceParam.data.param_name;
+      const isBoolean = instanceParam.type === "boolean";
+      const isString = instanceParam.type === "string";
+      const value = instanceParam.value;
+      const paramName = instanceParam.param_name;
 
       // Check if parameter name contains "password" (case insensitive)
       const isPassword =

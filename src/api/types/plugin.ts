@@ -2,7 +2,7 @@ import type { Datetime } from "./datetime";
 import type { ID } from "./id";
 
 // legacy: plugin
-export interface Plugin {
+export type Plugin = {
   id: ID;
   creation_date: Datetime; // yyyy-mm-ddTHH:MM:SS.ffffffTZ
   name: string;
@@ -30,9 +30,9 @@ export interface Plugin {
   max_gpu_limit: number;
   category: string;
   url: string;
-}
+};
 
-export interface PluginMeta {
+export type PluginMeta = {
   id: ID;
   creation_date: Datetime;
   modification_date: Datetime;
@@ -46,9 +46,9 @@ export interface PluginMeta {
   category: string;
   authors: string;
   documentation: string;
-}
+};
 
-export interface PluginParameter {
+export type PluginParameter = {
   id: ID;
   name: string;
   type: string;
@@ -58,7 +58,7 @@ export interface PluginParameter {
   short_flag: string;
   help: string;
   ui_exposed: boolean;
-}
+};
 
 export type PluginDefaultParameter = {
   name: string;

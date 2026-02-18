@@ -3,7 +3,6 @@ import {
   type ThunkModuleToFunc,
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
-import type { Plugin as ChrisPlugin, ComputeResource } from "@fnndsc/chrisapi";
 import {
   Button,
   Card,
@@ -20,6 +19,8 @@ import { format } from "date-fns";
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ChrisAPIClient from "../../api/chrisapiclient";
+import { getPluginComputeResources } from "../../api/serverApi/plugin";
+import type { ComputeResource, Plugin } from "../../api/types";
 import * as DoUser from "../../reducers/user";
 import { CheckCircleIcon } from "../Icons";
 import type { StorePlugin } from "./hooks/useFetchPlugins";
@@ -44,14 +45,18 @@ const checkInstallation = async (
   if (!resp.data?.length) {
     return { installed: false, computeResources: [] };
   }
-  const realItems = resp.getItems() as ChrisPlugin[];
+  const realItems = resp.getItems() as Plugin[];
   const real = realItems[0];
   if (!isLoggedIn) {
     return { installed: true, computeResources: [] };
   }
-  const crList = await real.getPluginComputeResources();
-  const crItems = crList.getItems() || [];
-  return { installed: true, computeResources: crItems as ComputeResource[] };
+  const { status, data, errmsg } = await getPluginComputeResources(
+    real.id,
+    0,
+    100,
+  );
+  const crItems = data || [];
+  return { installed: true, computeResources: crItems };
 };
 
 type Props = {
@@ -61,7 +66,7 @@ type Props = {
     plugin: StorePlugin,
     computeResources: ComputeResource[],
   ) => void;
-  onModify?: (plugin: ChrisPlugin, computeResources: ComputeResource[]) => void;
+  onModify?: (plugin: Plugin, computeResources: ComputeResource[]) => void;
   onResourcesChange?: (pluginId: string, resources: ComputeResource[]) => void;
   refreshMap?: Record<string, number>;
 
@@ -122,7 +127,7 @@ export default (props: Props) => {
             : computeResources;
         setRegisteredResources(computeResources);
         setSelectedResources(initial);
-        onResourcesChange?.(current.id, initial);
+        onResourcesChange?.(`${current.id}`, initial);
       } catch {
         if (alive) setIsInstalled(false);
       } finally {
@@ -205,17 +210,17 @@ export default (props: Props) => {
       className={styles.toggle}
     >
       {selectedResources.length
-        ? selectedResources[0].data.name
+        ? selectedResources[0].name
         : "Select resources"}
     </MenuToggle>
   );
 
   const selectedIds = useMemo(
-    () => new Set(selectedResources.map((r) => r.data.id)),
+    () => new Set(selectedResources.map((r) => r.id)),
     [selectedResources],
   );
   const registeredIds = useMemo(
-    () => new Set(registeredResources.map((r) => r.data.id)),
+    () => new Set(registeredResources.map((r) => r.id)),
     [registeredResources],
   );
   const hasChanges = useMemo(() => {
@@ -250,6 +255,7 @@ export default (props: Props) => {
               isOpen={versionOpen}
               onSelect={(e, v) => {
                 e?.stopPropagation();
+                // @ts-expect-error v as StorePlugin
                 v && setSelectedPlugin(v as StorePlugin);
                 setVersionOpen(false);
               }}
@@ -257,6 +263,7 @@ export default (props: Props) => {
               shouldFocusToggleOnSelect
               popperProps={{ appendTo: () => document.body }}
             >
+              {/* @ts-expect-error v as StorePlugin */}
               {basePlugin.pluginsList.map((v: StorePlugin) => (
                 <SelectOption
                   isSelected={v.id === current.id}
@@ -275,10 +282,10 @@ export default (props: Props) => {
                 id="resource-select"
                 isOpen={resourceOpen}
                 selected={selectedResources}
-                // @ts-ignore
+                // @ts-expect-error
                 onSelect={(e, val: ComputeResource) => {
                   e?.stopPropagation();
-                  const isAlready = selectedIds.has(val.data.id);
+                  const isAlready = selectedIds.has(val.id);
                   if (isAlready && selectedResources.length === 1) {
                     notification.info({
                       message: "At least one compute resource must be selected",
@@ -287,10 +294,10 @@ export default (props: Props) => {
                     return;
                   }
                   const next = isAlready
-                    ? selectedResources.filter((r) => r.data.id !== val.data.id)
+                    ? selectedResources.filter((r) => r.id !== val.id)
                     : [...selectedResources, val];
                   setSelectedResources(next);
-                  onResourcesChange?.(current.id, next);
+                  onResourcesChange?.(`${current.id}`, next);
                 }}
                 toggle={resourceToggle}
                 shouldFocusToggleOnSelect
@@ -298,11 +305,11 @@ export default (props: Props) => {
               >
                 {computeList.map((r: ComputeResource) => (
                   <SelectOption
-                    key={r.data.id}
-                    isSelected={selectedIds.has(r.data.id)}
+                    key={r.id}
+                    isSelected={selectedIds.has(r.id)}
                     value={r}
                   >
-                    {r.data.name}
+                    {r.name}
                   </SelectOption>
                 ))}
               </Select>

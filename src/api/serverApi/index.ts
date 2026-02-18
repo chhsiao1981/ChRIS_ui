@@ -1,5 +1,5 @@
 import {
-  createFeedWithFilepath,
+  createFeedWithFilepaths,
   getFeed,
   getFeeds,
   updateFeedName,
@@ -48,7 +48,7 @@ export {
   getFeeds,
   updateFeedName,
   updateFeedPublic,
-  createFeedWithFilepath,
+  createFeedWithFilepaths,
   searchPluginsByName,
   createPipeline,
   getPipelines,
