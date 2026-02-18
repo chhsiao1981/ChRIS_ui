@@ -15,7 +15,6 @@ import {
   SplitItem,
   Tooltip,
 } from "@patternfly/react-core";
-import list from "antd/es/list";
 import { differenceInSeconds, format } from "date-fns";
 import { isEmpty } from "lodash";
 import type React from "react";
@@ -376,27 +375,30 @@ type SubLinkCardProps = {
   linkFile: FileBrowserFolderLinkFile;
   computedPath: string;
   username: string;
+  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 export const getLinkFileName = (file: FileBrowserFolderLinkFile) => {
   return file.path.split("/").pop() || "";
 };
 
-export const SubLinkCard: React.FC<SubLinkCardProps> = ({
-  linkFile,
-  computedPath,
-  username,
-}) => {
+export const SubLinkCard: React.FC<SubLinkCardProps> = (
+  props: SubLinkCardProps,
+) => {
+  const { linkFile, computedPath, username, useCart } = props;
   const navigate = useNavigate();
   const { isDarkTheme } = useContext(ThemeContext);
-  const selectedPaths = useAppSelector((state) => state.cart.selectedPaths);
+
+  const [classStateCart, _doCart] = useCart;
+  const cart = getState(classStateCart) || DoCart.defaultState;
+  const { selectedPaths } = cart;
   const handleDownloadMutation = useDownload();
   const { handlers } = useLongPress();
   const [api, contextHolder] = notification.useNotification();
 
   const linkName = getLinkFileName(linkFile);
   const isSelected = selectedPaths.some(
-    (payload) => payload.path === linkFile.data.path,
+    (payload) => payload.path === linkFile.path,
   );
   const selectedBgRow = getBackgroundRowColor(isSelected, isDarkTheme);
 
@@ -426,14 +428,14 @@ export const SubLinkCard: React.FC<SubLinkCardProps> = ({
 
   const handleClick = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
     e.stopPropagation();
-    handlers.handleOnClick(e, linkFile, linkFile.data.path, "linkFile", () => {
-      navigate(linkFile.data.path);
+    handlers.handleOnClick(e, linkFile, linkFile.path, "linkFile", () => {
+      navigate(linkFile.path);
     });
   };
 
   const handleCheckboxChange = (e: React.FormEvent<HTMLInputElement>) => {
     e.stopPropagation();
-    handlers.handleCheckboxChange(e, linkFile.data.path, linkFile, "linkFile");
+    handlers.handleCheckboxChange(e, linkFile.path, linkFile, "linkFile");
   };
 
   return (
@@ -448,14 +450,15 @@ export const SubLinkCard: React.FC<SubLinkCardProps> = ({
         onMouseDown={handlers.handleOnMouseDown}
         onCheckboxChange={handleCheckboxChange}
         onContextMenuClick={handleClick}
-        onNavigate={() => navigate(linkFile.data.path)}
+        onNavigate={() => navigate(linkFile.path)}
         computedPath={computedPath}
         isChecked={isSelected}
         name={linkName}
-        date={linkFile.data.creation_date}
+        date={linkFile.creation_date}
         icon={icon}
         bgRow={selectedBgRow}
         username={username}
+        useCart={useCart}
       />
     </>
   );
