@@ -1,7 +1,5 @@
 import {
   genUUID,
-  getRootID,
-  getState,
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";

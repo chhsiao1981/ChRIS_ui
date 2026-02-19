@@ -1,5 +1,5 @@
 import {
-  getRootID,
+  getDefaultID,
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
@@ -270,7 +270,7 @@ export default function usePaginatedTreeQuery(
   );
 
   const [classStatePluginInstance, doPluginInstance] = usePluginInstance;
-  const pluginInstanceID = getRootID(classStatePluginInstance);
+  const pluginInstanceID = getDefaultID(classStatePluginInstance);
 
   const queryClient = useQueryClient();
   const [localItems, setLocalItems] = useState<PluginInstance[]>([]);

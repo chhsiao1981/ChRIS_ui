@@ -1,5 +1,5 @@
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
@@ -33,7 +33,7 @@ export default (props: Props) => {
   const [classStatePlugin, doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(
     DoPlugin,
   );
-  const pluginID = getRootID(classStatePlugin);
+  const pluginID = getDefaultID(classStatePlugin);
 
   const cancelled =
     selectedPlugin?.status === "cancelled" ||

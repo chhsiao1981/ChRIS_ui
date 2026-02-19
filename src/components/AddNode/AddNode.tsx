@@ -15,7 +15,7 @@ import BasicConfiguration from "./BasicConfiguration";
 import GuidedConfig from "./GuidedConfig";
 import "./add-node.css";
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
@@ -49,7 +49,7 @@ export default (props: Props) => {
   const [classStatePlugin, doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(
     DoPlugin,
   );
-  const pluginID = getRootID(classStatePlugin);
+  const pluginID = getDefaultID(classStatePlugin);
   const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
   const { nodeOperations, parameters: params } = plugin;
   const { childNode } = nodeOperations;

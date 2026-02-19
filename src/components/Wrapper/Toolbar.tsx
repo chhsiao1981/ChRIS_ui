@@ -1,5 +1,5 @@
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
@@ -47,7 +47,7 @@ export default (props: Props) => {
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, doUser] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
-  const userID = getRootID(classStateUser);
+  const userID = getDefaultID(classStateUser);
   const { username, role, isStaff } = user;
 
   console.info("Wrapper.Toolbar: user:", user);

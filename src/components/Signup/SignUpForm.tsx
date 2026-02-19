@@ -1,7 +1,6 @@
 import {
-  getRootID,
+  getDefaultID,
   type ThunkModuleToFunc,
-  type UseThunk,
   useThunk,
 } from "@chhsiao1981/use-thunk";
 import {
@@ -43,7 +42,7 @@ export default (props: Props) => {
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, doUser] = useUser;
 
-  const userID = getRootID(classStateUser);
+  const userID = getDefaultID(classStateUser);
 
   const isShowPasswordEnabled =
     typeof propsIsShowPasswordEnabled === "undefined"

@@ -14,7 +14,7 @@ import { DrawerActionButton } from "./DrawerUtils";
 import usePaginatedTreeQuery from "./usePaginatedTreeQuery";
 import "./Feeds.css"; // Import your CSS file
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
@@ -53,15 +53,15 @@ export default () => {
   const useDrawer = useThunk<DoDrawer.State, TDoDrawer>(DoDrawer);
   const [classStateDrawer, doDrawer] = useDrawer;
   const drawerState = getState(classStateDrawer) || DoDrawer.defaultState;
-  const drawerID = getRootID(classStateDrawer);
+  const drawerID = getDefaultID(classStateDrawer);
 
   const useExplorer = useThunk<DoExplorer.State, TDoExplorer>(DoExplorer);
   const [classStateExplorer, doExplorer] = useExplorer;
-  const explorerID = getRootID(classStateExplorer);
+  const explorerID = getDefaultID(classStateExplorer);
 
   const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
   const [classStateFeed, doFeed] = useFeed;
-  const feedID = getRootID(classStateFeed);
+  const feedID = getDefaultID(classStateFeed);
 
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
 
@@ -69,7 +69,7 @@ export default () => {
     DoPluginInstance,
   );
   const [classStatePluginInstance, doPluginInstance] = usePluginInstance;
-  const pluginInstanceID = getRootID(classStatePluginInstance);
+  const pluginInstanceID = getDefaultID(classStatePluginInstance);
 
   const [currentLayout, setCurrentLayout] = useState(false);
   const query = useSearchQueryParams();

@@ -1,9 +1,8 @@
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
-  useThunk,
 } from "@chhsiao1981/use-thunk";
 import { useMutation } from "@tanstack/react-query";
 import { useRef, useState } from "react";
@@ -87,7 +86,7 @@ export const useFolderOperations = (
   const { handleOrigin, invalidateQueries } = useOperationsContext();
 
   const [classStateCart, doCart] = useCart;
-  const cartID = getRootID(classStateCart);
+  const cartID = getDefaultID(classStateCart);
   const cart = getState(classStateCart) || DoCart.defaultState;
   const { selectedPaths } = cart;
 

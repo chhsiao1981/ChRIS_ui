@@ -1,5 +1,5 @@
 import {
-  getRootID,
+  getDefaultID,
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
@@ -18,7 +18,7 @@ type DeletionErrors = { path: string; message: string }[];
 const useDeletePayload = (origin: OriginState, api: any) => {
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
   const [classStateCart, doCart] = useCart;
-  const cartID = getRootID(classStateCart);
+  const cartID = getDefaultID(classStateCart);
 
   const { handleOrigin, invalidateQueries } = useOperationsContext();
   const [notificationKey, setNotificationKey] = useState<string | null>(null);

@@ -1,5 +1,5 @@
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
@@ -53,7 +53,7 @@ export default (props: Props) => {
     DoMainRouter,
   );
   const [classStateMainRouter, doMainRouter] = useMainRouter;
-  const mainRouterID = getRootID(classStateMainRouter);
+  const mainRouterID = getDefaultID(classStateMainRouter);
 
   const { state: stateCreateFeed, dispatch: dispatchCreateFeed } =
     useContext(CreateFeedContext);

@@ -5,7 +5,7 @@ import Sidebar from "./Sidebar";
 import "./wrapper.css";
 
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
@@ -30,7 +30,7 @@ export default (props: Props) => {
   const useUI = useThunk<DoUI.State, TDoUI>(DoUI);
   const [classStateUI, doUI] = useUI;
   const ui = getState(classStateUI) || DoUI.defaultState;
-  const uiID = getRootID(classStateUI);
+  const uiID = getDefaultID(classStateUI);
   const { isNavOpen, sidebarActiveItem } = ui;
 
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);

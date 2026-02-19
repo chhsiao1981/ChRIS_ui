@@ -1,5 +1,5 @@
 import {
-  getRootID,
+  getDefaultID,
   type ThunkModuleToFunc,
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
@@ -22,7 +22,7 @@ type Props = {
 export default (props: Props) => {
   const { actionType, icon, title, isDisabled, useDrawer } = props;
   const [classStateDrawer, doDrawer] = useDrawer;
-  const drawerID = getRootID(classStateDrawer);
+  const drawerID = getDefaultID(classStateDrawer);
   return (
     <ButtonWithTooltip
       position="bottom"

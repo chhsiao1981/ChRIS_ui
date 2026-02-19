@@ -1,5 +1,5 @@
 import {
-  getRootID,
+  getDefaultID,
   type ThunkModuleToFunc,
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
@@ -19,7 +19,7 @@ export default (props: Props) => {
   const { selectedPaths, useCart } = props;
 
   const [classStateCart, doCart] = useCart;
-  const cartID = getRootID(classStateCart);
+  const cartID = getDefaultID(classStateCart);
 
   return (
     <ChipGroup>

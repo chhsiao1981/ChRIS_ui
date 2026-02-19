@@ -1,7 +1,7 @@
 // usePaginatedTreeQuery.ts
 
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
@@ -47,7 +47,7 @@ export default (props: Props) => {
     TDoPluginInstance
   >(DoPluginInstance);
 
-  const pluginInstanceID = getRootID(classStatePluginInstance);
+  const pluginInstanceID = getDefaultID(classStatePluginInstance);
   const pluginInstance =
     getState(classStatePluginInstance) || DoPluginInstance.defaultState;
   const { selectedPlugin } = pluginInstance;

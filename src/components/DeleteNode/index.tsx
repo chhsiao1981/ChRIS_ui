@@ -1,7 +1,5 @@
-// -------------------- 1) Imports --------------------
-
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
@@ -33,7 +31,7 @@ export default (props: Props) => {
     DoPlugin,
   );
 
-  const pluginID = getRootID(classStatePlugin);
+  const pluginID = getDefaultID(classStatePlugin);
   const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
   const { nodeOperations } = plugin;
   const { deleteNode: isModalOpen } = nodeOperations;
@@ -43,7 +41,7 @@ export default (props: Props) => {
     TDoPluginInstance
   >(DoPluginInstance);
 
-  const pluginInstanceID = getRootID(classStatePluginInstance);
+  const pluginInstanceID = getDefaultID(classStatePluginInstance);
   const pluginInstance =
     getState(classStatePluginInstance) || DoPluginInstance.defaultState;
   const { selectedPlugin } = pluginInstance;

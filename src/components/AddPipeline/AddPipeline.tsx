@@ -1,5 +1,5 @@
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
@@ -41,7 +41,7 @@ export default (props: Props) => {
 
   const usePlugin = useThunk<DoPlugin.State, TDoPlugin>(DoPlugin);
   const [classStatePlugin, doPlugin] = usePlugin;
-  const pluginID = getRootID(classStatePlugin);
+  const pluginID = getDefaultID(classStatePlugin);
   const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
   const { nodeOperations } = plugin;
   const { childPipeline } = nodeOperations;

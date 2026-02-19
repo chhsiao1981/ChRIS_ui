@@ -1,5 +1,5 @@
 import {
-  getRootID,
+  getDefaultID,
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
@@ -12,7 +12,7 @@ type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 export default () => {
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, doUser] = useUser;
-  const userID = getRootID(classStateUser);
+  const userID = getDefaultID(classStateUser);
 
   useEffect(() => {
     if (!userID) {
@@ -23,10 +23,6 @@ export default () => {
       return;
     }
 
-    console.info(
-      "LoginRedirect: to doUser.oidcRedirect: search:",
-      window.location.search,
-    );
     doUser.oidcRedirect(userID, window.location.search);
   }, [doUser, userID]);
 

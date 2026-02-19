@@ -1,5 +1,5 @@
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
@@ -71,7 +71,7 @@ export default () => {
   const [classStatePlugin, doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(
     DoPlugin,
   );
-  const pluginID = getRootID(classStatePlugin);
+  const pluginID = getDefaultID(classStatePlugin);
   const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
   const { parameters: params, resourceError } = plugin;
 
@@ -325,7 +325,7 @@ const CheckboxComponent = () => {
   const [classStatePlugin, doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(
     DoPlugin,
   );
-  const pluginID = getRootID(classStatePlugin);
+  const pluginID = getDefaultID(classStatePlugin);
   const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
   const { parameters: params, resourceError } = plugin;
 
@@ -525,7 +525,7 @@ const DropdownBasic = ({ plugins }: { plugins?: Plugin[] }) => {
   const [classStatePlugin, doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(
     DoPlugin,
   );
-  const pluginID = getRootID(classStatePlugin);
+  const pluginID = getDefaultID(classStatePlugin);
 
   const [isopen, setIsOpen] = useState(false);
   const { state, dispatch: nodeDispatch } = useContext(AddNodeContext);

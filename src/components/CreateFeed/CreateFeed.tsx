@@ -22,7 +22,7 @@ import Review from "./Review";
 import withSelectionAlert from "./SelectionAlert";
 import "./createFeed.css";
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
@@ -47,7 +47,7 @@ export default (props: Props) => {
   const { isLoggedIn, username, isStaff } = user;
 
   const [classStateMainRouter, doMainRouter] = useMainRouter;
-  const mainRouterID = getRootID(classStateMainRouter);
+  const mainRouterID = getDefaultID(classStateMainRouter);
 
   const [feedProcessing, setFeedProcessing] = useState(false);
   const queryClient = useQueryClient();

@@ -1,5 +1,5 @@
 import {
-  getRootID,
+  getDefaultID,
   type ThunkModuleToFunc,
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
@@ -22,7 +22,7 @@ export default (
   usePluginInstance: UseThunk<DoPluginInstance.State, TDoPluginInstance>,
 ) => {
   const [classStatePluginInstance, doPluginInstance] = usePluginInstance;
-  const pluginInstanceID = getRootID(classStatePluginInstance);
+  const pluginInstanceID = getDefaultID(classStatePluginInstance);
   const [api, contextHolder] = notification.useNotification();
 
   const fetchPipelines = async () => {

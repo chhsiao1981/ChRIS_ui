@@ -1,5 +1,5 @@
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
@@ -183,7 +183,7 @@ export default (props: FeedTreeProps) => {
     TDoPluginInstance
   >(DoPluginInstance);
 
-  const pluginInstanceID = getRootID(classStatePluginInstance);
+  const pluginInstanceID = getDefaultID(classStatePluginInstance);
   const pluginInstance =
     getState(classStatePluginInstance) || DoPluginInstance.defaultState;
   const { selectedPlugin } = pluginInstance;

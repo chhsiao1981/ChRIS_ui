@@ -1,5 +1,5 @@
 import {
-  getRootID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
@@ -110,10 +110,10 @@ export default (props: Props) => {
 
   const [classStateDrawer, doDrawer] = useDrawer;
   const drawer = getState(classStateDrawer) || DoDrawer.defaultState;
-  const drawerID = getRootID(classStateDrawer);
+  const drawerID = getDefaultID(classStateDrawer);
 
   const [classStateExplorer, doExplorer] = useExplorer;
-  const explorerID = getRootID(classStateExplorer);
+  const explorerID = getDefaultID(classStateExplorer);
   const explorer = getState(classStateExplorer) || DoExplorer.defaultState;
   const { selectedFile } = explorer;
 
