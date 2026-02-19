@@ -6,12 +6,7 @@ import {
   useThunk,
 } from "@chhsiao1981/use-thunk";
 import { useEffect, useState } from "react";
-import {
-  matchPath,
-  useLocation,
-  useNavigate,
-  useRoutes,
-} from "react-router-dom";
+import { matchPath, useLocation, useRoutes } from "react-router-dom";
 import ComputePage from "./components/ComputePage";
 import Dashboard from "./components/Dashboard";
 import FeedsListView from "./components/Feeds/FeedListView";
@@ -27,10 +22,6 @@ import Pacs from "./components/Pacs";
 import PipelinePage from "./components/PipelinesPage";
 import PluginInstall from "./components/PluginInstall";
 import PrivateRoute from "./components/PrivateRoute";
-import {
-  RouterContext,
-  RouterProvider,
-} from "./components/Routing/RouterContext";
 import Signup from "./components/Signup";
 import SinglePlugin from "./components/SinglePlugin";
 import * as DoCart from "./reducers/cart";
@@ -38,6 +29,7 @@ import * as DoDataTag from "./reducers/dataTag";
 import * as DoDrawer from "./reducers/drawer";
 import * as DoExplorer from "./reducers/explorer";
 import * as DoFeed from "./reducers/feed";
+import * as DoMainRouter from "./reducers/mainRouter";
 import * as DoPlugin from "./reducers/plugin";
 import * as DoPluginInstance from "./reducers/pluginInstance";
 import * as DoUI from "./reducers/ui";
@@ -52,23 +44,7 @@ type TDoDataTag = ThunkModuleToFunc<typeof DoDataTag>;
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
 type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
-
-interface State {
-  selectData?: Series;
-}
-
-export type Series = any[];
-
-interface Actions {
-  createFeedWithData: (data: Series) => void;
-  clearFeedData: () => void;
-}
-
-export const [State, MainRouterContext] = RouterContext<State, Actions>({
-  state: {
-    selectData: [] as Series,
-  },
-});
+type TDoMainRouter = ThunkModuleToFunc<typeof DoMainRouter>;
 
 // Define the routes and their corresponding sidebar items
 const _ROUTE_TO_SIDEBAR_ITEM: Record<string, string> = {
@@ -99,37 +75,30 @@ const _ROUTE_TO_SIDEBAR_ITEM: Record<string, string> = {
 
 export default () => {
   const location = useLocation();
-  const [state, setState] = useState(State);
-  const navigate = useNavigate();
 
-  const [uiID, _] = useState(genUUID);
-  const [dataTagID, _6] = useState(genUUID);
+  const [uiID, _setUIID] = useState(genUUID);
+  const [dataTagID, _setDataTagID] = useState(genUUID);
 
   const useUI = useThunk<DoUI.State, TDoUI>(DoUI);
-  const [_2, doUI] = useUI;
+  const [_classStateUI, doUI] = useUI;
 
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
-  const [classStateUser, doUser] = useUser;
-  const userID = getRootID(classStateUser);
-  const user = getState(classStateUser) || DoUser.defaultState;
-  const { isLoggedIn } = user;
-
-  console.info("routes: user:", user, "userID:", userID);
+  const [_classStateUser, doUser] = useUser;
 
   const useDrawer = useThunk<DoDrawer.State, TDoDrawer>(DoDrawer);
-  const [_3, doDrawer] = useDrawer;
+  const [_classStateDrawer, doDrawer] = useDrawer;
 
   const useExplorer = useThunk<DoExplorer.State, TDoExplorer>(DoExplorer);
-  const [_4, doExplorer] = useExplorer;
+  const [_classStateExplorer, doExplorer] = useExplorer;
 
   const useDataTag = useThunk<DoDataTag.State, TDoDataTag>(DoDataTag);
-  const [_7, doDataTag] = useDataTag;
+  const [_classStateDataTag, doDataTag] = useDataTag;
 
   const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
-  const [_8, doFeed] = useFeed;
+  const [_classStateFeed, doFeed] = useFeed;
 
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
-  const [_9, doCart] = useCart;
+  const [_classStateCart, doCart] = useCart;
 
   const usePlugin = useThunk<DoPlugin.State, TDoPlugin>(DoPlugin);
   const [_classStatePlugin, doPlugin] = usePlugin;
@@ -137,21 +106,12 @@ export default () => {
   const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
     DoPluginInstance,
   );
-  const [_classStatePluginInstance, doPluginInstance] = usePlugin;
+  const [_classStatePluginInstance, doPluginInstance] = usePluginInstance;
 
-  const actions: Actions = {
-    createFeedWithData: (selectData: Series) => {
-      setState({ selectData });
-      const type = isLoggedIn ? "private" : "public";
-      navigate(
-        `/feeds?search=&searchType=&page=${1}&perPage=${14}&type=${type}`,
-      );
-    },
-
-    clearFeedData: () => {
-      setState({ selectData: [] });
-    },
-  };
+  const useMainRouter = useThunk<DoMainRouter.State, TDoMainRouter>(
+    DoMainRouter,
+  );
+  const [_classStateMainRouter, doMainRouter] = useMainRouter;
 
   const matchRoute = (path: string) => {
     const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
@@ -192,6 +152,7 @@ export default () => {
     doCart.init();
     doPlugin.init();
     doPluginInstance.init();
+    doMainRouter.init();
   }, []);
 
   // Update the active sidebar item based on the current route
@@ -210,82 +171,66 @@ export default () => {
       path: "library/*",
       element: (
         <PrivateRoute>
-          <RouterProvider {...{ actions, state }} context={MainRouterContext}>
-            <OperationsProvider>
-              <GnomeLibrary />
-            </OperationsProvider>
-          </RouterProvider>
+          <OperationsProvider>
+            <GnomeLibrary />
+          </OperationsProvider>
         </PrivateRoute>
       ),
     },
     {
       path: "data/tag/uploaded",
       element: (
-        <RouterProvider {...{ actions, state }} context={MainRouterContext}>
-          <OperationsProvider>
-            <FeedsListView title="Data: uploaded" isShared={false} />
-          </OperationsProvider>
-        </RouterProvider>
+        <OperationsProvider>
+          <FeedsListView title="Data: uploaded" isShared={false} />
+        </OperationsProvider>
       ),
     },
     {
       path: "data/tag/public",
       element: (
-        <RouterProvider {...{ actions, state }} context={MainRouterContext}>
-          <OperationsProvider>
-            <FeedsListView title="Data: public" isShared={true} />
-          </OperationsProvider>
-        </RouterProvider>
+        <OperationsProvider>
+          <FeedsListView title="Data: public" isShared={true} />
+        </OperationsProvider>
       ),
     },
     {
       path: "data/tag/pacs",
       element: (
-        <RouterProvider {...{ actions, state }} context={MainRouterContext}>
-          <OperationsProvider>
-            <FeedsListView title="Data: pacs" isShared={false} />
-          </OperationsProvider>
-        </RouterProvider>
+        <OperationsProvider>
+          <FeedsListView title="Data: pacs" isShared={false} />
+        </OperationsProvider>
       ),
     },
     {
       path: "data/tag/:id",
       element: (
-        <RouterProvider {...{ actions, state }} context={MainRouterContext}>
-          <OperationsProvider>
-            <FeedsListView title="Data" isShared={false} />
-          </OperationsProvider>
-        </RouterProvider>
+        <OperationsProvider>
+          <FeedsListView title="Data" isShared={false} />
+        </OperationsProvider>
       ),
     },
     {
       path: "data/:id",
       element: (
-        <RouterProvider {...{ actions, state }} context={MainRouterContext}>
-          <OperationsProvider>
-            <FeedView />
-          </OperationsProvider>
-        </RouterProvider>
+        <OperationsProvider>
+          <FeedView />
+        </OperationsProvider>
       ),
     },
     {
       path: "data/*",
       element: (
-        <RouterProvider {...{ actions, state }} context={MainRouterContext}>
-          <OperationsProvider>
-            <FeedsListView title="My Data" isShared={false} />
-          </OperationsProvider>
-        </RouterProvider>
+        <OperationsProvider>
+          <FeedsListView title="My Data" isShared={false} />
+        </OperationsProvider>
       ),
     },
     {
       path: "shared/*",
       element: (
-        <RouterProvider {...{ actions, state }} context={MainRouterContext}>
-          <OperationsProvider>
-            <FeedsListView title="Shared Data" isShared={true} />
-          </OperationsProvider>
-        </RouterProvider>
+        <OperationsProvider>
+          <FeedsListView title="Shared Data" isShared={true} />
+        </OperationsProvider>
       ),
     },
     {

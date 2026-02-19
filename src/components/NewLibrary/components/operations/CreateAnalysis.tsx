@@ -1,7 +1,9 @@
 import {
+  getRootID,
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
+  useThunk,
 } from "@chhsiao1981/use-thunk";
 import {
   Modal,
@@ -16,8 +18,8 @@ import { catchError } from "../../../../api/common";
 import { getFeed, getPluginInstances } from "../../../../api/serverApi";
 import type { PluginInstance } from "../../../../api/types";
 import * as DoCart from "../../../../reducers/cart";
+import * as DoMainRouter from "../../../../reducers/mainRouter";
 import type { CartSelectionPayload } from "../../../../reducers/types";
-import { MainRouterContext } from "../../../../routes";
 import { AddNodeContext } from "../../../AddNode/context";
 import BasicInformation from "../../../CreateFeed/BasicInformation";
 import { CreateFeedContext } from "../../../CreateFeed/context";
@@ -31,6 +33,7 @@ import { PipelineContext } from "../../../PipelinesCopy/context";
 import OperationButton from "./OperationButton";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+type TDoMainRouter = ThunkModuleToFunc<typeof DoMainRouter>;
 
 type Props = {
   handleOperations: (operationKey: string) => void;
@@ -45,7 +48,12 @@ export default (props: Props) => {
   const { selectedPaths } = cart;
 
   const queryClient = useQueryClient();
-  const router = useContext(MainRouterContext);
+
+  const useMainRouter = useThunk<DoMainRouter.State, TDoMainRouter>(
+    DoMainRouter,
+  );
+  const [classStateMainRouter, doMainRouter] = useMainRouter;
+  const mainRouterID = getRootID(classStateMainRouter);
 
   const { state: stateCreateFeed, dispatch: dispatchCreateFeed } =
     useContext(CreateFeedContext);
@@ -88,7 +96,7 @@ export default (props: Props) => {
     pipelineDispatch({
       type: Types.ResetState,
     });
-    router.actions.clearFeedData();
+    doMainRouter.clearFeedData(mainRouterID);
   };
 
   const getFeedError = (error: any) => {

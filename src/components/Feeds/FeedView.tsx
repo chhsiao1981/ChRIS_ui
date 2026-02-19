@@ -255,7 +255,11 @@ export default () => {
                   maximized={drawerState.node.maximized}
                 />
                 <div className="node-block">
-                  <NodeDetails useDrawer={useDrawer} useFeed={useFeed} />
+                  <NodeDetails
+                    useDrawer={useDrawer}
+                    useFeed={useFeed}
+                    usePluginInstance={usePluginInstance}
+                  />
                 </div>
               </Panel>
             </PanelGroup>

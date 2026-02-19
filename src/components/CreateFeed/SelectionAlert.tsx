@@ -1,8 +1,14 @@
+import {
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import { Chip, ChipGroup } from "@patternfly/react-core";
 import type React from "react";
-import { useContext } from "react";
 import { pluralize } from "../../api/common";
-import { MainRouterContext } from "../../routes";
+import * as DoMainRouter from "../../reducers/mainRouter";
+
+type TDoMainRouter = ThunkModuleToFunc<typeof DoMainRouter>;
 
 /** Wraps step component to add an alert to the top */
 
@@ -17,7 +23,13 @@ export const SelectionAlertWrap = ({
   showAlert,
   stepComponent,
 }: SelectionAlertWrapProps) => {
-  const { selectData } = useContext(MainRouterContext).state;
+  const useMainRouter = useThunk<DoMainRouter.State, TDoMainRouter>(
+    DoMainRouter,
+  );
+  const [classStateMainRouter, _doMainRouter] = useMainRouter;
+  const mainRouter =
+    getState(classStateMainRouter) || DoMainRouter.defaultState;
+  const { selectData } = mainRouter;
 
   const Alert = () => {
     if (showAlert && selectData && selectData.length > 0)

@@ -1,6 +1,6 @@
 import { produce } from "immer";
 import type { Key } from "rc-tree/lib/interface";
-import type { State as MainRouterContextState } from "../../../routes";
+import type * as DoMainRouter from "../../../reducers/mainRouter";
 import {
   type CreateFeedActions,
   type CreateFeedData,
@@ -12,7 +12,7 @@ import {
 import { Series } from "../../../../pages/DataLibrary/Library";
 */
 
-function getDefaultCreateFeedData(selectedData?: any[]): CreateFeedData {
+const getDefaultCreateFeedData = (selectedData?: any[]): CreateFeedData => {
   const initData: CreateFeedData = {
     feedName: "",
     feedDescription: "",
@@ -29,11 +29,11 @@ function getDefaultCreateFeedData(selectedData?: any[]): CreateFeedData {
   }
 
   return initData;
-}
+};
 
-export function getInitialState(
-  routerContextState?: typeof MainRouterContextState,
-): CreateFeedState {
+export const getInitialState = (
+  routerContextState?: DoMainRouter.State,
+): CreateFeedState => {
   const selectedData = routerContextState?.selectData;
   const isInitDataSelected = !!selectedData?.length;
 
@@ -47,7 +47,7 @@ export function getInitialState(
     feedError: {},
     creatingFeedStatus: "",
   };
-}
+};
 
 const createFeedReducer = produce(
   (draft: CreateFeedState, action: CreateFeedActions) => {
@@ -58,6 +58,7 @@ const createFeedReducer = produce(
       }
 
       case Types.SetStep: {
+        // @ts-expect-error id can be number too.
         draft.step = action.payload.id;
         break;
       }
