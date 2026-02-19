@@ -1,36 +1,55 @@
 // -------------------- 1) Imports --------------------
 
+import {
+  getRootID,
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import { Button, Modal, ModalVariant, Spinner } from "@patternfly/react-core";
 import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useState } from "react";
 import ChrisAPIClient from "../../api/chrisapiclient";
 import type { Feed } from "../../api/types";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { getNodeOperations } from "../../store/plugin/pluginSlice";
-import { getSelectedPlugin } from "../../store/pluginInstance/pluginInstanceSlice";
+import * as DoPlugin from "../../reducers/plugin";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { Alert } from "../Antd";
 
+type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
+
 // -------------------- 2) Props & Interfaces --------------------
-interface DeleteNodeProps {
+type Props = {
   feed?: Feed;
   removeNodeLocally?: (ids: number[]) => void;
-}
+};
 
 // -------------------- 3) Component: DeleteNode --------------------
-export default function DeleteNode({
-  feed,
-  removeNodeLocally,
-}: DeleteNodeProps) {
-  // --- Redux / Query-Client Hooks ---
-  const dispatch = useAppDispatch();
-  const queryClient = useQueryClient();
+export default (props: Props) => {
+  const { feed, removeNodeLocally } = props;
 
-  // --- Global Redux States ---
-  const isModalOpen = useAppSelector(
-    (state) => state.plugin.nodeOperations.deleteNode,
+  const [classStatePlugin, doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(
+    DoPlugin,
   );
-  const { selectedPlugin } = useAppSelector((state) => state.instance);
+
+  const pluginID = getRootID(classStatePlugin);
+  const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
+  const { nodeOperations } = plugin;
+  const { deleteNode: isModalOpen } = nodeOperations;
+
+  const [classStatePluginInstance, doPluginInstance] = useThunk<
+    DoPluginInstance.State,
+    TDoPluginInstance
+  >(DoPluginInstance);
+
+  const pluginInstanceID = getRootID(classStatePluginInstance);
+  const pluginInstance =
+    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
+  const { selectedPlugin } = pluginInstance;
+
+  // --- Redux / Query-Client Hooks ---
+  const queryClient = useQueryClient();
 
   // -------------------- 4) Local State & Logic --------------------
   const [loading, setLoading] = useState(false);
@@ -49,7 +68,7 @@ export default function DeleteNode({
 
     try {
       // 1) Cancel if plugin not in terminal state
-      const { previous_id: parentId, status } = selectedPlugin.data;
+      const { previous_id: parentId, status } = selectedPlugin;
       if (
         !["finishedSuccessfully", "cancelled", "finishedWithError"].includes(
           status,
@@ -80,7 +99,7 @@ export default function DeleteNode({
       // 5) Delete plugin instance via axios
       const client = ChrisAPIClient.getClient();
       const token = client.auth.token;
-      const pluginId = selectedPlugin.data.id;
+      const pluginId = selectedPlugin.id;
       const deleteUrl = `${import.meta.env.VITE_CHRIS_UI_URL}plugins/instances/${pluginId}/`;
 
       await axios.delete(deleteUrl, {
@@ -117,12 +136,12 @@ export default function DeleteNode({
 
     // 1) If we have a valid parent, select it *now* that the modal is closed
     if (parentToSelect) {
-      dispatch(getSelectedPlugin(parentToSelect));
+      doPluginInstance.getSelectedPlugin(pluginInstanceID, parentToSelect);
       setParentToSelect(null); // reset
     }
 
     // 2) Close the modal
-    dispatch(getNodeOperations("deleteNode"));
+    doPlugin.getNodeOperations(pluginID, "deleteNode");
   };
 
   // -------------------- 5) Render --------------------
@@ -132,7 +151,7 @@ export default function DeleteNode({
       title="Delete Selected Node"
       description={
         selectedPlugin
-          ? `You are about to delete "${selectedPlugin.data.title || selectedPlugin.data.plugin_name}" and its descendants. This action cannot be undone.`
+          ? `You are about to delete "${selectedPlugin.title || selectedPlugin.plugin_name}" and its descendants. This action cannot be undone.`
           : "No node selected."
       }
       isOpen={isModalOpen}
@@ -175,4 +194,4 @@ export default function DeleteNode({
       )}
     </Modal>
   );
-}
+};

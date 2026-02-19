@@ -1,4 +1,10 @@
 import {
+  getRootID,
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
+import {
   Button,
   Card,
   CardBody,
@@ -19,6 +25,7 @@ import {
   useWizardContext,
 } from "@patternfly/react-core";
 import React, { useCallback, useContext, useEffect, useState } from "react";
+import * as DoPlugin from "../../reducers/plugin";
 import { useAppSelector } from "../../store/hooks";
 import { AddNodeContext } from "../AddNode/context";
 import GuidedConfig from "../AddNode/GuidedConfig";
@@ -36,6 +43,8 @@ import { FileList } from "./HelperComponent";
 import LocalFileUpload from "./LocalFileUpload";
 import { type ChRISFeed, Types } from "./types/feed";
 
+type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
+
 const ChooseConfig = ({
   handleFileUpload,
   user,
@@ -51,7 +60,11 @@ const ChooseConfig = ({
   const { goToNextStep: onNext, goToPrevStep: onBack } = useWizardContext();
   const [isRightDrawerExpand, setRightDrawerExpand] = useState<boolean>(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const params = useAppSelector((state) => state.plugin.parameters);
+
+  const [classStatePlugin, _] = useThunk<DoPlugin.State, TDoPlugin>(DoPlugin);
+  const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
+  const { parameters: params } = plugin;
+
   const [selectedCard, setSelectedCard] = useState("");
   const [showDragAndDrop, setShowDragAndDrop] = useState(false);
 
@@ -186,7 +199,7 @@ const ChooseConfig = ({
   const resetPlugin = () => {
     notification.info({
       message: "Plugin unselected",
-      description: `${pluginMeta?.data.name} unselected`,
+      description: `${pluginMeta?.name} unselected`,
       duration: 1,
     });
     nodeDispatch({
@@ -422,7 +435,7 @@ const ChooseConfig = ({
                             direction={{ default: "column" }}
                             flex={{ default: "flex_1" }}
                           >
-                            <p className="file-name">{pluginMeta.data.title}</p>
+                            <p className="file-name">{pluginMeta.title}</p>
                           </Flex>
 
                           <Flex direction={{ default: "column" }}>

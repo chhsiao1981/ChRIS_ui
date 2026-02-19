@@ -20,6 +20,8 @@ import { searchPluginsByName } from "./plugin";
 import {
   createPluginInstance,
   createPluginInstanceByDirs,
+  deletePluginInstance,
+  getPluginInstance,
   getPluginInstances,
   getWorkflowPluginInstances,
 } from "./pluginInstance";
@@ -42,6 +44,8 @@ export {
   getUserInfo,
   oidcRedirect,
   getPluginInstances,
+  getPluginInstance,
+  deletePluginInstance,
   getWorkflowPluginInstances,
   createPluginInstance,
   createPluginInstanceByDirs,

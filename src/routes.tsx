@@ -38,6 +38,8 @@ import * as DoDataTag from "./reducers/dataTag";
 import * as DoDrawer from "./reducers/drawer";
 import * as DoExplorer from "./reducers/explorer";
 import * as DoFeed from "./reducers/feed";
+import * as DoPlugin from "./reducers/plugin";
+import * as DoPluginInstance from "./reducers/pluginInstance";
 import * as DoUI from "./reducers/ui";
 import * as DoUser from "./reducers/user";
 
@@ -48,6 +50,8 @@ type TDoExplorer = ThunkModuleToFunc<typeof DoExplorer>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
 type TDoDataTag = ThunkModuleToFunc<typeof DoDataTag>;
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 interface State {
   selectData?: Series;
@@ -127,6 +131,14 @@ export default () => {
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
   const [_9, doCart] = useCart;
 
+  const usePlugin = useThunk<DoPlugin.State, TDoPlugin>(DoPlugin);
+  const [_classStatePlugin, doPlugin] = usePlugin;
+
+  const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
+    DoPluginInstance,
+  );
+  const [_classStatePluginInstance, doPluginInstance] = usePlugin;
+
   const actions: Actions = {
     createFeedWithData: (selectData: Series) => {
       setState({ selectData });
@@ -160,6 +172,7 @@ export default () => {
     return _ROUTE_TO_SIDEBAR_ITEM["*"];
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: init only once.
   useEffect(() => {
     // No need to set thunks when doing login.
     if (
@@ -177,18 +190,9 @@ export default () => {
     doExplorer.init();
     doFeed.init();
     doCart.init();
-  }, [
-    dataTagID,
-    doCart.init,
-    doDataTag,
-    doDrawer.init,
-    doExplorer.init,
-    doFeed.init,
-    doUI.init,
-    doUser.init,
-    location.pathname,
-    uiID,
-  ]);
+    doPlugin.init();
+    doPluginInstance.init();
+  }, []);
 
   // Update the active sidebar item based on the current route
   useEffect(() => {

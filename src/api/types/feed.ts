@@ -18,3 +18,11 @@ export interface Feed {
   errored_jobs: number;
   cancelled_jobs: number;
 }
+
+export type NodeOperation = {
+  terminal: boolean;
+  childNode: boolean;
+  childPipeline: boolean;
+  childGraph: boolean;
+  deleteNode: boolean;
+};

@@ -1,19 +1,28 @@
 import {
+  getRootID,
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
+import {
   MenuToggle,
   Select,
   SelectList,
   SelectOption,
 } from "@patternfly/react-core";
 import React, { useCallback, useContext, useEffect, useState } from "react";
-import { useAppSelector } from "../../store/hooks";
+import * as DoPlugin from "../../reducers/plugin";
 import { Alert } from "../Antd";
 import { AddNodeContext } from "./context";
 import { Types } from "./types";
 
+type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
+
 const ComputeEnvironment: React.FC = () => {
-  const { computeEnv: computeEnvs, resourceError } = useAppSelector(
-    (state) => state.plugin,
-  );
+  const [classStatePlugin, _] = useThunk<DoPlugin.State, TDoPlugin>(DoPlugin);
+  const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
+  const { computeEnv: computeEnvs, resourceError } = plugin;
+
   const { state, dispatch } = useContext(AddNodeContext);
   const { selectedComputeEnv } = state;
   const [isOpen, setIsOpen] = useState(false);
@@ -34,7 +43,7 @@ const ComputeEnvironment: React.FC = () => {
 
   useEffect(() => {
     if (computeEnvs && computeEnvs.length > 0) {
-      const currentComputeEnv = computeEnvs[0].data.name;
+      const currentComputeEnv = computeEnvs[0].name;
       setStates(currentComputeEnv);
     }
   }, [computeEnvs, setStates]);
@@ -56,12 +65,12 @@ const ComputeEnvironment: React.FC = () => {
   const menuItems = computeEnvs
     ? computeEnvs.map((computeEnv) => (
         <SelectOption
-          isSelected={selectedComputeEnv === computeEnv.data.name}
-          id={computeEnv.data.name}
-          key={computeEnv.data.id}
+          isSelected={selectedComputeEnv === computeEnv.name}
+          id={computeEnv.name}
+          key={computeEnv.id}
           onClick={onSelect}
         >
-          {computeEnv.data.name}
+          {computeEnv.name}
         </SelectOption>
       ))
     : [];

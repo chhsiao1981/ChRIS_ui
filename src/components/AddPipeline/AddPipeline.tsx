@@ -1,18 +1,27 @@
+import {
+  getRootID,
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import { Button, Modal, ModalVariant } from "@patternfly/react-core";
 import { useMutation } from "@tanstack/react-query";
-import React, { Fragment, useCallback, useContext } from "react";
+import React, { Fragment, useContext } from "react";
 import {
   computeWorkflowNodesInfo,
   createWorkflow,
   getWorkflowPluginInstances,
 } from "../../api/serverApi";
 import type { PluginInstance } from "../../api/types";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { getNodeOperations } from "../../store/plugin/pluginSlice";
+import * as DoPlugin from "../../reducers/plugin";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { Alert, Form, Tag } from "../Antd";
 import { SpinContainer } from "../Common";
 import Pipelines from "../PipelinesCopy";
 import { PipelineContext, Types } from "../PipelinesCopy/context";
+
+type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 type Props = {
   addNodeLocally: (instance: PluginInstance | PluginInstance[]) => void;
@@ -20,28 +29,38 @@ type Props = {
 };
 export default (props: Props) => {
   const { addNodeLocally, isStaff } = props;
+
+  const [classStatePluginInstance, _1] = useThunk<
+    DoPluginInstance.State,
+    TDoPluginInstance
+  >(DoPluginInstance);
+
+  const pluginInstance =
+    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
+  const { selectedPlugin, pluginInstances } = pluginInstance;
+
+  const [classStatePlugin, doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(
+    DoPlugin,
+  );
+  const pluginID = getRootID(classStatePlugin);
+  const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
+  const { nodeOperations } = plugin;
+  const { childPipeline } = nodeOperations;
+
   const { state, dispatch } = useContext(PipelineContext);
   const { pipelineToAdd, selectedPipeline, computeInfo, titleInfo } = state;
-  const reactDispatch = useAppDispatch();
-  const { childPipeline } = useAppSelector(
-    (state) => state.plugin.nodeOperations,
-  );
-
-  const { pluginInstances, selectedPlugin } = useAppSelector(
-    (state) => state.instance,
-  );
 
   const alreadyAvailableInstances = pluginInstances.data;
 
-  const handleToggle = useCallback(() => {
+  const handleToggle = () => {
     if (childPipeline) {
       dispatch({
         type: Types.ResetState,
       });
       mutation.reset();
     }
-    reactDispatch(getNodeOperations("childPipeline"));
-  }, [childPipeline, dispatch, reactDispatch]);
+    doPlugin.getNodeOperations(pluginID, "childPipeline");
+  };
 
   const addPipeline = async () => {
     if (!pipelineToAdd) {
@@ -73,7 +92,7 @@ export default (props: Props) => {
           status,
           data: workflow,
           errmsg,
-        } = await createWorkflow(id, selectedPlugin.data.id, nodes_info);
+        } = await createWorkflow(id, selectedPlugin.id, nodes_info);
         if (!workflow) {
           return;
         }

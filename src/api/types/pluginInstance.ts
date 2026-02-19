@@ -16,7 +16,7 @@ export enum PluginInstanceStatus {
 export interface PluginInstance {
   id: ID;
   title: string;
-  previous_id: number;
+  previous_id: ID;
   compute_resource_name: string;
   plugin_id: ID;
   plugin_name: string;

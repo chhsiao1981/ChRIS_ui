@@ -63,3 +63,9 @@ export const getPluginInstance = (theID: ID) =>
   api<PluginInstance>({
     endpoint: `/plugins/instances/${theID}`,
   });
+
+export const deletePluginInstance = (theID: ID) =>
+  api<PluginInstance>({
+    endpoint: `/plugins/instances/${theID}`,
+    method: "delete",
+  });

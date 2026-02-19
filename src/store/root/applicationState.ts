@@ -4,11 +4,9 @@
  *   Author:         ChRIS UI
  */
 
-import type { IPluginState } from "../plugin/pluginSlice";
 import type { IPluginInstanceState } from "../pluginInstance/types";
 
 export interface ApplicationState {
-  plugin: IPluginState;
   instance: IPluginInstanceState;
 }
 
