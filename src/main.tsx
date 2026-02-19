@@ -11,7 +11,6 @@ import * as DoFeed from "./reducers/feed";
 import * as DoPacs from "./reducers/pacs";
 import * as DoUI from "./reducers/ui";
 import * as DoUser from "./reducers/user";
-import { setupStore } from "./store/configureStore.ts";
 
 import "@patternfly/react-core/dist/styles/base.css";
 
@@ -37,13 +36,12 @@ registerThunk(DoUser);
 registerThunk(DoCart);
 
 enableMapSet();
-const store = setupStore();
 const root = createRoot(document.getElementById("root")!);
 root.render(
   <StrictMode>
     <ThunkContext>
       <ThemeContextProvider>
-        <App store={store} />
+        <App />
       </ThemeContextProvider>
     </ThunkContext>
   </StrictMode>,
