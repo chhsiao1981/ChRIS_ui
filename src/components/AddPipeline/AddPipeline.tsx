@@ -30,18 +30,17 @@ type Props = {
 export default (props: Props) => {
   const { addNodeLocally, isStaff } = props;
 
-  const [classStatePluginInstance, _1] = useThunk<
-    DoPluginInstance.State,
-    TDoPluginInstance
-  >(DoPluginInstance);
+  const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
+    DoPluginInstance,
+  );
 
+  const [classStatePluginInstance, _doPluginInstance] = usePluginInstance;
   const pluginInstance =
     getState(classStatePluginInstance) || DoPluginInstance.defaultState;
   const { selectedPlugin, pluginInstances } = pluginInstance;
 
-  const [classStatePlugin, doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(
-    DoPlugin,
-  );
+  const usePlugin = useThunk<DoPlugin.State, TDoPlugin>(DoPlugin);
+  const [classStatePlugin, doPlugin] = usePlugin;
   const pluginID = getRootID(classStatePlugin);
   const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
   const { nodeOperations } = plugin;

@@ -1,9 +1,13 @@
+import {
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import type { HierarchyPointNode } from "d3-hierarchy";
 import { select } from "d3-selection";
 import { Fragment, useCallback, useContext, useEffect, useRef } from "react";
 import type { PluginInstance } from "../../api/types";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { ThemeContext } from "../DarkTheme/useTheme";
 import type { FeedTreeScaleType } from "./Controls";
 import DropdownMenu from "./DropdownMenu";
@@ -11,6 +15,8 @@ import type { Point, TreeNodeDatum } from "./data";
 import NodeModal from "./NodeModal";
 import { getStatusClass, setNodeTransform } from "./NodeUtils";
 import usePipelineMutation from "./usePipelineMutation";
+
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 /** Constants */
 const DEFAULT_NODE_CIRCLE_RADIUS = 12;
@@ -28,7 +34,7 @@ type Props = {
   addNodeLocally: (instance: PluginInstance | PluginInstance[]) => void;
   status?: string;
   overlaySize?: number;
-  currentId: boolean;
+  isCurrentID: boolean;
 
   isStaff: boolean;
 };
@@ -44,25 +50,29 @@ export default (props: Props) => {
     onNodeClick,
     toggleLabel,
     status,
-    currentId,
+    isCurrentID: currentId,
     overlaySize,
     searchFilter,
     addNodeLocally,
     isStaff,
   } = props;
 
-  const dispatch = useAppDispatch();
-  const pluginInstances = useAppSelector(
-    (state) => state.instance.pluginInstances.data,
+  const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
+    DoPluginInstance,
   );
-  const selectedPlugin = useAppSelector(
-    (state) => state.instance.selectedPlugin,
-  );
+
+  const [classStatePluginInstance, _doPluginInstance] = usePluginInstance;
+
+  const pluginInstance =
+    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
+  const { selectedPlugin, pluginInstances: pluginInstancesObj } =
+    pluginInstance;
+  const { data: pluginInstances } = pluginInstancesObj;
 
   const { mutation, contextHolder } = usePipelineMutation(
     selectedPlugin,
     pluginInstances,
-    dispatch,
+    usePluginInstance,
   );
 
   const applyNodeTransform = useCallback((transform: string, opacity = 1) => {

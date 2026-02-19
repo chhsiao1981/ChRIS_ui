@@ -1,3 +1,8 @@
+import {
+  getRootID,
+  type ThunkModuleToFunc,
+  type UseThunk,
+} from "@chhsiao1981/use-thunk";
 import { useMutation } from "@tanstack/react-query";
 import { notification } from "antd";
 import { useEffect } from "react";
@@ -7,16 +12,17 @@ import {
   getWorkflowPluginInstances,
 } from "../../api/serverApi";
 import type { PluginInstance } from "../../api/types";
-import {
-  getSelectedPlugin,
-  setPluginInstancesAndSelectedPlugin,
-} from "../../store/pluginInstance/pluginInstanceSlice";
+import type * as DoPluginInstance from "../../reducers/pluginInstance";
+
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 export default (
   selectedPlugin: PluginInstance | undefined,
   pluginInstances: PluginInstance[],
-  dispatch: any,
+  usePluginInstance: UseThunk<DoPluginInstance.State, TDoPluginInstance>,
 ) => {
+  const [classStatePluginInstance, doPluginInstance] = usePluginInstance;
+  const pluginInstanceID = getRootID(classStatePluginInstance);
   const [api, contextHolder] = notification.useNotification();
 
   const fetchPipelines = async () => {
@@ -47,14 +53,18 @@ export default (
           const firstInstance = instances[instances.length - 1];
           const completeList = [...pluginInstances, ...instances];
 
-          dispatch(getSelectedPlugin(firstInstance));
+          doPluginInstance.getSelectedPlugin(pluginInstanceID, firstInstance);
 
           const pluginInstanceObj = {
             selected: firstInstance,
             pluginInstances: completeList,
           };
 
-          dispatch(setPluginInstancesAndSelectedPlugin(pluginInstanceObj));
+          doPluginInstance.setPluginInstancesAndSelectedPlugin(
+            pluginInstanceID,
+            pluginInstanceObj.selected,
+            pluginInstanceObj.pluginInstances,
+          );
           //dispatch(getPluginInstanceStatusRequest(pluginInstanceObj));
         }
       } else {

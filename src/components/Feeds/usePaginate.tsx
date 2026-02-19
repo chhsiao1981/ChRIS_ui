@@ -1,7 +1,6 @@
 import { debounce } from "lodash";
 import { useCallback, useMemo, useState } from "react";
 import { useLocation } from "react-router";
-import { useAppDispatch } from "../../store/hooks.ts";
 
 export interface FilterState {
   perPage: number;
@@ -18,7 +17,6 @@ export const usePaginate = () => {
     searchType: "name",
   });
   const { perPage, page, search, searchType } = filterState;
-  const dispatch = useAppDispatch();
 
   const handlePageSet = (_e: any, page: number) => {
     setFilterState({
@@ -47,9 +45,9 @@ export const usePaginate = () => {
 
   const run = useCallback(
     (action: any) => {
-      dispatch(action(searchType, search, perPage, perPage * (page - 1)));
+      action(searchType, search, perPage, perPage * (page - 1));
     },
-    [page, perPage, search, dispatch, searchType],
+    [page, perPage, search, searchType],
   );
 
   return {
@@ -59,7 +57,6 @@ export const usePaginate = () => {
     handleFilterChange,
     run,
     debouncedFilterUpdate,
-    dispatch,
   };
 };
 

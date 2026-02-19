@@ -1,10 +1,17 @@
+import {
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import { useQuery } from "@tanstack/react-query";
 import type { HierarchyPointNode } from "d3-hierarchy";
 import type { PluginInstance } from "../../api/types";
-import { useAppSelector } from "../../store/hooks";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import type { FeedTreeScaleType } from "./Controls";
 import type { Point, TreeNodeDatum } from "./data";
 import Node from "./Node";
+
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 type Props = {
   tsNodes?: PluginInstance[];
@@ -61,9 +68,15 @@ export default (props: Props) => {
     },
   });
 
-  const currentId = useAppSelector((state) => {
-    return state.instance.selectedPlugin?.data.id === data.id;
-  });
+  const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
+    DoPluginInstance,
+  );
+
+  const [classStatePluginInstance, _doPluginInstance] = usePluginInstance;
+  const pluginInstance =
+    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
+  const { selectedPlugin } = pluginInstance;
+  const isCurrentID = selectedPlugin?.id === data.id;
 
   let scale: number | undefined;
   if (overlayScale === "time") {
@@ -89,7 +102,7 @@ export default (props: Props) => {
       addNodeLocally={addNodeLocally}
       status={activeStatus.data || intitalStatus}
       overlaySize={scale}
-      currentId={currentId}
+      isCurrentID={isCurrentID}
       isStaff={isStaff}
     />
   );

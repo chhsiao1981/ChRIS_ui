@@ -1,3 +1,9 @@
+import {
+  getRootID,
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import { useMutation } from "@tanstack/react-query";
 import { Input, notification, Switch } from "antd";
 import type { HierarchyPointLink, HierarchyPointNode } from "d3-hierarchy";
@@ -24,8 +30,7 @@ import {
 } from "../../api/serverApi";
 import { getPipelines } from "../../api/serverApi/pipeline";
 import type { Feed, ID, PluginInstance } from "../../api/types";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { getSelectedPlugin } from "../../store/pluginInstance/pluginInstanceSlice";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import AddNodeConnect from "../AddNode/AddNode";
 import { AddNodeProvider } from "../AddNode/context";
 import AddPipeline from "../AddPipeline/AddPipeline";
@@ -35,6 +40,8 @@ import { RotateLeft, RotateRight } from "../Icons";
 import { PipelineProvider } from "../PipelinesCopy/context";
 import DropdownMenu from "./DropdownMenu";
 import useSize from "./useSize";
+
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 export type TSID = {
   [key: string]: ID[];
@@ -170,7 +177,17 @@ export default (props: FeedTreeProps) => {
     feed,
     isStaff,
   } = props;
-  const dispatch = useAppDispatch();
+
+  const [classStatePluginInstance, doPluginInstance] = useThunk<
+    DoPluginInstance.State,
+    TDoPluginInstance
+  >(DoPluginInstance);
+
+  const pluginInstanceID = getRootID(classStatePluginInstance);
+  const pluginInstance =
+    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
+  const { selectedPlugin } = pluginInstance;
+
   const { isDarkTheme } = useContext(ThemeContext);
   const [state, updateState] = useImmer(getInitialState());
   const [transform, setTransform] = useState({
@@ -197,9 +214,7 @@ export default (props: FeedTreeProps) => {
     visible: false,
   });
   const orientation = state.switchState.orientation;
-  const selectedPlugin = useAppSelector(
-    (store) => store.instance.selectedPlugin,
-  );
+
   const [api, contextHolder] = notification.useNotification();
 
   const pipelineMutation = useMutation({
@@ -248,7 +263,7 @@ export default (props: FeedTreeProps) => {
     const instances = data || [];
     if (instances && instances.length > 0) {
       const firstInstance = instances[instances.length - 1];
-      dispatch(getSelectedPlugin(firstInstance));
+      doPluginInstance.getSelectedPlugin(pluginInstanceID, firstInstance);
       addNodeLocally(instances);
     }
     return pipelines;
@@ -418,7 +433,7 @@ export default (props: FeedTreeProps) => {
         overlayScale: state.overlayScale.enabled
           ? state.overlayScale.type
           : undefined,
-        selectedId: selectedPlugin?.data.id,
+        selectedId: selectedPlugin?.id,
         finalStatus,
       });
     });
@@ -651,7 +666,6 @@ export default (props: FeedTreeProps) => {
           />
         )}
       </div>
-      {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
       <canvas
         ref={canvasRef}
         style={{ width: "100%", height: "100%", cursor: "grab" }}
@@ -728,7 +742,7 @@ interface DrawNodeOptions {
   toggleLabel: boolean;
   searchFilter: string;
   overlayScale?: FeedTreeScaleType;
-  selectedId?: number;
+  selectedId?: ID;
   finalStatus: string | undefined;
 }
 

@@ -1,4 +1,10 @@
 import {
+  getRootID,
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
+import {
   Button,
   Modal,
   ModalVariant,
@@ -7,30 +13,34 @@ import {
 } from "@patternfly/react-core";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { setPluginTitle } from "../../store/pluginInstance/pluginInstanceSlice";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { Alert } from "../Antd";
 import { SpinContainer } from "../Common";
 import { EditIcon } from "../Icons";
 
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
+
 const PluginTitle = () => {
-  const dispatch = useAppDispatch();
-  const { selectedPlugin } = useAppSelector((state) => state.instance);
+  const [classStatePluginInstance, doPluginInstance] = useThunk<
+    DoPluginInstance.State,
+    TDoPluginInstance
+  >(DoPluginInstance);
+
+  const pluginInstanceID = getRootID(classStatePluginInstance);
+  const pluginInstance =
+    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
+  const { selectedPlugin } = pluginInstance;
+
   const [isOpen, setIsOpen] = useState(false);
   const [value, setValue] = useState("");
 
   const handleSubmit = async () => {
-    try {
-      const pluginItem = await selectedPlugin?.put({
-        title: value,
-      });
+    const pluginItem = await selectedPlugin?.put({
+      title: value,
+    });
 
-      if (!pluginItem) throw new Error("Failed to set title...");
-      dispatch(setPluginTitle(pluginItem));
-    } catch (e) {
-      // biome-ignore lint/complexity/noUselessCatch: <explanation>
-      throw e;
-    }
+    if (!pluginItem) throw new Error("Failed to set title...");
+    doPluginInstance.setPluginTitle(pluginInstanceID, pluginItem);
   };
 
   const mutation = useMutation({
@@ -47,11 +57,10 @@ const PluginTitle = () => {
   }, [mutation.isSuccess]);
 
   useEffect(() => {
-    const pluginName =
-      selectedPlugin?.data.title.length > 0
-        ? selectedPlugin?.data.title
-        : `${selectedPlugin?.data.plugin_name} v.${selectedPlugin?.data.plugin_version}`;
-    setValue(pluginName);
+    const pluginName = selectedPlugin?.title
+      ? selectedPlugin?.title
+      : `${selectedPlugin?.plugin_name} v.${selectedPlugin?.plugin_version}`;
+    setValue(pluginName || "");
   }, [selectedPlugin]);
 
   return (

@@ -26,7 +26,6 @@ import {
 } from "@patternfly/react-core";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import * as DoPlugin from "../../reducers/plugin";
-import { useAppSelector } from "../../store/hooks";
 import { AddNodeContext } from "../AddNode/context";
 import GuidedConfig from "../AddNode/GuidedConfig";
 import {

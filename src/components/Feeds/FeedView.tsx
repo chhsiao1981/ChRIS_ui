@@ -1,14 +1,9 @@
 import { Tooltip } from "@patternfly/react-core";
-import { type CSSProperties, useCallback, useEffect, useState } from "react";
+import { type CSSProperties, useEffect, useState } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { elipses } from "../../api/common";
 import type { PluginInstance } from "../../api/types";
-import { useAppDispatch } from "../../store/hooks";
-import {
-  getSelectedPlugin,
-  resetSelectedPlugin,
-} from "../../store/pluginInstance/pluginInstanceSlice";
 import FeedOutputBrowser from "../FeedOutputBrowser/FeedOutputBrowser";
 import FeedGraph from "../FeedTree/FeedGraph";
 import ParentComponent from "../FeedTree/ParentComponent";
@@ -33,6 +28,7 @@ import * as DoCart from "../../reducers/cart";
 import * as DoDrawer from "../../reducers/drawer";
 import * as DoExplorer from "../../reducers/explorer";
 import * as DoFeed from "../../reducers/feed";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { Role } from "../../reducers/types";
 import * as DoUser from "../../reducers/user";
 import CustomTitle from "./CustomTitle";
@@ -46,6 +42,7 @@ type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 type TDoExplorer = ThunkModuleToFunc<typeof DoExplorer>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 export default () => {
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
@@ -68,8 +65,13 @@ export default () => {
 
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
 
+  const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
+    DoPluginInstance,
+  );
+  const [classStatePluginInstance, doPluginInstance] = usePluginInstance;
+  const pluginInstanceID = getRootID(classStatePluginInstance);
+
   const [currentLayout, setCurrentLayout] = useState(false);
-  const dispatch = useAppDispatch();
   const query = useSearchQueryParams();
   const theType = query.get("type");
   const params = useParams();
@@ -102,11 +104,11 @@ export default () => {
     document.title = "My Analyses - CHRIS UI";
     doFeed.setShowToolbar(feedID, true);
     return () => {
-      dispatch(resetSelectedPlugin());
+      doPluginInstance.resetSelectedPlugin(pluginInstanceID);
       doExplorer.clearSelectedFile(explorerID);
       doFeed.setShowToolbar(feedID, false);
     };
-  }, [dispatch, isInit]);
+  }, [isInit]);
 
   // set drawer state
   useEffect(() => {
@@ -130,31 +132,25 @@ export default () => {
       const theRole = role || Role.DefaultRole;
       doDrawer.resetDrawerState(drawerID, theRole, isSuccess);
     };
-  }, [dispatch, role, treeQuery.pluginInstances, treeQuery.totalCount]);
+  }, [role, treeQuery.pluginInstances, treeQuery.totalCount]);
 
   useEffect(() => {
     if (!feed) {
       return;
     }
     doFeed.feedSuccess(feedID, feed);
-  }, [dispatch, feed]);
+  }, [feed]);
 
-  const onNodeClick = useCallback(
-    (node: any) => {
-      doExplorer.clearSelectedFile(explorerID);
-      dispatch(getSelectedPlugin(node.item));
-    },
-    [dispatch],
-  );
+  const onNodeClick = (node: any) => {
+    doExplorer.clearSelectedFile(explorerID);
+    doPluginInstance.getSelectedPlugin(pluginInstanceID, node.item);
+  };
 
-  const onNodeBrowserClick = useCallback(
-    (node: PluginInstance) => {
-      console.info("onNodeBrowserClick: start: node:", node);
-      doExplorer.clearSelectedFile(explorerID);
-      dispatch(getSelectedPlugin(node));
-    },
-    [dispatch],
-  );
+  const onNodeBrowserClick = (node: PluginInstance) => {
+    console.info("onNodeBrowserClick: start: node:", node);
+    doExplorer.clearSelectedFile(explorerID);
+    doPluginInstance.getSelectedPlugin(pluginInstanceID, node);
+  };
 
   const changeLayout = () => {
     setCurrentLayout(!currentLayout);

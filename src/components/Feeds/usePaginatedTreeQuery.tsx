@@ -1,14 +1,20 @@
 import {
+  getRootID,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
+import {
   useInfiniteQuery,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
 import { getPluginInstances } from "../../api/serverApi";
 import type { Feed, ID, PluginInstance } from "../../api/types";
-import { getSelectedPlugin } from "../../store/pluginInstance/pluginInstanceSlice";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { getTsNodes } from "../FeedTree/data";
+
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 /**
  * Constants for performance optimization and network behavior
@@ -57,11 +63,11 @@ export interface PaginatedTreeQueryReturn {
  * @param feed The feed to fetch the count for
  * @returns A promise resolving to the total count
  */
-async function fetchTotalCount(feed: Feed) {
+const fetchTotalCount = async (feed: Feed) => {
   const { status, data, errmsg } = await getPluginInstances(feed.id, 0, 1);
   const pluginInstances = data || [];
   return pluginInstances.length;
-}
+};
 
 /**
  * Fetches a page of plugin instances with retry and exponential backoff
@@ -177,7 +183,7 @@ function integrateBatchDirectSingleRoot(
  */
 function insertChildImmutable(
   root: TreeNodeDatum,
-  parentId: number,
+  parentId: ID,
   newChild: TreeNodeDatum,
 ): TreeNodeDatum {
   if (root.id === parentId) {
@@ -259,7 +265,13 @@ function findParent(root: TreeNodeDatum | null, id: ID): TreeNodeDatum | null {
 export default function usePaginatedTreeQuery(
   feed?: Feed,
 ): PaginatedTreeQueryReturn {
-  const dispatch = useDispatch();
+  const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
+    DoPluginInstance,
+  );
+
+  const [classStatePluginInstance, doPluginInstance] = usePluginInstance;
+  const pluginInstanceID = getRootID(classStatePluginInstance);
+
   const queryClient = useQueryClient();
   const [localItems, setLocalItems] = useState<PluginInstance[]>([]);
   const [isViewportLimited, setIsViewportLimited] = useState(false);
@@ -460,13 +472,13 @@ export default function usePaginatedTreeQuery(
         setRootNode(updatedRoot);
         setLocalItems((prev) => [...prev, ...addedItems]);
         const lastAdded = addedItems[addedItems.length - 1];
-        dispatch(getSelectedPlugin(lastAdded));
+        doPluginInstance.getSelectedPlugin(pluginInstanceID, lastAdded);
         await queryClient.invalidateQueries({
           queryKey: ["feedPluginInstances", feed?.id, "countOnly"],
         });
       }
     },
-    [rootNode, dispatch, feed, queryClient],
+    [rootNode, feed, queryClient],
   );
 
   const removeNodeLocally = useCallback(
@@ -479,7 +491,10 @@ export default function usePaginatedTreeQuery(
       const newRoot = removeNodesIterative(rootNode, toRemove);
 
       if (lastRemovedParent) {
-        dispatch(getSelectedPlugin(lastRemovedParent.item));
+        doPluginInstance.getSelectedPlugin(
+          pluginInstanceID,
+          lastRemovedParent.item,
+        );
       }
 
       setRootNode(newRoot);
@@ -489,7 +504,7 @@ export default function usePaginatedTreeQuery(
         queryKey: ["feedPluginInstances", feed?.id, "countOnly"],
       });
     },
-    [rootNode, feed, dispatch, queryClient],
+    [rootNode, feed, queryClient],
   );
 
   return {

@@ -1,13 +1,27 @@
+import {
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import { ClockIcon } from "@patternfly/react-icons";
-
 import FillCheckIcon from "@patternfly/react-icons/dist/esm/icons/check-icon";
 import ExclaimationIcon from "@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon";
 import React from "react";
-import { useAppSelector } from "../../store/hooks";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { SpinContainer } from "../Common";
 
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
+
 const StatusTitle = ({ pluginStatus }: { pluginStatus: any }) => {
-  const selected = useAppSelector((state) => state.instance.selectedPlugin);
+  const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
+    DoPluginInstance,
+  );
+
+  const [classStatePluginInstance, _doPluginInstance] = usePluginInstance;
+
+  const pluginInstance =
+    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
+  const { selectedPlugin: selected } = pluginInstance;
 
   let statusTitle:
     | {
@@ -23,8 +37,8 @@ const StatusTitle = ({ pluginStatus }: { pluginStatus: any }) => {
   ];
 
   statusTitle =
-    selected && finishedStatuses.includes(selected.data.status) === true
-      ? getFinishedTitle(selected.data.status)
+    selected && finishedStatuses.includes(selected.status) === true
+      ? getFinishedTitle(selected.status)
       : pluginStatus
         ? getCurrentTitleFromStatus(pluginStatus)
         : { title: "processing...", icon: ClockIcon };

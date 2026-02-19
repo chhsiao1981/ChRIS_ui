@@ -7,12 +7,19 @@ import ForceGraph2D, {
 } from "react-force-graph-2d";
 import { type ITreeChart, TreeModel } from "../../api/model";
 import type { Feed, PluginInstance } from "../../api/types";
-import { useAppSelector } from "../../store/hooks";
 import { type FeedTreeScaleType, NodeScaleDropdown } from "./Controls";
 import "./FeedTree.css";
+import {
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { SpinContainer } from "../Common";
 import usePaginatedTreeQuery from "../Feeds/usePaginatedTreeQuery";
 import useSize from "./useSize";
+
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 interface IFeedProps {
   onNodeClick: (node: PluginInstance) => void;
@@ -28,9 +35,15 @@ const FeedGraph: React.FC<IFeedProps> = ({
   feed,
 }) => {
   const { pluginInstances, isLoading: loading } = usePaginatedTreeQuery(feed);
-  const selectedPlugin = useAppSelector(
-    (state) => state.instance.selectedPlugin,
+
+  const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
+    DoPluginInstance,
   );
+
+  const [classStatePluginInstance, _doPluginInstance] = usePluginInstance;
+  const pluginInstance =
+    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
+  const { selectedPlugin } = pluginInstance;
 
   console.info("FeedGraph: selectedPlugin:", selectedPlugin);
   //const { data: instances, loading } = pluginInstances;
@@ -160,7 +173,7 @@ const FeedGraph: React.FC<IFeedProps> = ({
               }
               nodeAutoColorBy={(d: NodeObject) =>
                 selectedPlugin &&
-                (d.item as PluginInstance).id === selectedPlugin.data.id
+                (d.item as PluginInstance).id === selectedPlugin.id
                   ? "#fff"
                   : (d.group as string)
               }
