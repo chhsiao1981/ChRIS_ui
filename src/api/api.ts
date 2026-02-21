@@ -230,11 +230,6 @@ const fetchCore = async <T>(
       return res
         .json()
         .then((collectionJsonData) => {
-          if (res.status === STATUS_UNAUTHORIZED) {
-            const redirectTo = encodeURIComponent(getCurrentPathQeury());
-            window.location.href = `/login?redirectTo=${redirectTo}`;
-          }
-
           if (res.status >= 400) {
             const msg = collectionJsonData.error;
             return { status, errmsg: msg };
@@ -243,13 +238,6 @@ const fetchCore = async <T>(
           const jsonData = isJson
             ? collectionJsonData
             : collectionJsonToJson(collectionJsonData, isLink);
-
-          console.info(
-            "api.callApi: jsonData:",
-            jsonData,
-            "collectionJsonData:",
-            collectionJsonData,
-          );
 
           const data = jsonData;
 

@@ -178,9 +178,11 @@ export default () => {
     {
       path: "data/tag/uploaded",
       element: (
-        <OperationsProvider>
-          <FeedsListView title="Data: uploaded" isShared={false} />
-        </OperationsProvider>
+        <PrivateRoute>
+          <OperationsProvider>
+            <FeedsListView title="Data: uploaded" isShared={false} />
+          </OperationsProvider>
+        </PrivateRoute>
       ),
     },
     {
@@ -194,9 +196,11 @@ export default () => {
     {
       path: "data/tag/pacs",
       element: (
-        <OperationsProvider>
-          <FeedsListView title="Data: pacs" isShared={false} />
-        </OperationsProvider>
+        <PrivateRoute>
+          <OperationsProvider>
+            <FeedsListView title="Data: pacs" isShared={false} />
+          </OperationsProvider>
+        </PrivateRoute>
       ),
     },
     {
@@ -218,17 +222,21 @@ export default () => {
     {
       path: "data/*",
       element: (
-        <OperationsProvider>
-          <FeedsListView title="My Data" isShared={false} />
-        </OperationsProvider>
+        <PrivateRoute>
+          <OperationsProvider>
+            <FeedsListView title="My Data" isShared={false} />
+          </OperationsProvider>
+        </PrivateRoute>
       ),
     },
     {
       path: "shared/*",
       element: (
-        <OperationsProvider>
-          <FeedsListView title="Shared Data" isShared={true} />
-        </OperationsProvider>
+        <PrivateRoute>
+          <OperationsProvider>
+            <FeedsListView title="Shared Data" isShared={true} />
+          </OperationsProvider>
+        </PrivateRoute>
       ),
     },
     {
