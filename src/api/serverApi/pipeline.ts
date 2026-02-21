@@ -4,7 +4,6 @@ import type {
   ID,
   Pipeline,
   PipelineSourceFile,
-  PipelineSourceFile,
   UploadPipeline,
 } from "../types";
 import type { ListQuery } from "../types/list";
