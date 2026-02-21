@@ -36,6 +36,8 @@ export default () => {
   const user = getState(classStateUser) || DoUser.defaultState;
   const { isLoggedIn } = user;
 
+  console.info("Dashboard: isLoggedIn:", isLoggedIn);
+
   const navigate = useNavigate();
 
   useEffect(() => {

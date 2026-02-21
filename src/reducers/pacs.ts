@@ -2,6 +2,7 @@ import {
   init as _init,
   type ClassState,
   type Dispatch,
+  genUUID,
   getState,
   type State as rState,
   setData,
@@ -44,7 +45,6 @@ import {
   simplifyPypxSeriesData,
   simplifyPypxStudyData,
   studyUIDToStudyMapKey,
-  updateSearchParams,
 } from "./utils";
 
 export const myClass = "chris-ui/pacs";
@@ -120,8 +120,9 @@ export const defaultState: State = {
   errmsg: "",
 };
 
-export const init = (myID: string): Thunk<State> => {
+export const init = (): Thunk<State> => {
   return async (dispatch, _) => {
+    const myID = genUUID();
     dispatch(_init({ myID, state: defaultState }));
     dispatch(getServices(myID));
   };
@@ -195,7 +196,6 @@ export const getServices = (myID: string): Thunk<State> => {
 
     const services = data || defaultServices;
     const service = getDefaultPacsService(services);
-    updateSearchParams("service", service);
 
     dispatch(setData(myID, { services, service, isGetServices: true }));
   };
@@ -203,8 +203,6 @@ export const getServices = (myID: string): Thunk<State> => {
 
 export const setService = (myID: string, service: string): Thunk<State> => {
   return async (dispatch, _) => {
-    updateSearchParams("service", service);
-
     dispatch(setData(myID, { service }));
   };
 };

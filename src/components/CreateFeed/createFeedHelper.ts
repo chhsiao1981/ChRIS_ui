@@ -80,7 +80,11 @@ const createFeedCore = async (
     const { pluginPipings: propsPluginPipings, parameters } = pipeline;
 
     const pluginPipings = propsPluginPipings.map((eachPluginPiping) =>
-      collectionJsonToJson(eachPluginPiping),
+      collectionJsonToJson(
+        eachPluginPiping,
+        false,
+        "createFeedHelper.createFeedCore",
+      ),
     );
 
     console.info(

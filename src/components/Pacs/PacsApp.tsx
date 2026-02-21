@@ -5,7 +5,7 @@
  */
 
 import {
-  genUUID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
@@ -77,9 +77,9 @@ export default () => {
   const [classStatePacs, doPacs] = useThunk<DoPacs.State, TDoPacs>(DoPacs);
   const [searchParams, _setSearchParams] = useSearchParams();
   const location = useLocation();
-  const [pacsID, _] = useState(genUUID());
 
-  const pacs = getState(classStatePacs, pacsID) ?? DoPacs.defaultState;
+  const pacsID = getDefaultID(classStatePacs);
+  const pacs = getState(classStatePacs) ?? DoPacs.defaultState;
 
   const {
     expandedSeries,
@@ -116,28 +116,8 @@ export default () => {
   // EFFECTS
   // ========================================
 
-  // init
-  // biome-ignore lint/correctness/useExhaustiveDependencies: useEffect
+  // document title.
   useEffect(() => {
-    const thePacs = getState(classStatePacs, pacsID);
-    if (!thePacs) {
-      doPacs.init(pacsID);
-    }
-
-    doPacs.updateServiceQueryBySearchParams(pacsID, location, searchParams);
-  }, [
-    pacsID,
-    doPacs.init,
-    doPacs.updateServiceQueryBySearchParams,
-    location,
-    searchParams,
-  ]);
-
-  useEffect(() => {
-    if (!pacsID) {
-      return;
-    }
-
     if (!location.pathname.startsWith("/pacs")) {
       return;
     }
@@ -146,18 +126,10 @@ export default () => {
     const originalTitle = document.title;
     document.title = "ChRIS PACS";
 
-    doPacs.updateServiceQueryBySearchParams(pacsID, location, searchParams);
-
     return () => {
       document.title = originalTitle;
     };
-  }, [
-    pacsID,
-    location,
-    location.pathname,
-    searchParams,
-    doPacs.updateServiceQueryBySearchParams,
-  ]);
+  }, [location, location.pathname]);
 
   // Subscribe to all expanded series
   useEffect(() => {

@@ -20,7 +20,7 @@ import { BarsIcon } from "@patternfly/react-icons"; // Add a tools icon
 import { type ReactElement, useContext, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useNavigate } from "react-router";
-import { useSignUpAllowed } from "../../hooks/useSignUpAllowed";
+import * as DoSystem from "../../reducers/system";
 import { type Role, Roles, StaffRoles } from "../../reducers/types";
 import * as DoUser from "../../reducers/user";
 import { ThemeContext } from "../DarkTheme/useTheme";
@@ -29,6 +29,7 @@ import CartNotify from "./CartNotify";
 import styles from "./Toolbar.module.css";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
+type TDoSystem = ThunkModuleToFunc<typeof DoSystem>;
 
 type Props = {
   showToolbar: boolean;
@@ -38,7 +39,6 @@ type Props = {
 
 export default (props: Props) => {
   const isSmallerScreen = useMediaQuery({ maxWidth: 1224 });
-  const { signUpAllowed } = useSignUpAllowed();
   const { token, title } = props;
 
   const navigate = useNavigate();
@@ -49,6 +49,11 @@ export default (props: Props) => {
   const user = getState(classStateUser) || DoUser.defaultState;
   const userID = getDefaultID(classStateUser);
   const { username, role, isStaff } = user;
+
+  const useSystem = useThunk<DoSystem.State, TDoSystem>(DoSystem);
+  const [classStateSystem, _doSystem] = useSystem;
+  const system = getState(classStateSystem) || DoSystem.defaultState;
+  const { isAllowRegister } = system;
 
   console.info("Wrapper.Toolbar: user:", user);
 
@@ -194,7 +199,7 @@ export default (props: Props) => {
                   >
                     Login
                   </Button>
-                  {signUpAllowed && (
+                  {isAllowRegister && (
                     <Button
                       style={{ padding: "0.25em" }}
                       variant="link"

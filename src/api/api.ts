@@ -1,7 +1,7 @@
 import config from "config";
+import { error } from "console";
 import { Cookies } from "react-cookie";
 import type { List } from "../api/types";
-import { STATUS_UNAUTHORIZED } from "./constants";
 
 export type Query = Record<string, any>;
 
@@ -81,12 +81,17 @@ const collectionJsonLinkToJson = (links: any[]) => {
 export const collectionJsonToJson = <T>(
   theData: any,
   isLink = false,
-): T | T[] | List<T> => {
-  if (isLink) {
-    return collectionJsonLinkToJson(theData.collection.links);
+  prompt = "",
+) => {
+  try {
+    if (isLink) {
+      return collectionJsonLinkToJson(theData.collection.links);
+    }
+    const ret = theData.collection.items.map(collectionJsonItemToJson);
+    return typeof theData.collection.total === "undefined" ? ret[0] : ret;
+  } catch (error) {
+    console.error("collectionJsonToJson: error: prompt:", prompt, "e:", error);
   }
-  const ret = theData.collection.items.map(collectionJsonItemToJson);
-  return typeof theData.collection.total === "undefined" ? ret[0] : ret;
 };
 
 export const sanitizeAPIRootURL = (API_ROOT: string) => {
@@ -230,11 +235,6 @@ const fetchCore = async <T>(
       return res
         .json()
         .then((collectionJsonData) => {
-          if (res.status === STATUS_UNAUTHORIZED) {
-            const redirectTo = encodeURIComponent(getCurrentPathQeury());
-            window.location.href = `/login?redirectTo=${redirectTo}`;
-          }
-
           if (res.status >= 400) {
             const msg = collectionJsonData.error;
             return { status, errmsg: msg };
@@ -242,14 +242,11 @@ const fetchCore = async <T>(
 
           const jsonData = isJson
             ? collectionJsonData
-            : collectionJsonToJson(collectionJsonData, isLink);
-
-          console.info(
-            "api.callApi: jsonData:",
-            jsonData,
-            "collectionJsonData:",
-            collectionJsonData,
-          );
+            : collectionJsonToJson(
+                collectionJsonData,
+                isLink,
+                `fetchCore: endpoint: ${endpoint}`,
+              );
 
           const data = jsonData;
 
