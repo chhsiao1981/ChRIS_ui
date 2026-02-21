@@ -6,6 +6,7 @@ export type Plugin = {
   id: ID;
   creation_date: Datetime; // yyyy-mm-ddTHH:MM:SS.ffffffTZ
   name: string;
+  name_exact: string;
   version: string;
   dock_image: string;
   public_repo: string;

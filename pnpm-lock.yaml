@@ -23,9 +23,6 @@ importers:
       '@cornerstonejs/tools':
         specifier: ^1.86.0
         version: 1.86.1(@babel/preset-env@7.29.0(@babel/core@7.29.0))(@icr/polyseg-wasm@0.4.0)(@kitware/vtk.js@30.4.1(@babel/preset-env@7.29.0(@babel/core@7.29.0))(autoprefixer@10.4.24(postcss@8.5.6))(webpack@5.105.2)(wslink@2.5.0))(@types/d3-array@3.2.2)(@types/d3-interpolate@3.0.4)(autoprefixer@10.4.24(postcss@8.5.6))(d3-array@3.2.4)(d3-interpolate@3.0.1)(gl-matrix@3.4.4)(webpack@5.105.2)(wslink@2.5.0)
-      '@fnndsc/chrisapi':
-        specifier: ^1.23.0
-        version: 1.23.1
       '@microlink/react-json-view':
         specifier: ^1.26.2
         version: 1.27.1(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1087,7 +1084,6 @@ packages:
 
   '@evilmartians/lefthook@2.1.1':
     resolution: {integrity: sha512-+nyEG9SCmI8wRhMbMr1GUFWfbIGeY/vlzenrMZgYWRVhEKOn/pQt4nQSQlQmaoxo4uOY13Vl53SaijFoE58bYg==}
-    cpu: [x64, arm64, ia32]
     os: [darwin, linux, win32]
     hasBin: true
 
@@ -1109,9 +1105,6 @@ packages:
 
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
-
-  '@fnndsc/chrisapi@1.23.1':
-    resolution: {integrity: sha512-yY7Ql7qbP+rn/Ng5RjMQkLsjH1luyGJvOLmzqBJLi6L42RJc9cJ1m3t54gKGFL4PQ842vNBfGniIy1AWl5VtJg==}
 
   '@icr/polyseg-wasm@0.4.0':
     resolution: {integrity: sha512-3sZmiwG8I0NaqPle0L7+V/ZexiR7IjIUFkUsaOoFI9rNuBGyyMMmxAxnCmqcDFtBDk9h+JEYJf6e3NnqlHi/HQ==}
@@ -2075,9 +2068,6 @@ packages:
 
   core-js-pure@3.48.0:
     resolution: {integrity: sha512-1slJgk89tWC51HQ1AEqG+s2VuwpTRr8ocu4n20QUcH1v9lAN0RXen0Q0AABa/DK1I7RrNWLucplOHMx8hfTGTw==}
-
-  core-js@3.48.0:
-    resolution: {integrity: sha512-zpEHTy1fjTMZCKLHUZoVeylt9XrzaIN2rbPXEt0k+q7JE5CkCZdo6bNq55bn24a69CH7ErAVLKijxJja4fw+UQ==}
 
   cosmiconfig@7.1.0:
     resolution: {integrity: sha512-AdmX6xUzdNASswsFtmwSt7Vj8po9IuqXm0UXz7QKPuEUmPB4XyjGfaAr2PSuELMwkRMVH1EpIkX5bTZGRB3eCA==}
@@ -4915,13 +4905,6 @@ snapshots:
 
   '@floating-ui/utils@0.2.10': {}
 
-  '@fnndsc/chrisapi@1.23.1':
-    dependencies:
-      axios: 1.13.5
-      core-js: 3.48.0
-    transitivePeerDependencies:
-      - debug
-
   '@icr/polyseg-wasm@0.4.0': {}
 
   '@istanbuljs/load-nyc-config@1.1.0':
@@ -5990,8 +5973,6 @@ snapshots:
       browserslist: 4.28.1
 
   core-js-pure@3.48.0: {}
-
-  core-js@3.48.0: {}
 
   cosmiconfig@7.1.0:
     dependencies:

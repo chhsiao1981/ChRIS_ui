@@ -21,12 +21,12 @@ import type {
   FileBrowserFolderLinkFile,
   PluginInstance,
 } from "../../api/types";
+import { useDownload } from "../../hooks/useDownload";
 import type * as DoCart from "../../reducers/cart";
 import * as DoDrawer from "../../reducers/drawer";
 import * as DoExplorer from "../../reducers/explorer";
 import * as DoFeed from "../../reducers/feed";
 import * as DoUser from "../../reducers/user";
-import useDownload from "../../store/hooks";
 import { notification } from "../Antd";
 import { ClipboardCopyContainer } from "../Common";
 import { DrawerActionButton } from "../Feeds/DrawerUtils";

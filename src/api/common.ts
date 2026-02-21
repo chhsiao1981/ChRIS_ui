@@ -1,6 +1,8 @@
 import axios, { type AxiosProgressEvent } from "axios";
 import { quote } from "shlex";
-import ChrisAPIClient from "./chrisapiclient";
+import { getPipelinesByName } from "./serverApi";
+import { getComputeResourcesByPluginID } from "./serverApi/computeResource";
+import { createPipeline, getPipeline } from "./serverApi/pipeline";
 import type {
   ComputeResource,
   Feed,
@@ -89,7 +91,6 @@ export const fetchPipelines = async (
   searchType: string,
 ) => {
   const offset = perPage * (page - 1);
-  const client = ChrisAPIClient.getClient();
 
   const params = {
     limit: perPage,
@@ -98,13 +99,13 @@ export const fetchPipelines = async (
   };
 
   try {
-    const registeredPipelinesList: Pipeline[] =
-      await client.getPipelines(params);
-    const registeredPipelines = registeredPipelinesList;
+    //@ts-expect-error
+    const { _status, data, _errmsg } = await getPipelines(params);
+    const registeredPipelines = data || [];
 
     return {
       registeredPipelines,
-      totalCount: registeredPipelinesList.totalCount,
+      totalCount: registeredPipelines.length,
     };
   } catch (error) {
     const errorObj = catchError(error);
@@ -205,15 +206,20 @@ export async function fetchResources(
 }
 
 export const generatePipelineWithName = async (pipelineName: string) => {
-  const client = ChrisAPIClient.getClient();
-
-  const pipelineInstanceList: Pipeline[] = await client.getPipelines({
-    name: pipelineName,
-  });
+  const { status, data, errmsg } = await getPipelinesByName(pipelineName);
+  const pipelineInstanceList = data || [];
+  if (!pipelineInstanceList.length) {
+    return;
+  }
   const pipelineInstanceId = pipelineInstanceList[0].id;
-  const pipelineInstance: Pipeline = (await client.getPipeline(
-    pipelineInstanceId,
-  )) as Pipeline;
+  const {
+    status: _status,
+    data: pipelineInstance,
+    errmsg: _errmsg,
+  } = await getPipeline(pipelineInstanceId);
+  if (!pipelineInstance) {
+    return;
+  }
 
   try {
     const resources = await fetchResources(pipelineInstance);
@@ -234,8 +240,10 @@ export const generatePipelineWithName = async (pipelineName: string) => {
 };
 
 export const generatePipelineWithData = async (data: any) => {
-  const client = ChrisAPIClient.getClient();
-  const pipelineInstance: Pipeline = await client.createPipeline(data);
+  const { status, data: pipelineInstance, errmsg } = await createPipeline(data);
+  if (!pipelineInstance) {
+    return;
+  }
 
   try {
     const resources = await fetchResources(pipelineInstance);
@@ -259,35 +267,27 @@ export async function fetchComputeInfo(
   dictionary_id: string,
   globalCompute?: string,
 ) {
-  try {
-    const client = ChrisAPIClient.getClient();
-    const computeEnvs = await client.getComputeResources({
-      plugin_id: `${plugin_id}`,
-    });
+  const { status, data, errmsg } =
+    await getComputeResourcesByPluginID(plugin_id);
+  const computeItems = data || [];
 
-    const computeItems = computeEnvs.getItems();
+  if (computeItems) {
+    const activeCompute =
+      globalCompute && computeItems.some((env) => env.name === globalCompute)
+        ? globalCompute
+        : undefined;
 
-    if (computeItems) {
-      const activeCompute =
-        globalCompute &&
-        computeItems.some((env) => env.data.name === globalCompute)
-          ? globalCompute
-          : undefined;
-
-      const length = computeEnvs.data.length;
-      const currentlySelected = activeCompute
-        ? activeCompute
-        : (computeEnvs.data[length - 1].name as string);
-      const computeEnvData = {
-        [dictionary_id]: {
-          computeEnvs: computeItems as ComputeResource[],
-          currentlySelected,
-        },
-      };
-      return computeEnvData;
-    }
-  } catch (e) {
-    throw new Error("Error fetching the compute Environment");
+    const length = computeItems.length;
+    const currentlySelected = activeCompute
+      ? activeCompute
+      : computeItems[length - 1].name;
+    const computeEnvData = {
+      [dictionary_id]: {
+        computeEnvs: computeItems as ComputeResource[],
+        currentlySelected,
+      },
+    };
+    return computeEnvData;
   }
 }
 

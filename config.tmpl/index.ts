@@ -2,9 +2,11 @@ export default {
   API_ROOT: "http://localhost:5174/api/v1",
   API_V7_ROOT: "http://localhost:5174/api/v7",
   PFDCM_ROOT: "http://localhost:5174/api/v1",
-  AUTH_ROOT: "http://localhost:5174/api/v1",
-  USER_ROOT: "http://localhost:5174/api/v1",
+  AUTH_ROOT: "http://localhost:5174/api/v7",
+  USER_ROOT: "http://localhost:5174/api/v7",
   OIDC_ROOT: "http://localhost:5174/api/v7",
+  SIGNUP_ROOT: "http://localhost:5174/api/v7",
+  SIGNUP_ENDPOINT: "/register",
 
   PUBLIC_USER: "chris",
 

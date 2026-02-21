@@ -6,6 +6,7 @@ import type {
   Plugin,
   PluginParameter,
 } from "../types";
+import type { ListQuery } from "../types/list";
 
 export const searchPluginsByName = (name: string) =>
   api<List<Plugin>>({
@@ -14,6 +15,13 @@ export const searchPluginsByName = (name: string) =>
     query: {
       name,
     },
+  });
+
+export const getPlugins = (query: ListQuery<Plugin>) =>
+  api<List<Plugin>>({
+    endpoint: "/plugins/search/",
+    method: "get",
+    query: query,
   });
 
 export const getPluginParameters = (

@@ -6,8 +6,8 @@ import {
 } from "@chhsiao1981/use-thunk";
 import { useMutation } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import ChrisAPIClient from "../../../api/chrisapiclient";
 import { getFileName } from "../../../api/common";
+import { getFeed } from "../../../api/serverApi";
 import {
   updateFileBrowserFolderFilePath,
   updateFileBrowserFolderLinkFilePath,
@@ -20,7 +20,6 @@ import type {
 } from "../../../api/types";
 import * as DoCart from "../../../reducers/cart";
 import type { CartSelectionPayload } from "../../../reducers/types";
-import { createFeed as createFeedSaga } from "../../../store/cart/downloadSaga";
 import { notification } from "../../Antd";
 import { getFolderName } from "../components/FolderCard";
 import type { AdditionalValues } from "../components/Operations";
@@ -209,7 +208,7 @@ export const useFolderOperations = (
   const createFeedFromMenu = async (inputValue: string) => {
     handleOrigin(origin);
     const pathList = selectedPaths.map((payload) => payload.path);
-    await createFeedSaga(pathList, inputValue, invalidateQueries);
+    // await createFeedSaga(pathList, inputValue, invalidateQueries);
   };
 
   // Share Folder
@@ -325,8 +324,7 @@ export const useFolderOperations = (
   ) => {
     switch (modalState.type) {
       case "group": {
-        const client = ChrisAPIClient.getClient();
-        await client.adminCreateGroup({ name: inputValue });
+        await adminCreateGroup({ name: inputValue });
         break;
       }
       case "folder":
@@ -462,9 +460,9 @@ export const useFolderOperations = (
       const feedId = Number.parseInt(idPart, 10);
       (async () => {
         try {
-          const feed = await ChrisAPIClient.getClient().getFeed(feedId);
+          const { status, data: feed, errmsg } = await getFeed(feedId);
           // Use the feed's title if available; otherwise fallback to the feedSegment.
-          const defaultName = feed?.data.name || feedSegment;
+          const defaultName = feed?.name || feedSegment;
           setModalState({
             type: "rename",
             isOpen: true,

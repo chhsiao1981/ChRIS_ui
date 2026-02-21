@@ -6,7 +6,6 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { useState } from "react";
-import ChrisAPIClient from "../../../api/chrisapiclient";
 import * as DoCart from "../../../reducers/cart";
 import type { CartSelectionPayload } from "../../../reducers/types";
 import { type OriginState, useOperationsContext } from "../context";
@@ -33,10 +32,9 @@ const useDeletePayload = (origin: OriginState, api: any) => {
         const { payload, path: pathToClear } = path;
         try {
           const urlForDeletion = payload.url;
-          const client = ChrisAPIClient.getClient();
           await axios.delete(urlForDeletion, {
             headers: {
-              Authorization: `Token ${client.auth.token}`,
+              Authorization: `Token ${token}`,
             },
           });
           successfulPaths.push(pathToClear);

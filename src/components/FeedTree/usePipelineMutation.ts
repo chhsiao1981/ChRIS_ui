@@ -8,7 +8,7 @@ import { notification } from "antd";
 import { useEffect } from "react";
 import {
   createWorkflow,
-  getPipelines,
+  getPipelinesByName,
   getWorkflowPluginInstances,
 } from "../../api/serverApi";
 import type { PluginInstance } from "../../api/types";
@@ -27,7 +27,8 @@ export default (
 
   const fetchPipelines = async () => {
     try {
-      const { status, data, errmsg } = await getPipelines("zip v20240311");
+      const { status, data, errmsg } =
+        await getPipelinesByName("zip v20240311");
       const pipelines = data || [];
 
       if (pipelines && pipelines.length > 0) {

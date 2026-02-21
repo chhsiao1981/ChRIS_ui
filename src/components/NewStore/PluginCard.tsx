@@ -18,7 +18,6 @@ import { notification } from "antd";
 import { format } from "date-fns";
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import ChrisAPIClient from "../../api/chrisapiclient";
 import { getPluginComputeResources } from "../../api/serverApi/plugin";
 import type { ComputeResource, Plugin } from "../../api/types";
 import * as DoUser from "../../reducers/user";
@@ -40,6 +39,7 @@ const checkInstallation = async (
   version: string,
   isLoggedIn?: boolean,
 ): Promise<ReturnCheckInstallation> => {
+  /*
   const client = ChrisAPIClient.getClient();
   const resp = await client.getPlugins({ name, version });
   if (!resp.data?.length) {
@@ -56,6 +56,8 @@ const checkInstallation = async (
     100,
   );
   const crItems = data || [];
+  */
+  const crItems = [];
   return { installed: true, computeResources: crItems };
 };
 

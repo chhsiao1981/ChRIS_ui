@@ -1,7 +1,6 @@
 import {
   getState,
   type ThunkModuleToFunc,
-  type UseThunk,
   useThunk,
 } from "@chhsiao1981/use-thunk";
 import {
@@ -15,7 +14,6 @@ import { useMutation } from "@tanstack/react-query";
 import { type FormEvent, type MouseEvent, useEffect, useState } from "react";
 import { Cookies, useCookies } from "react-cookie";
 import { useNavigate } from "react-router";
-import ChrisAPIClient from "../../api/chrisapiclient";
 import * as DoUser from "../../reducers/user";
 import { Alert } from "../Antd";
 import { SpinContainer } from "../Common";
@@ -57,8 +55,7 @@ export default () => {
 
     const modifiedURL = adminURL.replace("/api/v1/", "/chris-admin/api/v1/");
 
-    const client = ChrisAPIClient.getClient();
-    const admin = client.auth.token;
+    const admin = token;
     const nonAdmin = btoa(`${username.trim()}:${password.trim()}`); // Base64 encoding for Basic Auth
 
     const authorization = isStaff ? `Token ${admin}` : `Basic ${nonAdmin}`;
@@ -68,24 +65,19 @@ export default () => {
       plugin_store_url: decodedURL,
     };
 
-    try {
-      const response = await fetch(modifiedURL, {
-        method: "POST",
-        headers: {
-          Authorization: authorization,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(pluginData),
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      // biome-ignore lint/complexity/noUselessCatch: <explanation>
-      throw error;
+    const response = await fetch(modifiedURL, {
+      method: "POST",
+      headers: {
+        Authorization: authorization,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(pluginData),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+    const data = await response.json();
+    return data;
   };
 
   const { isPending, isSuccess, isError, error, data, mutate } = useMutation({

@@ -16,8 +16,8 @@ import {
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
+import { useSignUpAllowed } from "../../hooks/useSignUpAllowed.ts";
 import * as DoUser from "../../reducers/user";
-import { useSignUpAllowed } from "../../store/hooks.ts";
 import FooterListItems from "./FooterListItems.tsx";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;

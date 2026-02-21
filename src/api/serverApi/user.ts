@@ -7,8 +7,8 @@ import { getLinkMap } from "./misc";
 
 export const createUser = (username: string, password: string, email: string) =>
   api<User>({
-    endpoint: "/users/",
-    apiroot: config.USER_ROOT,
+    endpoint: config.SIGNUP_ENDPOINT,
+    apiroot: config.SIGNUP_ROOT,
     json: {
       username,
       password,

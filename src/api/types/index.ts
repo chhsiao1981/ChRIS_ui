@@ -20,7 +20,7 @@ import type {
   PYPXResult,
   PYPXSeriesData,
 } from "./pacs";
-import type { Pipeline, UploadPipeline } from "./pipeline";
+import type { Pipeline, PipelineSourceFile, UploadPipeline } from "./pipeline";
 import type {
   Piping,
   PipingDefaultParameter,
@@ -62,6 +62,7 @@ export type {
   PluginParameter,
   Pipeline,
   UploadPipeline,
+  PipelineSourceFile,
   Feed,
   Link,
   ID,

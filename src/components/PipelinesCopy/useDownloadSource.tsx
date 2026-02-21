@@ -1,29 +1,22 @@
-import type {
-  Pipeline,
-  PipelineSourceFile,
-  PipelineSourceFileList,
-} from "@fnndsc/chrisapi";
 // hooks/useDownloadPipeline.ts
 import { useMutation } from "@tanstack/react-query";
 import { notification } from "antd";
-import ChrisAPIClient from "../../api/chrisapiclient";
+import { getPipelineSourceFiles } from "../../api/serverApi/pipeline";
+import type { Pipeline } from "../../api/types";
 
 const fetchPipelineSourceFiles = async (pipeline: Pipeline) => {
-  const client = ChrisAPIClient.getClient();
-  const response: PipelineSourceFileList = await client.getPipelineSourceFiles({
-    //@ts-ignore
-    pipeline_id: pipeline.data.id,
-    pipeline_name: pipeline.data.fname,
+  const { status, data, errmsg } = await getPipelineSourceFiles(pipeline.id, {
+    pipeline_name: pipeline.fname,
   });
+  const response = data || [];
 
-  const arrayOfPipelines = response.getItems() as PipelineSourceFile[];
+  const arrayOfPipelines = response;
 
   if (arrayOfPipelines.length === 0) {
     throw new Error("Failed to find a source file");
   }
   const neededPipeline = arrayOfPipelines.find(
-    (currentPipeline) =>
-      currentPipeline.data.pipeline_name === pipeline.data.name,
+    (currentPipeline) => currentPipeline.pipeline_name === pipeline.name,
   );
 
   if (!neededPipeline) {
@@ -31,10 +24,10 @@ const fetchPipelineSourceFiles = async (pipeline: Pipeline) => {
   }
 
   // Get the file type (ftype) from the response
-  const fileType = neededPipeline.data.ftype || "txt"; // Default to 'txt' if ftype is undefined
+  const fileType = neededPipeline.ftype || "txt"; // Default to 'txt' if ftype is undefined
 
   // Get the pipeline name and construct the file name with extension
-  const fileName = `${pipeline.data.name}.${fileType}`;
+  const fileName = `${pipeline.name}.${fileType}`;
 
   // Get the file blob
   const blob = await neededPipeline.getFileBlob();

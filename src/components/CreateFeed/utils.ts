@@ -1,13 +1,12 @@
 import type { EventDataNode } from "rc-tree/lib/interface";
-import ChrisAPIClient from "../../api/chrisapiclient";
-import { fetchResource } from "../../api/common";
 import { createPipeline, getTags } from "../../api/serverApi";
+import { getComputeResourcesByPluginID } from "../../api/serverApi/computeResource";
+import { getPluginMetas } from "../../api/serverApi/pluginMeta";
 import type {
+  ID,
   Piping,
   PipingDefaultParameter,
   PipingInfo,
-  PluginMeta,
-  Tag,
 } from "../../api/types";
 import constants from "../../datasets/constants";
 import fetchFolders from "../NewLibrary/utils/fetchFolders";
@@ -113,18 +112,13 @@ export const getPlugins = async (
   offset: number,
   type: string,
 ) => {
-  const client = ChrisAPIClient.getClient();
-  const params = { name, limit, offset, type };
-  const fn = client.getPluginMetas;
-  const boundFn = fn.bind(client);
-  const { resource: plugins, totalCount } = await fetchResource<PluginMeta>(
-    params,
-    boundFn,
-  );
+  const query = { name, limit, offset, type };
+  const { status, data, errmsg } = await getPluginMetas(query);
+  const plugins = data || [];
 
   return {
     plugins,
-    totalCount,
+    totalCount: 0,
   };
 };
 
@@ -267,23 +261,20 @@ For example, the color #FF0000 represents a shade of red. The FF in the first pa
 Similarly, the color #00FF00 represents a shade of green, and the color #0000FF represents a shade of blue. By combining different values for the red, green, and blue components, it is possible to create a wide range of different colors, from bright and saturated to pale and pastel.
 */
 
-export async function fetchComputeInfo(
-  plugin_id: number,
-  dictionary_id: number,
-) {
-  const client = ChrisAPIClient.getClient();
-  const computeEnvs = await client.getComputeResources({
-    plugin_id: `${plugin_id}`,
-  });
+export async function fetchComputeInfo(plugin_id: ID, dictionary_id: number) {
+  const { status, data, errmsg } =
+    await getComputeResourcesByPluginID(plugin_id);
+  const computeEnvs = data || [];
 
-  if (computeEnvs.getItems()) {
-    const computeEnvData = {
-      [dictionary_id]: {
-        computeEnvs: computeEnvs.data,
-        currentlySelected: computeEnvs.data[0].name,
-      },
-    };
-    return computeEnvData;
+  if (!computeEnvs.length) {
+    return;
   }
-  return undefined;
+
+  const computeEnvData = {
+    [dictionary_id]: {
+      computeEnvs: computeEnvs,
+      currentlySelected: computeEnvs[0].name,
+    },
+  };
+  return computeEnvData;
 }

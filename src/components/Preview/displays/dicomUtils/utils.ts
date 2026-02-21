@@ -12,7 +12,6 @@ import {
   type Types as CornerstoneToolTypes,
   init as csToolsInit,
 } from "@cornerstonejs/tools";
-import { Collection } from "@fnndsc/chrisapi";
 import dicomParser from "dicom-parser";
 import type { IFileBlob } from "../../../../api/model";
 import ptScalingMetaDataProvider from "./ptScalingMetaDataProvider";
@@ -248,8 +247,5 @@ export const displayDicomImage = async (
 };
 
 export function getFileResourceUrl(file: IFileBlob): string {
-  return Collection.getLinkRelationUrls(
-    file?.collection.items[0],
-    "file_resource",
-  )[0];
+  return getLinkRelationUrls(file, "file_resource")[0];
 }

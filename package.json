@@ -57,7 +57,6 @@
     "@cornerstonejs/core": "^1.86.0",
     "@cornerstonejs/dicom-image-loader": "^1.86.0",
     "@cornerstonejs/tools": "^1.86.0",
-    "@fnndsc/chrisapi": "^1.23.0",
     "@microlink/react-json-view": "^1.26.2",
     "@niivue/niivue": "0.62.1",
     "@patternfly/react-charts": "^7.4.0",

@@ -10,8 +10,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import type React from "react";
 import { useCallback, useContext, useRef, useState } from "react";
-import ChrisAPIClient from "../../api/chrisapiclient";
-import { fetchResource } from "../../api/common";
+import { getPluginMetas } from "../../api/serverApi/pluginMeta";
 import type { PluginMeta } from "../../api/types";
 import { Alert } from "../Antd";
 import { EmptyStateComponent, SpinContainer } from "../Common";
@@ -56,19 +55,9 @@ const PluginSelect: React.FC = () => {
 
   // Function to fetch all plugins
   const fetchAllPlugins = async () => {
-    const client = ChrisAPIClient.getClient();
-    const params = { limit: 25, offset: 0 };
-
-    try {
-      const { resource: pluginMetas } = await fetchResource<PluginMeta>(
-        params,
-        client.getPluginMetas.bind(client),
-      );
-      return pluginMetas?.filter((pluginMeta) => pluginMeta.type !== "fs");
-    } catch (error) {
-      // biome-ignore lint/complexity/noUselessCatch: <explanation>
-      throw error;
-    }
+    const { status, data, errmsg } = await getPluginMetas(0, 25);
+    const pluginMetas = data || [];
+    return pluginMetas.filter((pluginMeta) => pluginMeta.type !== "fs");
   };
 
   // Query to fetch all plugins

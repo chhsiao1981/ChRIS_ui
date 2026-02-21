@@ -11,6 +11,7 @@ export type Pipeline = {
   description: string;
   authors: string;
   min_creation_date: Datetime;
+  fname: string;
 };
 
 export interface UploadPipeline {
@@ -21,3 +22,9 @@ export interface UploadPipeline {
   locked: false;
   plugin_tree: UploadPipingInfo[];
 }
+
+export type PipelineSourceFile = {
+  id: ID;
+  pipeline_name: string;
+  ftype: string;
+};

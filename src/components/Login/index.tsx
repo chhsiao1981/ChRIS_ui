@@ -13,7 +13,7 @@ import config from "config";
 
 const { OIDC_URL, OIDC_PROMPT } = config;
 
-import { useSignUpAllowed } from "../../store/hooks.ts";
+import { useSignUpAllowed } from "../../hooks/useSignUpAllowed.ts";
 import FooterListItems from "./FooterListItems.tsx";
 
 export default () => {

@@ -27,7 +27,6 @@ import type {
 } from "../../../api/types";
 import * as DoCart from "../../..//reducers/cart";
 import type * as DoUser from "../../../reducers/user";
-import useDownload from "../../../store/hooks";
 import { notification } from "../../Antd";
 import { getIcon } from "../../Common";
 import { ThemeContext } from "../../DarkTheme/useTheme";

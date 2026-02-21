@@ -8,14 +8,16 @@ import { Button, Modal, ModalVariant, Spinner } from "@patternfly/react-core";
 import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Fragment, useState } from "react";
-import ChrisAPIClient from "../../api/chrisapiclient";
+import { getPluginInstance } from "../../api/serverApi";
 import type { Feed } from "../../api/types";
 import * as DoPlugin from "../../reducers/plugin";
 import * as DoPluginInstance from "../../reducers/pluginInstance";
+import * as DoUser from "../../reducers/user";
 import { Alert } from "../Antd";
 
 type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
 type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
+type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 
 // -------------------- 2) Props & Interfaces --------------------
 type Props = {
@@ -27,10 +29,13 @@ type Props = {
 export default (props: Props) => {
   const { feed, removeNodeLocally } = props;
 
-  const [classStatePlugin, doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(
-    DoPlugin,
-  );
+  const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
+  const [classStateUser, _doUser] = useUser;
+  const user = getState(classStateUser) || DoUser.defaultState;
+  const { token } = user;
 
+  const usePlugin = useThunk<DoPlugin.State, TDoPlugin>(DoPlugin);
+  const [classStatePlugin, doPlugin] = usePlugin;
   const pluginID = getDefaultID(classStatePlugin);
   const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
   const { nodeOperations } = plugin;
@@ -88,15 +93,18 @@ export default (props: Props) => {
       }
 
       // 4) If there's a parent, fetch it but *do not* select it yet.
-      if (parentId && parentId > 0) {
-        const client = ChrisAPIClient.getClient();
-        const parentInst = await client.getPluginInstance(parentId);
-        setParentToSelect(parentInst);
+      if (parentId) {
+        const {
+          status,
+          data: parentInst,
+          errmsg,
+        } = await getPluginInstance(parentId);
+        if (parentInst) {
+          setParentToSelect(parentInst);
+        }
       }
 
       // 5) Delete plugin instance via axios
-      const client = ChrisAPIClient.getClient();
-      const token = client.auth.token;
       const pluginId = selectedPlugin.id;
       const deleteUrl = `${import.meta.env.VITE_CHRIS_UI_URL}plugins/instances/${pluginId}/`;
 

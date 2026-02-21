@@ -2,7 +2,7 @@ import { LoginPage } from "@patternfly/react-core";
 import { App, Spin } from "antd";
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useSignUpAllowed } from "../../store/hooks";
+import { useSignUpAllowed } from "../../hooks/useSignUpAllowed";
 import SignUpForm from "./SignUpForm";
 
 export default () => {

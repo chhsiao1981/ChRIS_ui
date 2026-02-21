@@ -15,8 +15,8 @@ import {
   queryPFDCMStudies,
   retrievePFDCMPACS,
 } from "./pacs";
-import { createPipeline, getPipelines } from "./pipeline";
-import { searchPluginsByName } from "./plugin";
+import { createPipeline, getPipelinesByName } from "./pipeline";
+import { getPlugins, searchPluginsByName } from "./plugin";
 import {
   createPluginInstance,
   createPluginInstanceByDirs,
@@ -56,8 +56,9 @@ export {
   updateFeedPublic,
   createFeedWithFilepaths,
   searchPluginsByName,
+  getPlugins,
   createPipeline,
-  getPipelines,
+  getPipelinesByName,
   createWorkflow,
   computeWorkflowNodesInfo,
   createDownloadToken,

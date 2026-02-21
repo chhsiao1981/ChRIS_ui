@@ -28,7 +28,7 @@ import {
   createWorkflow,
   getWorkflowPluginInstances,
 } from "../../api/serverApi";
-import { getPipelines } from "../../api/serverApi/pipeline";
+import { getPipelinesByName } from "../../api/serverApi/pipeline";
 import type { Feed, ID, PluginInstance } from "../../api/types";
 import * as DoPluginInstance from "../../reducers/pluginInstance";
 import AddNodeConnect from "../AddNode/AddNode";
@@ -236,7 +236,7 @@ export default (props: FeedTreeProps) => {
       status: status3,
       data: data3,
       errmsg: errmsg3,
-    } = await getPipelines("zip v20240311");
+    } = await getPipelinesByName("zip v20240311");
     const pipelines = data3 || [];
     if (!pipelines || pipelines.length === 0) {
       throw new Error("The zip pipeline is not registered. Contact admin.");

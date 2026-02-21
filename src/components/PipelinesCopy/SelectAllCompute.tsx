@@ -8,9 +8,8 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import React, { useContext } from "react";
 import { useLocation } from "react-router";
-import ChrisAPIClient from "../../api/chrisapiclient";
-import { fetchResource } from "../../api/common";
-import type { ComputeResource, Pipeline } from "../../api/types";
+import { getComputeResources } from "../../api/serverApi/computeResource";
+import type { Pipeline } from "../../api/types";
 import { Avatar } from "../Antd";
 import { stringToColour } from "../CreateFeed/utils";
 import { PipelineContext, Types } from "./context";
@@ -29,23 +28,12 @@ export default (props: Props) => {
   const selectedItem = state.generalCompute?.[id] || "";
 
   const fetchCompute = async () => {
-    const client = ChrisAPIClient.getClient();
-    const fn = client.getComputeResources;
-    const boundFn = fn.bind(client);
-    try {
-      const data: {
-        resource: ComputeResource[];
-        totalCount: number;
-      } = await fetchResource<ComputeResource>(
-        { limit: 100, offset: 0 },
-        boundFn,
-      );
-      return data;
-    } catch (e) {
-      throw new Error(
-        "Count not fetch the compute resources registered to this ChRIS instance",
-      );
-    }
+    const { status, data, errmsg } = await getComputeResources({
+      limit: 100,
+      offset: 0,
+    });
+    const computeResources = data || [];
+    return computeResources;
   };
 
   const { data, isLoading, isError, error } = useQuery({
@@ -105,14 +93,14 @@ export default (props: Props) => {
   return (
     <Select
       onOpenChange={(nextOpen: boolean) => setIsOpen(nextOpen)}
-      selected={data?.resource || []}
+      selected={data || []}
       onSelect={onSelect}
       isOpen={isOpen}
       toggle={toggle}
     >
       <SelectList>
-        {data?.resource && !isLoading && !isError ? (
-          data.resource.map((resource) => {
+        {data && !isLoading && !isError ? (
+          data.map((resource) => {
             return (
               <SelectOption
                 isSelected={resource.name === selectedItem}

@@ -1,15 +1,15 @@
 import { collectionJsonToJson } from "../../api/api";
-import ChrisAPIClient from "../../api/chrisapiclient";
 import {
   fetchResource,
   limitConcurrency,
   uploadWrapper,
 } from "../../api/common";
 import {
+  createPluginInstance as apiCreatePluginInstance,
   createPluginInstanceByDirs,
   createWorkflow,
   getFeed,
-  searchPluginsByName,
+  getPlugins,
   updateFeedName,
 } from "../../api/serverApi";
 import type {
@@ -33,7 +33,7 @@ const createFeedCore = async (
     status,
     data: searchPluginsResult,
     errmsg,
-  } = await searchPluginsByName("pl-dircopy");
+  } = await getPlugins({ name: "pl-dircopy" });
   console.info(
     "createFeedCore: after searchPluginsByName: searchPluginsResult:",
     searchPluginsResult,
@@ -176,11 +176,11 @@ export const uploadLocalFiles = async (
   files: File[],
   directory: string,
   statusCallback: (value: number) => void,
+  token: string,
 ) => {
-  const client = ChrisAPIClient.getClient();
-  await client.setUrls();
+  await setUrls();
 
-  const fileUploads = uploadWrapper(files, directory, client.auth.token);
+  const fileUploads = uploadWrapper(files, directory, token);
   const promises = fileUploads.map(
     ({ promise }) =>
       () =>
@@ -205,12 +205,11 @@ function generatePathForLocalFile(data: CreateFeedData) {
 export const getPlugin = async (
   pluginName: string,
 ): Promise<Plugin | undefined> => {
-  const client = ChrisAPIClient.getClient();
-
   try {
-    const pluginList = await client.getPlugins({
+    const { status, data, errmsg } = await getPlugins({
       name_exact: pluginName,
     });
+    const pluginList = data || [];
     let plugin: Plugin[] = [];
     if (pluginList.getItems()) {
       plugin = pluginList.getItems() as Plugin[];
@@ -382,15 +381,22 @@ export const sanitizeAdvancedConfig = (
 
 export const createPluginInstance = async (
   pluginId: ID,
-  parameterInput: Record<string, any>,
+  parameterInput: Partial<PluginInstance>,
 ) => {
-  const client = ChrisAPIClient.getClient();
-  const pluginInstance = await client.createPluginInstance(
-    // @ts-expect-error client
-    pluginId,
-    parameterInput,
-  );
-  const feed = await pluginInstance.getFeed();
+  const {
+    status,
+    data: pluginInstance,
+    errmsg,
+  } = await apiCreatePluginInstance(pluginId, parameterInput);
+  if (!pluginInstance) {
+    return;
+  }
+
+  const {
+    status: _status2,
+    data: feed,
+    errmsg: _errmsg2,
+  } = await getFeed(pluginInstance.feed_id);
   return { pluginInstance, feed };
 };
 
