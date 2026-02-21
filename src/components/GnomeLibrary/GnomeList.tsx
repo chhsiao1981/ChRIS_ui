@@ -19,10 +19,10 @@ import { format } from "date-fns";
 import type React from "react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import {
+import type {
   FileBrowserFolder,
   FileBrowserFolderFile,
-  type FileBrowserFolderLinkFile,
+  FileBrowserFolderLinkFile,
 } from "../../api/types";
 import * as DoCart from "../../reducers/cart";
 import * as DoUser from "../../reducers/user";

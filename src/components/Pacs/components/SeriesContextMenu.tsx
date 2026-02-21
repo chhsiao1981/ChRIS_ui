@@ -1,7 +1,7 @@
 import { FolderOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import type { useNavigate } from "react-router-dom";
-import { createFeed } from "../../../store/cart/downloadSaga";
+import { createFeedWithFilepaths } from "../../../api/serverApi";
 import { AnalysisIcon } from "../../Icons";
 import type { PacsSeriesState } from "../types";
 import { fetchSeriesPath } from "./pacsUtils";
@@ -76,7 +76,7 @@ export const createSeriesFeed = async (
     }
 
     // Create the feed
-    await createFeed(paths, feedName);
+    await createFeedWithFilepaths(paths, feedName);
 
     // Show appropriate success message
     const isMultipleSeries = paths.length > 1;
