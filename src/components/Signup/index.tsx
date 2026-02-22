@@ -1,21 +1,38 @@
+import {
+  getDefaultID,
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import { LoginPage } from "@patternfly/react-core";
 import { App, Spin } from "antd";
-import React from "react";
+import type React from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSignUpAllowed } from "../../hooks/useSignUpAllowed";
+import * as DoSystem from "../../reducers/system";
 import SignUpForm from "./SignUpForm";
 
+type TDoSystem = ThunkModuleToFunc<typeof DoSystem>;
+
 export default () => {
-  const { signUpAllowed, isLoading, isError } = useSignUpAllowed();
   const navigate = useNavigate();
 
   // Use the message API from Ant Design
   const { message } = App.useApp();
 
-  React.useEffect(() => {
-    let timer: NodeJS.Timeout;
+  const useSystem = useThunk<DoSystem.State, TDoSystem>(DoSystem);
+  const [classStateSystem, _doSystem] = useSystem;
+  const systemID = getDefaultID(classStateSystem);
+  const system = getState(classStateSystem) || DoSystem.defaultState;
+  const { isAllowRegister } = system;
 
-    if (!isLoading && !signUpAllowed) {
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (!systemID) {
+      return;
+    }
+
+    if (!isAllowRegister) {
       // If sign-ups are not allowed, show error and redirect after delay
       message.error(
         "Anonymous sign-ups are not allowed on this platform. Redirecting to login page...",
@@ -24,15 +41,6 @@ export default () => {
       timer = setTimeout(() => {
         navigate("/login");
       }, 3000); // Redirect after 3 seconds
-    } else if (isError) {
-      // If there was an error checking sign-up availability
-      message.error(
-        "Failed to check sign-up availability. Please try again later. Redirecting to login page...",
-        3,
-      );
-      timer = setTimeout(() => {
-        navigate("/login");
-      }, 3000);
     }
 
     // Cleanup the timer if the component unmounts
@@ -41,18 +49,18 @@ export default () => {
         clearTimeout(timer);
       }
     };
-  }, [signUpAllowed, isLoading, isError, navigate, message]);
+  }, [systemID, isAllowRegister, navigate, message]);
 
   // Determine what content to render inside the LoginPage
   let content: React.ReactNode;
-  if (isLoading) {
+  if (!systemID) {
     // Display a loading spinner while checking sign-up availability
     content = (
       <div style={{ textAlign: "center", marginTop: "50px" }}>
         <Spin size="large" tip="Checking sign-up availability..." />
       </div>
     );
-  } else if ((!isLoading && !signUpAllowed) || isError) {
+  } else if (!isAllowRegister) {
     // Show a message indicating redirecting
     content = (
       <div>

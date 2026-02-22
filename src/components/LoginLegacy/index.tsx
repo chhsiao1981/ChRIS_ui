@@ -16,9 +16,11 @@ import {
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
-import { useSignUpAllowed } from "../../hooks/useSignUpAllowed.ts";
+import * as DoSystem from "../../reducers/system";
 import * as DoUser from "../../reducers/user";
 import FooterListItems from "./FooterListItems.tsx";
+
+type TDoSystem = ThunkModuleToFunc<typeof DoSystem>;
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 
@@ -30,18 +32,19 @@ export default () => {
   const userID = getDefaultID(classStateUser);
   const user = getState(classStateUser) || DoUser.defaultState;
 
-  console.info("Login.index: userID:", userID, "user:", user);
+  const useSystem = useThunk<DoSystem.State, TDoSystem>(DoSystem);
+  const [classStateSystem, _doSystem] = useSystem;
+  const system = getState(classStateSystem) || DoSystem.defaultState;
+  const { isAllowRegister } = system;
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<Status>("idle");
 
-  // Use the custom hook
-  const { signUpAllowed } = useSignUpAllowed();
-
   // Use the message API from Ant Design
   const { message } = App.useApp();
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: useEffect
   useEffect(() => {
     if (!user.errmsg) {
       setStatus("success");
@@ -68,7 +71,7 @@ export default () => {
   };
 
   // Conditionally render the "Sign up" link based on signUpAllowed state
-  const signUpForAccountMessage = signUpAllowed ? (
+  const signUpForAccountMessage = isAllowRegister ? (
     <LoginMainFooterBandItem>
       Need an account? <Link to="/signup">Sign up.</Link>
     </LoginMainFooterBandItem>

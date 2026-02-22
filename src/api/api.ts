@@ -1,7 +1,6 @@
 import config from "config";
 import { Cookies } from "react-cookie";
 import type { List } from "../api/types";
-import { STATUS_UNAUTHORIZED } from "./constants";
 
 export type Query = Record<string, any>;
 

@@ -5,7 +5,7 @@
  */
 
 import {
-  genUUID,
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
@@ -77,9 +77,9 @@ export default () => {
   const [classStatePacs, doPacs] = useThunk<DoPacs.State, TDoPacs>(DoPacs);
   const [searchParams, _setSearchParams] = useSearchParams();
   const location = useLocation();
-  const [pacsID, _] = useState(genUUID());
 
-  const pacs = getState(classStatePacs, pacsID) ?? DoPacs.defaultState;
+  const pacsID = getDefaultID(classStatePacs);
+  const pacs = getState(classStatePacs) ?? DoPacs.defaultState;
 
   const {
     expandedSeries,
@@ -119,19 +119,11 @@ export default () => {
   // init
   // biome-ignore lint/correctness/useExhaustiveDependencies: useEffect
   useEffect(() => {
-    const thePacs = getState(classStatePacs, pacsID);
-    if (!thePacs) {
-      doPacs.init(pacsID);
+    if (!pacsID) {
+      return;
     }
-
     doPacs.updateServiceQueryBySearchParams(pacsID, location, searchParams);
-  }, [
-    pacsID,
-    doPacs.init,
-    doPacs.updateServiceQueryBySearchParams,
-    location,
-    searchParams,
-  ]);
+  }, [pacsID, location, searchParams]);
 
   useEffect(() => {
     if (!pacsID) {
@@ -151,13 +143,7 @@ export default () => {
     return () => {
       document.title = originalTitle;
     };
-  }, [
-    pacsID,
-    location,
-    location.pathname,
-    searchParams,
-    doPacs.updateServiceQueryBySearchParams,
-  ]);
+  }, [pacsID, location, location.pathname, searchParams]);
 
   // Subscribe to all expanded series
   useEffect(() => {

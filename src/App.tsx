@@ -1,6 +1,7 @@
 import "./app.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { App as AntdApp, ConfigProvider, theme } from "antd";
+import config from "config";
 import { useContext, useEffect, useState } from "react";
 import { CookiesProvider } from "react-cookie";
 import { BrowserRouter } from "react-router-dom";
@@ -11,6 +12,8 @@ import { ThemeContext } from "./components/DarkTheme/useTheme";
 import "./components/Feeds/Feeds.css";
 import {
   genUUID,
+  registerThunk,
+  ThunkContext,
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
@@ -21,8 +24,10 @@ import * as DoDrawer from "./reducers/drawer";
 import * as DoExplorer from "./reducers/explorer";
 import * as DoFeed from "./reducers/feed";
 import * as DoMainRouter from "./reducers/mainRouter";
+import * as DoPacs from "./reducers/pacs";
 import * as DoPlugin from "./reducers/plugin";
 import * as DoPluginInstance from "./reducers/pluginInstance";
+import * as DoSystem from "./reducers/system";
 import * as DoUI from "./reducers/ui";
 import * as DoUser from "./reducers/user";
 import Routes from "./routes";
@@ -37,6 +42,33 @@ type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
 type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 type TDoMainRouter = ThunkModuleToFunc<typeof DoMainRouter>;
+type TDoPacs = ThunkModuleToFunc<typeof DoPacs>;
+type TDoSystem = ThunkModuleToFunc<typeof DoSystem>;
+
+// @ts-expect-error registerThunk
+registerThunk(DoDrawer);
+// @ts-expect-error registerThunk
+registerThunk(DoDataTag);
+// @ts-expect-error registerThunk
+registerThunk(DoExplorer);
+// @ts-expect-error registerThunk
+registerThunk(DoFeed);
+// @ts-expect-error registerThunk
+registerThunk(DoPacs);
+// @ts-expect-error registerThunk
+registerThunk(DoUI);
+// @ts-expect-error registerThunk
+registerThunk(DoUser);
+// @ts-expect-error registerThunk
+registerThunk(DoCart);
+// @ts-expect-error registerThunk
+registerThunk(DoPlugin);
+// @ts-expect-error registerThunk
+registerThunk(DoPluginInstance);
+// @ts-expect-error registerThunk
+registerThunk(DoMainRouter);
+// @ts-expect-error registerThunk
+registerThunk(DoSystem);
 
 // for react-query
 const queryClient = new QueryClient({
@@ -53,7 +85,7 @@ const queryClient = new QueryClient({
 type Props = {};
 
 export default (props: Props) => {
-  // useThunk
+  //
   const useUI = useThunk<DoUI.State, TDoUI>(DoUI);
   const [_classStateUI, doUI] = useUI;
 
@@ -88,17 +120,23 @@ export default (props: Props) => {
   );
   const [_classStateMainRouter, doMainRouter] = useMainRouter;
 
+  const usePacs = useThunk<DoPacs.State, TDoPacs>(DoPacs);
+  const [_classStatePacs, doPacs] = usePacs;
+
+  const useSystem = useThunk<DoSystem.State, TDoSystem>(DoSystem);
+  const [_classStateSystem, doSystem] = useSystem;
   // required for user
   const [dataTagID, _setDataTagID] = useState(genUUID);
 
+  // theme
   const { isDarkTheme } = useContext(ThemeContext);
 
   /////
   // ackee
   /////
   const ackeeEnv = {
-    server: import.meta.env.VITE_ACKEE_SERVER,
-    domainId: import.meta.env.VITE_ACKEE_DOMAIN_ID,
+    server: config.ACKEE_SERVER,
+    domainId: config.ACKEE_DOMAIN_ID,
   };
 
   if (ackeeEnv.server && ackeeEnv.server.length > 0 && ackeeEnv.domainId) {
@@ -110,14 +148,7 @@ export default (props: Props) => {
     });
   }
 
-  // to render
-  const themeAlg = isDarkTheme ? theme.darkAlgorithm : theme.defaultAlgorithm;
-
-  const futureRouter = {
-    v7_startTransition: true,
-    v7_relativeSplatPath: true,
-  };
-
+  // biome-ignore lint/correctness/useExhaustiveDependencies: doThunk never changed.
   useEffect(() => {
     // No need to set thunks when doing login / signup.
     if (
@@ -126,6 +157,7 @@ export default (props: Props) => {
       window.location.pathname === "/signup" ||
       window.location.pathname === "/oidc-redirect"
     ) {
+      doSystem.init();
       return;
     }
 
@@ -139,36 +171,48 @@ export default (props: Props) => {
     doPlugin.init();
     doPluginInstance.init();
     doMainRouter.init();
+    doPacs.init();
+    doSystem.init();
   }, []);
 
+  // to render
+  const themeAlg = isDarkTheme ? theme.darkAlgorithm : theme.defaultAlgorithm;
+
+  const futureRouter = {
+    v7_startTransition: true,
+    v7_relativeSplatPath: true,
+  };
+
   return (
-    <CookiesProvider>
-      <BrowserRouter future={futureRouter}>
-        <QueryClientProvider client={queryClient}>
-          <ConfigProvider
-            theme={{
-              algorithm: themeAlg,
-              token: {
-                // var(--pf-v5-global--primary-color--200)
-                colorSuccess: "#004080",
-              },
-              components: {
-                Progress: {
-                  // var(--pf-v5-global--primary-color--100)
-                  defaultColor: "#0066CC",
+    <ThunkContext>
+      <CookiesProvider>
+        <BrowserRouter future={futureRouter}>
+          <QueryClientProvider client={queryClient}>
+            <ConfigProvider
+              theme={{
+                algorithm: themeAlg,
+                token: {
+                  // var(--pf-v5-global--primary-color--200)
+                  colorSuccess: "#004080",
                 },
-              },
-            }}
-          >
-            <AntdApp>
-              <div className="patternfly-font">
-                <Cart />
-                <Routes />
-              </div>
-            </AntdApp>
-          </ConfigProvider>
-        </QueryClientProvider>
-      </BrowserRouter>
-    </CookiesProvider>
+                components: {
+                  Progress: {
+                    // var(--pf-v5-global--primary-color--100)
+                    defaultColor: "#0066CC",
+                  },
+                },
+              }}
+            >
+              <AntdApp>
+                <div className="patternfly-font">
+                  <Cart />
+                  <Routes />
+                </div>
+              </AntdApp>
+            </ConfigProvider>
+          </QueryClientProvider>
+        </BrowserRouter>
+      </CookiesProvider>
+    </ThunkContext>
   );
 };

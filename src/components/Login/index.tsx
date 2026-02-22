@@ -8,20 +8,29 @@ import { Link, redirect } from "react-router-dom";
 import ChRIS_Logo from "../../assets/chris-logo.png";
 import ChRIS_Logo_Inline from "../../assets/chris-logo-inline.png";
 import "./Login.css";
-
+import {
+  getState,
+  type ThunkModuleToFunc,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
 import config from "config";
+import * as DoSystem from "../../reducers/system";
+import FooterListItems from "./FooterListItems.tsx";
+
+type TDoSystem = ThunkModuleToFunc<typeof DoSystem>;
 
 const { OIDC_URL, OIDC_PROMPT } = config;
 
-import { useSignUpAllowed } from "../../hooks/useSignUpAllowed.ts";
-import FooterListItems from "./FooterListItems.tsx";
-
 export default () => {
   // Use the custom hook
-  const { signUpAllowed } = useSignUpAllowed();
+
+  const useSystem = useThunk<DoSystem.State, TDoSystem>(DoSystem);
+  const [classStateSystem, _doSystem] = useSystem;
+  const system = getState(classStateSystem) || DoSystem.defaultState;
+  const { isAllowRegister } = system;
 
   // Conditionally render the "Sign up" link based on signUpAllowed state
-  const signUpForAccountMessage = signUpAllowed ? (
+  const signUpForAccountMessage = isAllowRegister ? (
     <LoginMainFooterBandItem>
       Need an account? <Link to="/signup">Sign up.</Link>
     </LoginMainFooterBandItem>

@@ -2,6 +2,7 @@ import {
   init as _init,
   type ClassState,
   type Dispatch,
+  genUUID,
   getState,
   type State as rState,
   setData,
@@ -120,8 +121,9 @@ export const defaultState: State = {
   errmsg: "",
 };
 
-export const init = (myID: string): Thunk<State> => {
+export const init = (): Thunk<State> => {
   return async (dispatch, _) => {
+    const myID = genUUID();
     dispatch(_init({ myID, state: defaultState }));
     dispatch(getServices(myID));
   };
