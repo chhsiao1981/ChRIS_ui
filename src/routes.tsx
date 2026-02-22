@@ -4,7 +4,6 @@ import {
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
-import { getDefaultAutoSelectFamily } from "net";
 import { useEffect, useState } from "react";
 import { matchPath, useLocation, useRoutes } from "react-router-dom";
 import ComputePage from "./components/ComputePage";

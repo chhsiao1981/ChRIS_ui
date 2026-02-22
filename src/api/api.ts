@@ -1,4 +1,5 @@
 import config from "config";
+import { error } from "console";
 import { Cookies } from "react-cookie";
 import type { List } from "../api/types";
 
@@ -80,12 +81,17 @@ const collectionJsonLinkToJson = (links: any[]) => {
 export const collectionJsonToJson = <T>(
   theData: any,
   isLink = false,
-): T | T[] | List<T> => {
-  if (isLink) {
-    return collectionJsonLinkToJson(theData.collection.links);
+  prompt = "",
+) => {
+  try {
+    if (isLink) {
+      return collectionJsonLinkToJson(theData.collection.links);
+    }
+    const ret = theData.collection.items.map(collectionJsonItemToJson);
+    return typeof theData.collection.total === "undefined" ? ret[0] : ret;
+  } catch (error) {
+    console.error("collectionJsonToJson: error: prompt:", prompt, "e:", error);
   }
-  const ret = theData.collection.items.map(collectionJsonItemToJson);
-  return typeof theData.collection.total === "undefined" ? ret[0] : ret;
 };
 
 export const sanitizeAPIRootURL = (API_ROOT: string) => {
@@ -99,7 +105,7 @@ export const sanitizeAPIRootURL = (API_ROOT: string) => {
 export default async <T>(apiParams: ApiParams): Promise<ApiResult<T>> => {
   const {
     endpoint,
-    query,
+    query,  
     queryString,
     method = "get",
     params,

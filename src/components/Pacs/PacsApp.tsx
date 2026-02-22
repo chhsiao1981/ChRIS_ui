@@ -116,13 +116,8 @@ export default () => {
   // EFFECTS
   // ========================================
 
-  // init
-  // biome-ignore lint/correctness/useExhaustiveDependencies: useEffect
+  // document title.
   useEffect(() => {
-    if (!pacsID) {
-      return;
-    }
-
     if (!location.pathname.startsWith("/pacs")) {
       return;
     }
@@ -131,12 +126,10 @@ export default () => {
     const originalTitle = document.title;
     document.title = "ChRIS PACS";
 
-    doPacs.updateServiceQueryBySearchParams(pacsID, location, searchParams);
-
     return () => {
       document.title = originalTitle;
     };
-  }, [pacsID, location, location.pathname, searchParams]);
+  }, [location, location.pathname]);
 
   // Subscribe to all expanded series
   useEffect(() => {
