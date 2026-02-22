@@ -4,7 +4,8 @@ import {
   LoginMainFooterBandItem,
   LoginPage,
 } from "@patternfly/react-core";
-import { Link, redirect } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { redirect } from "../../api/redirect";
 import ChRIS_Logo from "../../assets/chris-logo.png";
 import ChRIS_Logo_Inline from "../../assets/chris-logo-inline.png";
 import "./Login.css";
