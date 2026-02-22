@@ -105,7 +105,7 @@ export const sanitizeAPIRootURL = (API_ROOT: string) => {
 export default async <T>(apiParams: ApiParams): Promise<ApiResult<T>> => {
   const {
     endpoint,
-    query,  
+    query,
     queryString,
     method = "get",
     params,
