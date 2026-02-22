@@ -122,13 +122,6 @@ export default () => {
     if (!pacsID) {
       return;
     }
-    doPacs.updateServiceQueryBySearchParams(pacsID, location, searchParams);
-  }, [pacsID, location, searchParams]);
-
-  useEffect(() => {
-    if (!pacsID) {
-      return;
-    }
 
     if (!location.pathname.startsWith("/pacs")) {
       return;
