@@ -1,8 +1,10 @@
 import {
   genUUID,
+  getDefaultID,
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
+import { getDefaultAutoSelectFamily } from "net";
 import { useEffect, useState } from "react";
 import { matchPath, useLocation, useRoutes } from "react-router-dom";
 import ComputePage from "./components/ComputePage";
@@ -22,27 +24,10 @@ import PluginInstall from "./components/PluginInstall";
 import PrivateRoute from "./components/PrivateRoute";
 import Signup from "./components/Signup";
 import SinglePlugin from "./components/SinglePlugin";
-import * as DoCart from "./reducers/cart";
-import * as DoDataTag from "./reducers/dataTag";
-import * as DoDrawer from "./reducers/drawer";
-import * as DoExplorer from "./reducers/explorer";
-import * as DoFeed from "./reducers/feed";
-import * as DoMainRouter from "./reducers/mainRouter";
-import * as DoPlugin from "./reducers/plugin";
-import * as DoPluginInstance from "./reducers/pluginInstance";
+
 import * as DoUI from "./reducers/ui";
-import * as DoUser from "./reducers/user";
 
 type TDoUI = ThunkModuleToFunc<typeof DoUI>;
-type TDoUser = ThunkModuleToFunc<typeof DoUser>;
-type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
-type TDoExplorer = ThunkModuleToFunc<typeof DoExplorer>;
-type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
-type TDoDataTag = ThunkModuleToFunc<typeof DoDataTag>;
-type TDoCart = ThunkModuleToFunc<typeof DoCart>;
-type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
-type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
-type TDoMainRouter = ThunkModuleToFunc<typeof DoMainRouter>;
 
 // Define the routes and their corresponding sidebar items
 const _ROUTE_TO_SIDEBAR_ITEM: Record<string, string> = {
@@ -74,42 +59,9 @@ const _ROUTE_TO_SIDEBAR_ITEM: Record<string, string> = {
 export default () => {
   const location = useLocation();
 
-  const [uiID, _setUIID] = useState(genUUID);
-  const [dataTagID, _setDataTagID] = useState(genUUID);
-
   const useUI = useThunk<DoUI.State, TDoUI>(DoUI);
-  const [_classStateUI, doUI] = useUI;
-
-  const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
-  const [_classStateUser, doUser] = useUser;
-
-  const useDrawer = useThunk<DoDrawer.State, TDoDrawer>(DoDrawer);
-  const [_classStateDrawer, doDrawer] = useDrawer;
-
-  const useExplorer = useThunk<DoExplorer.State, TDoExplorer>(DoExplorer);
-  const [_classStateExplorer, doExplorer] = useExplorer;
-
-  const useDataTag = useThunk<DoDataTag.State, TDoDataTag>(DoDataTag);
-  const [_classStateDataTag, doDataTag] = useDataTag;
-
-  const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
-  const [_classStateFeed, doFeed] = useFeed;
-
-  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
-  const [_classStateCart, doCart] = useCart;
-
-  const usePlugin = useThunk<DoPlugin.State, TDoPlugin>(DoPlugin);
-  const [_classStatePlugin, doPlugin] = usePlugin;
-
-  const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
-    DoPluginInstance,
-  );
-  const [_classStatePluginInstance, doPluginInstance] = usePluginInstance;
-
-  const useMainRouter = useThunk<DoMainRouter.State, TDoMainRouter>(
-    DoMainRouter,
-  );
-  const [_classStateMainRouter, doMainRouter] = useMainRouter;
+  const [classStateUI, doUI] = useUI;
+  const uiID = getDefaultID(classStateUI);
 
   const matchRoute = (path: string) => {
     const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
@@ -129,29 +81,6 @@ export default () => {
     // Default to notFound if no match
     return _ROUTE_TO_SIDEBAR_ITEM["*"];
   };
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: init only once.
-  useEffect(() => {
-    // No need to set thunks when doing login.
-    if (
-      location.pathname.startsWith("/login") ||
-      location.pathname === "/signup" ||
-      location.pathname === "/oidc-redirect"
-    ) {
-      return;
-    }
-
-    doUI.init(uiID);
-    doDataTag.init(dataTagID);
-    doUser.init(dataTagID, doDataTag);
-    doDrawer.init();
-    doExplorer.init();
-    doFeed.init();
-    doCart.init();
-    doPlugin.init();
-    doPluginInstance.init();
-    doMainRouter.init();
-  }, []);
 
   // Update the active sidebar item based on the current route
   useEffect(() => {

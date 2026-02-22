@@ -22,9 +22,9 @@ export const defaultState: State = {
   isPipelineTagExpanded: false,
 };
 
-export const init = (myID: string): Thunk<State> => {
+export const init = (): Thunk<State> => {
   return async (dispatch, _) => {
-    dispatch(_init({ myID, state: defaultState }));
+    dispatch(_init({ state: defaultState }));
   };
 };
 
