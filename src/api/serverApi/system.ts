@@ -6,4 +6,5 @@ export const getSystemInfo = () =>
   api<SystemInfo>({
     endpoint: "/",
     apiroot: config.API_V7_ROOT,
+    isJson: true,
   });

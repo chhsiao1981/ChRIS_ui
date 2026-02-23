@@ -242,7 +242,11 @@ const fetchCore = async <T>(
 
           const jsonData = isJson
             ? collectionJsonData
-            : collectionJsonToJson(collectionJsonData, isLink);
+            : collectionJsonToJson(
+                collectionJsonData,
+                isLink,
+                `fetchCore: endpoint: ${endpoint}`,
+              );
 
           const data = jsonData;
 
