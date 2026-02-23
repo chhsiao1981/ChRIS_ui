@@ -12,8 +12,8 @@ import { ThemeContext } from "./components/DarkTheme/useTheme";
 import "./components/Feeds/Feeds.css";
 import {
   genUUID,
+  getState,
   registerThunk,
-  ThunkContext,
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
@@ -90,7 +90,10 @@ export default (props: Props) => {
   const [_classStateUI, doUI] = useUI;
 
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
-  const [_classStateUser, doUser] = useUser;
+  const [classStateUser, doUser] = useUser;
+  const user = getState(classStateUser) || DoUser.defaultState;
+  const { isLoggedIn } = user;
+  console.info("App: isLoggedIn:", isLoggedIn);
 
   const useDrawer = useThunk<DoDrawer.State, TDoDrawer>(DoDrawer);
   const [_classStateDrawer, doDrawer] = useDrawer;
@@ -183,36 +186,36 @@ export default (props: Props) => {
     v7_relativeSplatPath: true,
   };
 
+  console.info("App: to render");
+
   return (
-    <ThunkContext>
-      <CookiesProvider>
-        <BrowserRouter future={futureRouter}>
-          <QueryClientProvider client={queryClient}>
-            <ConfigProvider
-              theme={{
-                algorithm: themeAlg,
-                token: {
-                  // var(--pf-v5-global--primary-color--200)
-                  colorSuccess: "#004080",
+    <CookiesProvider>
+      <BrowserRouter future={futureRouter}>
+        <QueryClientProvider client={queryClient}>
+          <ConfigProvider
+            theme={{
+              algorithm: themeAlg,
+              token: {
+                // var(--pf-v5-global--primary-color--200)
+                colorSuccess: "#004080",
+              },
+              components: {
+                Progress: {
+                  // var(--pf-v5-global--primary-color--100)
+                  defaultColor: "#0066CC",
                 },
-                components: {
-                  Progress: {
-                    // var(--pf-v5-global--primary-color--100)
-                    defaultColor: "#0066CC",
-                  },
-                },
-              }}
-            >
-              <AntdApp>
-                <div className="patternfly-font">
-                  <Cart />
-                  <Routes />
-                </div>
-              </AntdApp>
-            </ConfigProvider>
-          </QueryClientProvider>
-        </BrowserRouter>
-      </CookiesProvider>
-    </ThunkContext>
+              },
+            }}
+          >
+            <AntdApp>
+              <div className="patternfly-font">
+                <Cart />
+                <Routes />
+              </div>
+            </AntdApp>
+          </ConfigProvider>
+        </QueryClientProvider>
+      </BrowserRouter>
+    </CookiesProvider>
   );
 };

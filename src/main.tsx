@@ -7,13 +7,16 @@ import { ThemeContextProvider } from "./components/DarkTheme/useTheme.tsx";
 import "@patternfly/react-core/dist/styles/base.css";
 
 import "./main.css";
+import { ThunkContext } from "@chhsiao1981/use-thunk";
 
 enableMapSet();
 const root = createRoot(document.getElementById("root")!);
 root.render(
   <StrictMode>
-    <ThemeContextProvider>
-      <App />
-    </ThemeContextProvider>
+    <ThunkContext>
+      <ThemeContextProvider>
+        <App />
+      </ThemeContextProvider>
+    </ThunkContext>
   </StrictMode>,
 );
