@@ -1,4 +1,5 @@
 import {
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
@@ -17,6 +18,7 @@ import {
   Title,
   Tooltip,
 } from "@patternfly/react-core";
+import page from "@patternfly/react-styles/css/components/Page/page";
 import {
   SortByDirection,
   Table,
@@ -28,13 +30,13 @@ import {
 } from "@patternfly/react-table";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { debounce } from "lodash";
 import type React from "react";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useNavigate } from "react-router";
 import type { Feed, FileBrowserFolder, ID } from "../../api/types";
 import * as DoCart from "../../reducers/cart";
+import * as DoFeedList from "../../reducers/feedList";
 import * as DoUser from "../../reducers/user";
 import { Typography } from "../Antd";
 import { InfoSection } from "../Common";
@@ -45,8 +47,7 @@ import Operations from "../NewLibrary/components/Operations";
 import { OperationContext } from "../NewLibrary/context";
 import useLongPress from "../NewLibrary/utils/longpress";
 import Wrapper from "../Wrapper";
-import FeedSearch from "./FeedsSearch";
-import { useFeedListData } from "./useFeedListData";
+import FeedsSearch from "./FeedsSearch";
 import {
   fetchAuthenticatedFeed,
   fetchPublicFeed,
@@ -56,6 +57,7 @@ import {
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+type TDoFeedList = ThunkModuleToFunc<typeof DoFeedList>;
 
 const { Paragraph } = Typography;
 
@@ -78,7 +80,6 @@ const COLUMN_DEFINITIONS: ColumnDefinition[] = [
       return 0;
     },
   },
-
   {
     id: "analysis",
     label: "Analysis",
@@ -108,34 +109,44 @@ const COLUMN_DEFINITIONS: ColumnDefinition[] = [
 
 type Props = {
   title: string;
-  isShared: boolean;
+  isPublic: boolean;
 };
 
 export default (props: Props) => {
-  const { title, isShared } = props;
+  const { title, isPublic } = props;
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
   const [classStateUser, _] = useUser;
   const user = getState(classStateUser) || DoUser.defaultState;
-  const { isLoggedIn, username, isInit, isStaff } = user;
-  const theType = isShared ? "public" : "private";
+  const { isLoggedIn, username, isInit: isInitUser, isStaff } = user;
+  const theType = isPublic ? "public" : "private";
 
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
 
+  const useFeedList = useThunk<DoFeedList.State, TDoFeedList>(DoFeedList);
+  const [classStateFeedList, doFeedList] = useFeedList;
+  const feedListID = getDefaultID(classStateFeedList);
+  const feedList = getState(classStateFeedList) || DoFeedList.defaultState;
+  const {
+    count,
+    data: feedsToDisplay,
+    page,
+    perPage,
+    searchType,
+    search,
+    isLoading,
+    error,
+  } = feedList;
+
   const navigate = useNavigate();
-  const { feedCount, loadingFeedState, feedsToDisplay, searchFolderData } =
-    useFeedListData(theType, isLoggedIn);
 
-  const { perPage, page, search, searchType } = searchFolderData;
-
+  /**
+   * Sorted Table data / parameters
+   */
+  // https://www.patternfly.org/components/table/
   const [activeSortIndex, setActiveSortIndex] = useState<number>(0);
   const [activeSortDirection, setActiveSortDirection] =
     useState<SortByDirection>(SortByDirection.desc);
 
-  /**
-   * Get sort parameters for a given column index
-   * @param columnIndex - Index of the column to sort
-   * @returns Sort parameters
-   */
   const getSortParams = (columnIndex: number) => ({
     sortBy: {
       index: activeSortIndex,
@@ -153,21 +164,20 @@ export default (props: Props) => {
   });
 
   /**
-   * Produce sorted feeds based on the active sort index and direction
-   * Status column uses row-level querying and cannot be sorted
-   * All other columns can be sorted by feed properties directly
+   * sortedFeeds
+   *
+   * 1. required to manually setup.
+   * 2. useMemo to reduce the sort issues.
    */
   const sortedFeeds = useMemo(() => {
-    if (activeSortIndex !== null) {
-      const comparator = COLUMN_DEFINITIONS[activeSortIndex].comparator;
+    const comparator = COLUMN_DEFINITIONS[activeSortIndex].comparator;
 
-      return [...feedsToDisplay].sort((a, b) =>
-        activeSortDirection === SortByDirection.asc
-          ? comparator(a, b)
-          : comparator(b, a),
-      );
-    }
-    return feedsToDisplay;
+    // activeSortIndex is always number and never the null.
+    return [...feedsToDisplay].sort((a, b) =>
+      activeSortDirection === SortByDirection.asc
+        ? comparator(a, b)
+        : comparator(b, a),
+    );
   }, [feedsToDisplay, activeSortIndex, activeSortDirection]);
 
   /**
@@ -182,6 +192,8 @@ export default (props: Props) => {
     navigate(
       `?search=${search}&searchType=${searchType}&page=${newPage}&perPage=${perPage}`,
     );
+
+    doFeedList.getFeedList(feedListID, searchType, search, newPage, perPage);
   };
 
   /**
@@ -198,6 +210,8 @@ export default (props: Props) => {
     navigate(
       `?search=${search}&searchType=${searchType}&page=${newPage}&perPage=${newPerPage}`,
     );
+
+    doFeedList.getFeedList(feedListID, searchType, search, newPage, perPage);
   };
 
   /**
@@ -205,15 +219,17 @@ export default (props: Props) => {
    * @param search - Search query
    * @param searchType - Search type
    */
-  const handleFilterChange = debounce((search: string, searchType: string) => {
+  const onChangeFilter = (search: string, searchType: string) => {
     navigate(`?search=${search}&searchType=${searchType}`);
-  });
+
+    doFeedList.getFeedList(feedListID, searchType, search, 0, perPage);
+  };
 
   /**
    * Redirect to public feeds if user is not logged in and type is private
    */
   useEffect(() => {
-    if (!isInit) {
+    if (!isInitUser) {
       return;
     }
 
@@ -224,7 +240,7 @@ export default (props: Props) => {
     }
   }, [
     isLoggedIn,
-    isInit,
+    isInitUser,
     navigate,
     perPage,
     page,
@@ -239,7 +255,7 @@ export default (props: Props) => {
    * @returns Pagination component
    */
   const generatePagination = (count?: number) => {
-    if (!count && loadingFeedState) {
+    if (!count && isLoading) {
       return <Skeleton width="25%" screenreaderText="Loaded Feed Count" />;
     }
 
@@ -260,11 +276,7 @@ export default (props: Props) => {
   };
 
   const feedCountText =
-    !feedCount && loadingFeedState
-      ? "Fetching..."
-      : feedCount === -1
-        ? 0
-        : feedCount;
+    !count && isLoading ? "Fetching..." : count === -1 ? 0 : count;
 
   const TitleComponent = (
     <InfoSection
@@ -285,14 +297,14 @@ export default (props: Props) => {
       >
         <div className="feed-header">
           <div>
-            <FeedSearch
-              loading={loadingFeedState}
+            <FeedsSearch
+              loading={isLoading}
               search={search}
               searchType={searchType}
-              onSearch={handleFilterChange}
+              onChange={onChangeFilter}
             />
           </div>
-          {generatePagination(feedCount)}
+          {generatePagination(count)}
         </div>
 
         {isLoggedIn && (
@@ -317,7 +329,7 @@ export default (props: Props) => {
         )}
       </PageSection>
       <PageSection style={{ paddingBlockStart: "0.5em" }}>
-        {loadingFeedState ? (
+        {isLoading ? (
           <LoadingTable />
         ) : feedsToDisplay.length > 0 ? (
           <Table

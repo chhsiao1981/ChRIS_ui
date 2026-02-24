@@ -1,4 +1,4 @@
-import { collectionJsonToJson } from "../../api/api";
+import { collectionJsonToJson } from "../../api/collectionToJson";
 import {
   fetchResource,
   limitConcurrency,
@@ -82,6 +82,7 @@ const createFeedCore = async (
     const pluginPipings = propsPluginPipings.map((eachPluginPiping) =>
       collectionJsonToJson(
         eachPluginPiping,
+        false,
         false,
         "createFeedHelper.createFeedCore",
       ),

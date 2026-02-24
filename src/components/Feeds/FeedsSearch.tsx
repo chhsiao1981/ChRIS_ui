@@ -22,31 +22,26 @@ const options = [
   },
 ];
 
-interface FeedSearchProps {
+type Props = {
   search: string;
   searchType: string;
-  onSearch: (search: string, searchType: string) => void;
+  onChange: (search: string, searchType: string) => void;
   loading: boolean;
-}
-
-const FeedSearch = ({
-  search,
-  searchType,
-  onSearch,
-  loading,
-}: FeedSearchProps) => {
+};
+export default (props: Props) => {
+  const { search, searchType, onChange, loading } = props;
   return (
     <Space size="middle">
       <Select
         onChange={(value: string) => {
-          onSearch(search, value);
+          onChange(search, value);
         }}
         value={searchType}
         options={options}
       />
       <Search
         onChange={(e) => {
-          onSearch(e.target.value, searchType);
+          onChange(e.target.value, searchType);
         }}
         value={search}
         loading={loading && search.length > 0}
@@ -56,5 +51,3 @@ const FeedSearch = ({
     </Space>
   );
 };
-
-export default FeedSearch;
