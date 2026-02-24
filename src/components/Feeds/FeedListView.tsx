@@ -18,7 +18,6 @@ import {
   Title,
   Tooltip,
 } from "@patternfly/react-core";
-import page from "@patternfly/react-styles/css/components/Page/page";
 import {
   SortByDirection,
   Table,
@@ -35,6 +34,7 @@ import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useNavigate } from "react-router";
 import type { Feed, FileBrowserFolder, ID } from "../../api/types";
+import type { FeedSearchType } from "../../api/types/feed";
 import * as DoCart from "../../reducers/cart";
 import * as DoFeedList from "../../reducers/feedList";
 import * as DoUser from "../../reducers/user";
@@ -219,7 +219,7 @@ export default (props: Props) => {
    * @param search - Search query
    * @param searchType - Search type
    */
-  const onChangeFilter = (search: string, searchType: string) => {
+  const onChangeFilter = (search: string, searchType: FeedSearchType) => {
     navigate(`?search=${search}&searchType=${searchType}`);
 
     doFeedList.getFeedList(feedListID, searchType, search, 0, perPage);

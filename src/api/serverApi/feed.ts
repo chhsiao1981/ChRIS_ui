@@ -1,5 +1,6 @@
 import api, { type ApiResult } from "../api";
 import type { Feed, ID, List } from "../types";
+import type { FeedSearchType } from "../types/feed";
 import { createPluginInstanceByDirs } from "./pluginInstance";
 
 export const getFeed = (dataID: ID) =>
@@ -29,7 +30,7 @@ export const getFeeds = (
 };
 
 export const getFeedList = (
-  searchType?: string,
+  searchType?: FeedSearchType,
   search?: string,
   offset: number = 0,
   limit: number = 100,
@@ -38,7 +39,7 @@ export const getFeedList = (
     offset,
     limit,
   };
-  if (searchType) {
+  if (searchType && search) {
     query[searchType] = search;
   }
   return api<List<Feed>>({

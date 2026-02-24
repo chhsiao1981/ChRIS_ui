@@ -1,4 +1,5 @@
 import { Input, Select, Space } from "antd";
+import type { FeedSearchType } from "../../api/types/feed";
 
 const { Search } = Input;
 
@@ -24,8 +25,8 @@ const options = [
 
 type Props = {
   search: string;
-  searchType: string;
-  onChange: (search: string, searchType: string) => void;
+  searchType: FeedSearchType;
+  onChange: (search: string, searchType: FeedSearchType) => void;
   loading: boolean;
 };
 export default (props: Props) => {
@@ -33,7 +34,7 @@ export default (props: Props) => {
   return (
     <Space size="middle">
       <Select
-        onChange={(value: string) => {
+        onChange={(value: FeedSearchType) => {
           onChange(search, value);
         }}
         value={searchType}
