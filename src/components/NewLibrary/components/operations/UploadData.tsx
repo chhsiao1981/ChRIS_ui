@@ -1,45 +1,83 @@
+import {
+  getState,
+  type ThunkModuleToFunc,
+  type UseThunk,
+} from "@chhsiao1981/use-thunk";
 import { Button } from "@patternfly/react-core";
+import type { CSSProperties } from "react";
+import * as DoOperation from "../../../../reducers/operation";
 import { Dropdown } from "../../../Antd";
 import { AddIcon } from "../../../Icons";
 
-const OPERATION_ITEMS = [
-  { key: "fileUpload", label: "Upload Files", disabled: false },
-  { key: "folderUpload", label: "Upload Folder", disabled: false },
+type TDoOperation = ThunkModuleToFunc<typeof DoOperation>;
+
+type OperationItem = {
+  key: "fileUpload" | "folderUpload";
+  label: string;
+  disabled: boolean;
+};
+
+const OPERATION_ITEMS: OperationItem[] = [
+  {
+    key: "fileUpload",
+    label: "Upload Files",
+    disabled: false,
+  },
+  {
+    key: "folderUpload",
+    label: "Upload Folder",
+    disabled: false,
+  },
 ];
 
 type Props = {
-  handleOperations: (operationKey: string) => void;
   isSidebar?: boolean;
 
   buttonColor?: string;
+
+  operationID: string;
+  useOperation: UseThunk<DoOperation.State, TDoOperation>;
 };
 
 export default (props: Props) => {
-  const { handleOperations, isSidebar: propsIsSidebar, buttonColor } = props;
+  const {
+    isSidebar: propsIsSidebar,
+    buttonColor,
+
+    operationID,
+    useOperation,
+  } = props;
+
+  const [classStateOperation, doOperation] = useOperation;
+  const operation =
+    getState(classStateOperation, operationID) || DoOperation.defaultState;
+  const { fileInputRef, folderInputRef } = operation;
+
   const isSidebar = propsIsSidebar || false;
   const buttonVariant = isSidebar ? "plain" : "primary";
 
-  const style = {};
+  const style: CSSProperties = {};
   if (isSidebar) {
-    // @ts-expect-error
     style.color = buttonColor;
-    // @ts-expect-error
     style.paddingTop = "8px";
-    // @ts-expect-error
     style.paddingLeft = "24px";
-    // @ts-expect-error
     style.paddingBottom = "8px";
-    // @ts-expect-error
     style.paddingRight = "24px";
   }
   const buttonSize = isSidebar ? undefined : "sm";
+
+  const refMap = {
+    fileUpload: fileInputRef,
+    folderUpload: folderInputRef,
+  };
 
   return (
     <Dropdown
       menu={{
         items: OPERATION_ITEMS,
         selectable: true,
-        onClick: (info) => handleOperations(info.key),
+        // @ts-expect-error info is OperationItem.
+        onClick: (info: OperationItem) => refMap[info.key].current?.click(),
       }}
     >
       <Button
@@ -51,6 +89,35 @@ export default (props: Props) => {
         style={style}
       >
         Upload Data
+        <input
+          ref={fileInputRef}
+          multiple
+          type="file"
+          hidden
+          onChange={(e) => {
+            console.info(
+              "UploadData: to doOperation.createFeedWithFile: operationID:",
+              operationID,
+              "files:",
+              e.target.files,
+            );
+            doOperation.createFeedWithFile(operationID, e.target.files, "file");
+          }}
+        />
+        <input
+          ref={folderInputRef}
+          type="file"
+          hidden
+          webkitdirectory=""
+          directory=""
+          onChange={(e) => {
+            doOperation.createFeedWithFile(
+              operationID,
+              e.target.files,
+              "folder",
+            );
+          }}
+        />
       </Button>
     </Dropdown>
   );

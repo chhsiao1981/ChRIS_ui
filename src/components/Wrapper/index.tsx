@@ -1,10 +1,16 @@
-import type { KeyboardEvent, ReactElement } from "react";
-import AnonSidebar from "./AnonSidebar";
+import {
+  type KeyboardEvent,
+  type ReactElement,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import "./wrapper.css";
 
 import {
+  genUUID,
   getDefaultID,
   getState,
   type ThunkModuleToFunc,
@@ -12,13 +18,16 @@ import {
 } from "@chhsiao1981/use-thunk";
 import { Page } from "@patternfly/react-core";
 import * as DoCart from "../../reducers/cart";
+import * as DoOperation from "../../reducers/operation";
 import * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
+
 import { OperationsProvider } from "../NewLibrary/context";
 
 type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+type TDoOperation = ThunkModuleToFunc<typeof DoOperation>;
 
 type Props = {
   children: ReactElement[] | ReactElement;
@@ -28,17 +37,28 @@ type Props = {
 export default (props: Props) => {
   const { children, title } = props;
   const useUI = useThunk<DoUI.State, TDoUI>(DoUI);
-  const [classStateUI, doUI] = useUI;
-  const ui = getState(classStateUI) || DoUI.defaultState;
-  const uiID = getDefaultID(classStateUI);
+  const [classUI, doUI] = useUI;
+  const ui = getState(classUI) || DoUI.defaultState;
+  const uiID = getDefaultID(classUI);
   const { isNavOpen, sidebarActiveItem } = ui;
 
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
-  const [classStateUser, _] = useUser;
-  const user = getState(classStateUser) || DoUser.defaultState;
+  const [classUser, _] = useUser;
+  const user = getState(classUser) || DoUser.defaultState;
   const { isLoggedIn } = user;
 
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
+
+  const useOperation = useThunk<DoOperation.State, TDoOperation>(DoOperation);
+  const [_classOperation, doOperation] = useOperation;
+  const [operationID, _setOeprationID] = useState(genUUID());
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: init
+  useEffect(() => {
+    doOperation.init(operationID, fileInputRef, folderInputRef);
+  }, []);
 
   const niivueActive = sidebarActiveItem === "niivue";
 
@@ -60,14 +80,6 @@ export default (props: Props) => {
     }
   };
 
-  const sidebar = isLoggedIn ? (
-    <OperationsProvider>
-      <Sidebar useUI={useUI} useUser={useUser} useCart={useCart} />
-    </OperationsProvider>
-  ) : (
-    <AnonSidebar isNavOpen={isNavOpen} sidebarActiveItem={sidebarActiveItem} />
-  );
-
   return (
     <Page
       onPageResize={onPageResize}
@@ -78,7 +90,18 @@ export default (props: Props) => {
           isNavOpen={isNavOpen}
         />
       }
-      sidebar={sidebar}
+      sidebar={
+        <OperationsProvider>
+          <Sidebar
+            useUI={useUI}
+            useUser={useUser}
+            useCart={useCart}
+            operationID={operationID}
+            useOperation={useOperation}
+            isLoggedIn={isLoggedIn}
+          />
+        </OperationsProvider>
+      }
     >
       {children}
     </Page>

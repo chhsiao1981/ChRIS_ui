@@ -2,7 +2,7 @@ import { Flex, FlexItem } from "@patternfly/react-core";
 import { useEffect, useState } from "react";
 import { fetchNote } from "../../api/common";
 import { Badge } from "../Antd";
-import { ButtonWithTooltip } from "../Feeds/DrawerUtils";
+import { ButtonWithTooltip } from "../FeedList/DrawerUtils";
 import {
   AnalysisIcon,
   BrainIcon,

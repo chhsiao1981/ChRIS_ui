@@ -9,7 +9,7 @@ import { BrowserRouter } from "react-router-dom";
 import useAckee from "use-ackee";
 
 import { ThemeContext } from "./components/DarkTheme/useTheme";
-import "./components/Feeds/Feeds.css";
+import "./components/FeedList/Feeds.css";
 import {
   genUUID,
   getState,
@@ -23,7 +23,9 @@ import * as DoDataTag from "./reducers/dataTag";
 import * as DoDrawer from "./reducers/drawer";
 import * as DoExplorer from "./reducers/explorer";
 import * as DoFeed from "./reducers/feed";
+import * as DoFeedList from "./reducers/feedList";
 import * as DoMainRouter from "./reducers/mainRouter";
+import * as DoOperation from "./reducers/operation";
 import * as DoPacs from "./reducers/pacs";
 import * as DoPlugin from "./reducers/plugin";
 import * as DoPluginInstance from "./reducers/pluginInstance";
@@ -37,6 +39,7 @@ type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 type TDoExplorer = ThunkModuleToFunc<typeof DoExplorer>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
+type TDoFeedList = ThunkModuleToFunc<typeof DoFeedList>;
 type TDoDataTag = ThunkModuleToFunc<typeof DoDataTag>;
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
@@ -44,6 +47,7 @@ type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 type TDoMainRouter = ThunkModuleToFunc<typeof DoMainRouter>;
 type TDoPacs = ThunkModuleToFunc<typeof DoPacs>;
 type TDoSystem = ThunkModuleToFunc<typeof DoSystem>;
+type TDoOperation = ThunkModuleToFunc<typeof DoOperation>;
 
 // @ts-expect-error registerThunk
 registerThunk(DoDrawer);
@@ -53,6 +57,8 @@ registerThunk(DoDataTag);
 registerThunk(DoExplorer);
 // @ts-expect-error registerThunk
 registerThunk(DoFeed);
+// @ts-expect-error registerThunk
+registerThunk(DoFeedList);
 // @ts-expect-error registerThunk
 registerThunk(DoPacs);
 // @ts-expect-error registerThunk
@@ -69,6 +75,8 @@ registerThunk(DoPluginInstance);
 registerThunk(DoMainRouter);
 // @ts-expect-error registerThunk
 registerThunk(DoSystem);
+// @ts-expect-error registerThunk
+registerThunk(DoOperation);
 
 // for react-query
 const queryClient = new QueryClient({
@@ -107,6 +115,9 @@ export default (props: Props) => {
   const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
   const [_classStateFeed, doFeed] = useFeed;
 
+  const useFeedList = useThunk<DoFeedList.State, TDoFeedList>(DoFeedList);
+  const [_classStateFeedList, doFeedList] = useFeedList;
+
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
   const [_classStateCart, doCart] = useCart;
 
@@ -128,6 +139,7 @@ export default (props: Props) => {
 
   const useSystem = useThunk<DoSystem.State, TDoSystem>(DoSystem);
   const [_classStateSystem, doSystem] = useSystem;
+
   // required for user
   const [dataTagID, _setDataTagID] = useState(genUUID);
 
@@ -176,6 +188,7 @@ export default (props: Props) => {
     doMainRouter.init();
     doPacs.init();
     doSystem.init();
+    doFeedList.init();
   }, []);
 
   // to render

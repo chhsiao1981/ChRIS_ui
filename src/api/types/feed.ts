@@ -1,6 +1,12 @@
 import type { Datetime } from "./datetime";
 import type { ID } from "./id";
 
+export type FeedType = "private" | "public";
+
+export type FeedSearchType = "name" | "id" | "name_exact" | "name_startsWith";
+
+export type FeedSearchValueType = string;
+
 export interface Feed {
   id: ID;
   creation_date: Datetime; // yyyy-mm-ddTHH:MM:SS.ffffffTZ

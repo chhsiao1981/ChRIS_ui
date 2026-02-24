@@ -1,7 +1,6 @@
 import config from "config";
-import { error } from "console";
 import { Cookies } from "react-cookie";
-import type { List } from "../api/types";
+import { collectionJsonToJson } from "./collectionToJson";
 
 export type Query = Record<string, any>;
 
@@ -23,6 +22,7 @@ export interface ApiParams {
   isJson?: boolean;
   isLink?: boolean;
   isSignUpLogin?: boolean;
+  isList?: boolean;
 }
 
 export interface ApiResult<T> {
@@ -62,44 +62,12 @@ export const getToken = () => {
   return token;
 };
 
-const collectionJsonItemToJson = (item: any) =>
-  item.data.reduce((r: any, x: any) => {
-    const { name, value } = x;
-    r[name] = value;
-    return r;
-  }, {});
-
-const collectionJsonLinkToJson = (links: any[]) => {
-  return links.reduce((r: any, x: any) => {
-    const key = x.rel;
-    const link = x.href;
-    r[key] = link;
-    return r;
-  }, {});
-};
-
-export const collectionJsonToJson = <T>(
-  theData: any,
-  isLink = false,
-  prompt = "",
-) => {
-  try {
-    if (isLink) {
-      return collectionJsonLinkToJson(theData.collection.links);
-    }
-    const ret = theData.collection.items.map(collectionJsonItemToJson);
-    return typeof theData.collection.total === "undefined" ? ret[0] : ret;
-  } catch (error) {
-    console.error("collectionJsonToJson: error: prompt:", prompt, "e:", error);
-  }
-};
-
-export const sanitizeAPIRootURL = (API_ROOT: string) => {
-  if (API_ROOT.length >= 1 && API_ROOT[API_ROOT.length - 1] === "/") {
-    return API_ROOT.slice(0, API_ROOT.length - 1);
+export const sanitizeAPIRootURL = (apiroot: string) => {
+  if (apiroot.length >= 1 && apiroot[apiroot.length - 1] === "/") {
+    return apiroot.slice(0, apiroot.length - 1);
   }
 
-  return API_ROOT;
+  return apiroot;
 };
 
 export default async <T>(apiParams: ApiParams): Promise<ApiResult<T>> => {
@@ -117,6 +85,7 @@ export default async <T>(apiParams: ApiParams): Promise<ApiResult<T>> => {
     isJson,
     isLink,
     isSignUpLogin,
+    isList,
   } = apiParams;
 
   const { API_ROOT: CONFIG_API_ROOT } = config;
@@ -174,7 +143,7 @@ export default async <T>(apiParams: ApiParams): Promise<ApiResult<T>> => {
     body,
   };
 
-  return await fetchCore<T>(theEndpoint, options, isJson, isLink);
+  return await fetchCore<T>(theEndpoint, options, isJson, isLink, isList);
 };
 
 const postFile = async <T>(
@@ -200,34 +169,12 @@ const postFile = async <T>(
   );
 };
 
-const getCurrentPathQeury = () => {
-  const searchStr = getCurrentPathQeurySanitizeSearch(window.location.search);
-  return `${window.location.pathname}${searchStr}`;
-};
-
-const getCurrentPathQeurySanitizeSearch = (search: string) => {
-  if (!search) {
-    return "";
-  }
-
-  // if with only '?': remove '?'
-  if (search[0] === "?" && search.length === 1) {
-    return "";
-  }
-
-  // if not starting with '?': add '?'
-  if (search[0] !== "?") {
-    return `?${search}`;
-  }
-
-  return search;
-};
-
 const fetchCore = async <T>(
   endpoint: string,
   options: RequestInit,
   isJson = false,
   isLink = false,
+  isList = false,
 ): Promise<ApiResult<T>> => {
   return await fetch(endpoint, options)
     .then((res) => {
@@ -240,15 +187,14 @@ const fetchCore = async <T>(
             return { status, errmsg: msg };
           }
 
-          const jsonData = isJson
+          const data: T = isJson
             ? collectionJsonData
             : collectionJsonToJson(
                 collectionJsonData,
                 isLink,
+                isList,
                 `fetchCore: endpoint: ${endpoint}`,
               );
-
-          const data = jsonData;
 
           return { status: res.status, data: data };
         })

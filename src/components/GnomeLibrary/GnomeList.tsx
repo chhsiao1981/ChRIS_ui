@@ -24,9 +24,10 @@ import type {
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
 } from "../../api/types";
+import type { FileBrowserType } from "../../api/types/fileBrowser";
 import * as DoCart from "../../reducers/cart";
 import * as DoUser from "../../reducers/user";
-import { formatBytes } from "../Feeds/utilties";
+import { formatBytes } from "../FeedList/utilties";
 import {
   getFileName,
   getLinkFileName,
@@ -54,7 +55,7 @@ type RowProps = {
   date: string;
   owner: string;
   size: number;
-  type: "folder" | "file" | "link";
+  type: FileBrowserType;
   computedPath: string;
   handleFolderClick: () => void;
   handleFileClick: () => void;

@@ -10,7 +10,7 @@ import { useEffect } from "react";
 import type { Feed, PluginInstance } from "../../api/types";
 import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { SpinContainer } from "../Common";
-import type { PaginatedTreeQueryReturn } from "../Feeds/usePaginatedTreeQuery";
+import type { PaginatedTreeQueryReturn } from "../FeedList/usePaginatedTreeQuery";
 import type { TreeNodeDatum } from "./data";
 import FeedTree from "./FeedTree";
 

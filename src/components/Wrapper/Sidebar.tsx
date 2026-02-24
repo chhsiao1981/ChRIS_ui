@@ -15,11 +15,12 @@ import {
   PageSidebarBody,
 } from "@patternfly/react-core";
 import { type DefaultError, useQueryClient } from "@tanstack/react-query";
-import { isEmpty } from "lodash";
+import config from "config";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import brandImg from "../../assets/logo_chris_dashboard.png";
 import type * as DoCart from "../../reducers/cart";
+import type * as DoOperation from "../../reducers/operation";
 import { Role } from "../../reducers/types";
 import * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
@@ -32,11 +33,17 @@ import styles from "./Sidebar.module.css";
 type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+type TDoOperation = ThunkModuleToFunc<typeof DoOperation>;
 
 type Props = {
   useUI: UseThunk<DoUI.State, TDoUI>;
   useUser: UseThunk<DoUser.State, TDoUser>;
   useCart: UseThunk<DoCart.State, TDoCart>;
+
+  operationID: string;
+  useOperation: UseThunk<DoOperation.State, TDoOperation>;
+
+  isLoggedIn: boolean;
 };
 
 type TagInfo = {
@@ -45,7 +52,8 @@ type TagInfo = {
 
 export default (props: Props) => {
   const queryClient = useQueryClient();
-  const { useUI, useUser, useCart } = props;
+  const { useUI, useUser, useCart, operationID, useOperation, isLoggedIn } =
+    props;
   const [classStateUI, doUI] = useUI;
   const [classStateUser, _2] = useUser;
   const ui = getState(classStateUI) || DoUI.defaultState;
@@ -162,22 +170,8 @@ export default (props: Props) => {
     additionalKeys: [],
   };
 
-  const {
-    modalState,
-    folderInputRef,
-    fileInputRef,
-    createFeedWithFile,
-    handleModalSubmitMutation,
-    handleOperations,
-    setModalState,
-  } = useFolderOperations(
-    username,
-    origin,
-    useCart,
-    undefined,
-    undefined,
-    true,
-  );
+  const { modalState, handleModalSubmitMutation, setModalState } =
+    useFolderOperations(username, origin, useCart, undefined, undefined, true);
 
   const uploadDataColor =
     sidebarActiveItem === "uploadData" ? "#ffffff" : "#aaaaaa";
@@ -188,11 +182,14 @@ export default (props: Props) => {
   const classNameComposePipeline =
     role === Role.Clinician ? styles.hide : undefined;
 
+  const stylesNavUser = isLoggedIn ? styles.nav : styles.hide;
+  const stylesNavGuest = isLoggedIn ? styles.hide : styles.nav;
   return (
     <PageSidebar isSidebarOpen={isNavOpen}>
       <PageSidebarBody>
         <div className={styles["page-sidebar"]}>
-          <div className={styles.nav}>
+          {/* user */}
+          <div className={stylesNavUser}>
             {" "}
             <Nav onSelect={onSelect} aria-label="ChRIS Demo site navigation">
               <NavList>
@@ -235,7 +232,8 @@ export default (props: Props) => {
                     isActive={sidebarActiveItem === "uploadData"}
                   >
                     <UploadData
-                      handleOperations={handleOperations}
+                      operationID={operationID}
+                      useOperation={useOperation}
                       isSidebar={true}
                       buttonColor={uploadDataColor}
                     />
@@ -267,16 +265,20 @@ export default (props: Props) => {
                     {renderPipelineTags()}
                   </NavExpandable>
 
-                  {!isEmpty(import.meta.env.VITE_CHRIS_STORE_URL) && (
-                    <NavItem
-                      key="store"
-                      itemId="store"
-                      isActive={sidebarActiveItem === "store"}
-                      className={classNameImportPipeline}
-                    >
-                      {renderLink("/import", "Import Pipeline", "store")}
-                    </NavItem>
-                  )}
+                  {
+                    /* config is statically assigned,
+                       can be used as conditional statement */
+                    config.STORE_ROOT && (
+                      <NavItem
+                        key="store"
+                        itemId="store"
+                        isActive={sidebarActiveItem === "store"}
+                        className={classNameImportPipeline}
+                      >
+                        {renderLink("/import", "Import Pipeline", "store")}
+                      </NavItem>
+                    )
+                  }
                   <NavItem
                     key="compose"
                     itemId="compose"
@@ -307,27 +309,37 @@ export default (props: Props) => {
                 clearErrors: () => handleModalSubmitMutation.reset(),
               }}
             />
-            <input
-              ref={fileInputRef}
-              multiple
-              type="file"
-              hidden
-              onChange={(e) => {
-                createFeedWithFile(e, "file");
-              }}
-            />
-            <input
-              ref={folderInputRef}
-              type="file"
-              hidden
-              webkitdirectory=""
-              directory=""
-              onChange={(e) => {
-                createFeedWithFile(e, "folder");
-              }}
-            />
           </div>
 
+          {/* guest */}
+          <div className={stylesNavGuest}>
+            {" "}
+            <Nav>
+              <NavList>
+                <NavGroup title="Discover ChRIS">
+                  <NavItem
+                    itemId="overview"
+                    isActive={sidebarActiveItem === "overview"}
+                  >
+                    <Link to="/">Overview</Link>
+                  </NavItem>
+                  <NavItem
+                    itemId="shared"
+                    isActive={sidebarActiveItem === "shared"}
+                  >
+                    <Link to="/shared">Shared Data</Link>
+                  </NavItem>
+
+                  <NavItem
+                    itemId="package"
+                    isActive={sidebarActiveItem === "package"}
+                  >
+                    <Link to="/package">Browse Packages</Link>
+                  </NavItem>
+                </NavGroup>
+              </NavList>
+            </Nav>
+          </div>
           <div className={styles.brand}>
             <Brand src={brandImg} alt="ChRIS Logo" />
           </div>

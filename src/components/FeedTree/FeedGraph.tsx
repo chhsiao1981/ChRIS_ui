@@ -16,7 +16,7 @@ import {
 } from "@chhsiao1981/use-thunk";
 import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { SpinContainer } from "../Common";
-import usePaginatedTreeQuery from "../Feeds/usePaginatedTreeQuery";
+import usePaginatedTreeQuery from "../FeedList/usePaginatedTreeQuery";
 import useSize from "./useSize";
 
 type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;

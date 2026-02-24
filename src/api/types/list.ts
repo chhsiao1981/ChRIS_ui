@@ -1,5 +1,8 @@
+import type { ID } from "./id";
+
 export interface List<T> {
   list: T[];
+  next: ID;
   count: number;
 }
 

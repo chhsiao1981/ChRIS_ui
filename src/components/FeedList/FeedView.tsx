@@ -19,7 +19,7 @@ import {
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
-import { collectionJsonToJson } from "../../api/api";
+import { collectionJsonToJson } from "../../api/collectionToJson";
 import {
   PluginInstanceStatus,
   type PluginInstance as PluginInstanceType,
@@ -121,7 +121,10 @@ export default () => {
 
     const lastPluginInstance: PluginInstanceType = collectionJsonToJson(
       treeQuery.pluginInstances[treeQuery.pluginInstances.length - 1],
-    ) as PluginInstanceType;
+      false,
+      false,
+      "FeedView.useEffect",
+    );
 
     const isSuccess =
       lastPluginInstance.status === PluginInstanceStatus.SUCCESS;

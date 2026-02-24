@@ -1,12 +1,34 @@
 import api, { type ApiResult } from "../api";
-import type { Feed, ID } from "../types";
+import type { Feed, ID, List } from "../types";
+import type { FeedSearchType, FeedSearchValueType } from "../types/feed";
 import { createPluginInstanceByDirs } from "./pluginInstance";
 
-export const getFeed = (dataID: ID) =>
-  api<Feed>({
+export const getFeed = (dataID: ID, isPublic: boolean = false) => {
+  if (isPublic) {
+    return getPublicFeed(dataID);
+  }
+
+  return api<Feed>({
     endpoint: `/${dataID}/`,
     method: "get",
   });
+};
+
+export const getPublicFeed = async (dataID: ID): Promise<ApiResult<Feed>> => {
+  // @ts-expect-error getPublicFeedList accepts ID.
+  const { status, data, errmsg } = await getPublicFeedList("id", dataID, 0, 1);
+  if (errmsg) {
+    return { status, errmsg };
+  }
+
+  if (!data) {
+    return { status, errmsg: "no data" };
+  }
+  if (!data.list.length) {
+    return { status, errmsg: "no data" };
+  }
+  return { status, data: data.list[0] };
+};
 
 export const getFeeds = (
   searchType?: string,
@@ -25,6 +47,53 @@ export const getFeeds = (
     endpoint: `/`,
     method: "get",
     query,
+  });
+};
+
+export const getFeedList = (
+  searchType?: FeedSearchType,
+  search?: FeedSearchValueType,
+  offset: number = 0,
+  limit: number = 100,
+  isPublic: boolean = false,
+) => {
+  if (isPublic) {
+    return getPublicFeedList(searchType, search, offset, limit);
+  }
+
+  const query: any = {
+    offset,
+    limit,
+  };
+  if (searchType && search) {
+    query[searchType] = search;
+  }
+  return api<List<Feed>>({
+    endpoint: `/`,
+    method: "get",
+    query,
+    isList: true,
+  });
+};
+
+const getPublicFeedList = (
+  searchType?: FeedSearchType,
+  search?: FeedSearchValueType,
+  offset: number = 0,
+  limit: number = 100,
+) => {
+  const query: any = {
+    offset,
+    limit,
+  };
+  if (searchType && search) {
+    query[searchType] = search;
+  }
+  return api<List<Feed>>({
+    endpoint: `/publicfeeds/`,
+    method: "get",
+    query,
+    isList: true,
   });
 };
 
@@ -72,7 +141,7 @@ export const createFeedWithFilepaths = async (
     await updateFeedPublic(dataID, true);
   }
 
-  const dataResult = await getFeed(dataID);
+  const dataResult = await getFeed(dataID, isPublic);
 
   return dataResult;
 };

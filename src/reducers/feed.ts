@@ -4,7 +4,8 @@ import {
   setData,
   type Thunk,
 } from "@chhsiao1981/use-thunk";
-import type { Feed } from "../api/types";
+import type { Feed, ID } from "../api/types";
+import type { FeedType } from "../api/types/feed";
 
 export const myClass = "chris-ui/feed";
 
@@ -48,4 +49,12 @@ export const setShowToolbar = (
   return (dispatch, _) => {
     dispatch(setData(myID, { showToolbar }));
   };
+};
+
+export const getFeedDetail = (
+  myID: string,
+  feedID: ID,
+  theType: FeedType,
+): Thunk<State> => {
+  return (dispatch, _) => {};
 };

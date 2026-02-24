@@ -26,6 +26,7 @@ import {
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
 import * as DoCart from "../../../reducers/cart";
+import type * as DoOperation from "../../../reducers/operation";
 import { AddNodeProvider } from "../../AddNode/context";
 import { CreateFeedProvider } from "../../CreateFeed/context";
 import { PipelineProvider } from "../../PipelinesCopy/context";
@@ -39,6 +40,7 @@ import Share from "./operations/Share";
 import UploadData from "./operations/UploadData";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+type TDoOperation = ThunkModuleToFunc<typeof DoOperation>;
 
 export type AdditionalValues = {
   share: {
@@ -59,8 +61,14 @@ type Props = {
     [key: string]: string;
   };
   useCart: UseThunk<DoCart.State, TDoCart>;
+
+  operationID: string;
+  useOperation: UseThunk<DoOperation.State, TDoOperation>;
 };
 
+// Operations
+//
+// Components in FeedListView, FileBrowser, and FeedView.
 export default (props: Props) => {
   const {
     username,
@@ -71,6 +79,9 @@ export default (props: Props) => {
     customStyle,
     customClassName,
     useCart,
+
+    operationID,
+    useOperation,
   } = props;
   const location = useLocation();
 
@@ -79,9 +90,6 @@ export default (props: Props) => {
   const {
     modalState,
     userRelatedError,
-    folderInputRef,
-    fileInputRef,
-    createFeedWithFile,
     handleModalSubmitMutation,
     handleOperations,
     contextHolder,
@@ -108,7 +116,7 @@ export default (props: Props) => {
     <Fragment>
       {contextHolder}
       <ToolbarItem>
-        <UploadData handleOperations={handleOperations} />
+        <UploadData operationID={operationID} useOperation={useOperation} />
         {userRelatedError && (
           <AntdAlert
             style={{ marginLeft: "1rem" }}
@@ -182,25 +190,6 @@ export default (props: Props) => {
       />
 
       {/* Hidden file/folder pickers */}
-      <input
-        ref={fileInputRef}
-        multiple
-        type="file"
-        hidden
-        onChange={(e) => {
-          createFeedWithFile(e, "file");
-        }}
-      />
-      <input
-        ref={folderInputRef}
-        type="file"
-        hidden
-        webkitdirectory=""
-        directory=""
-        onChange={(e) => {
-          createFeedWithFile(e, "folder");
-        }}
-      />
 
       {/* The main toolbar */}
       <Toolbar

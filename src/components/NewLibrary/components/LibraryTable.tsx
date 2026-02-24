@@ -31,7 +31,7 @@ import * as DoCart from "../../..//reducers/cart";
 import * as DoUser from "../../../reducers/user";
 import { getIcon } from "../../Common";
 import { ThemeContext } from "../../DarkTheme/useTheme";
-import { formatBytes } from "../../Feeds/utilties";
+import { formatBytes } from "../../FeedList/utilties";
 import FileDetailView from "../../Preview/FileDetailView";
 import { OperationContext } from "../context";
 import useLongPress, {
