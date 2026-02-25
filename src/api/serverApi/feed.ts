@@ -3,11 +3,31 @@ import type { Feed, ID, List } from "../types";
 import type { FeedSearchType } from "../types/feed";
 import { createPluginInstanceByDirs } from "./pluginInstance";
 
-export const getFeed = (dataID: ID) =>
-  api<Feed>({
+export const getFeed = (dataID: ID, isPublic: boolean = false) => {
+  if (isPublic) {
+    return getPublicFeed(dataID);
+  }
+
+  return api<Feed>({
     endpoint: `/${dataID}/`,
     method: "get",
   });
+};
+
+export const getPublicFeed = async (dataID: ID): Promise<ApiResult<Feed>> => {
+  const { status, data, errmsg } = await getPublicFeedList("id", dataID, 0, 1);
+  if (errmsg) {
+    return { status, errmsg };
+  }
+
+  if (!data) {
+    return { status, errmsg: "no data" };
+  }
+  if (!data.list.length) {
+    return { status, errmsg: "no data" };
+  }
+  return { status, data: data.list[0] };
+};
 
 export const getFeeds = (
   searchType?: string,
@@ -57,7 +77,7 @@ export const getFeedList = (
 
 const getPublicFeedList = (
   searchType?: FeedSearchType,
-  search?: string,
+  search?: any,
   offset: number = 0,
   limit: number = 100,
 ) => {
@@ -120,7 +140,7 @@ export const createFeedWithFilepaths = async (
     await updateFeedPublic(dataID, true);
   }
 
-  const dataResult = await getFeed(dataID);
+  const dataResult = await getFeed(dataID, isPublic);
 
   return dataResult;
 };
