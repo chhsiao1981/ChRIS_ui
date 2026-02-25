@@ -1,16 +1,24 @@
-import { getState, type UseThunk } from "@chhsiao1981/use-thunk";
+import {
+  getState,
+  type ThunkModuleToFunc,
+  type UseThunk,
+} from "@chhsiao1981/use-thunk";
 import { Td, Tr } from "@patternfly/react-table";
-import { format } from "path";
 import { useContext, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import type { Feed, FileBrowserFolder } from "../../api/types";
+import * as DoCart from "../../reducers/cart";
 import { ThemeContext } from "../DarkTheme/useTheme";
 import { FolderContextMenu } from "../NewLibrary/components/ContextMenu";
 import { OperationContext } from "../NewLibrary/context";
+import { formatDate } from "../utils/datetime";
+import DonutUtilization from "./DonutUtilization";
 import FeedInfoColumn from "./FeedInfoColumn";
 
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+
 // -------------- TableRow Props --------------
-type TableRowProps = {
+type Props = {
   rowIndex: number;
   feed: Feed;
   allFeeds: Feed[];
@@ -20,7 +28,7 @@ type TableRowProps = {
   useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
-const TableRow = (props: TableRowProps) => {
+export default (props: Props) => {
   const { rowIndex, feed, additionalKeys, type, username, useCart } = props;
 
   const [classStateCart, _doCart] = useCart;
@@ -160,9 +168,7 @@ const TableRow = (props: TableRowProps) => {
         <Td dataLabel="analysis">
           <FeedInfoColumn feed={feed} onClick={onFeedNameClick} />
         </Td>
-        <Td dataLabel="created">
-          {format(new Date(feed.creation_date), "dd MMM yyyy, HH:mm")}
-        </Td>
+        <Td dataLabel="created">{formatDate(feed.creation_date)}</Td>
         <Td dataLabel="creator">{feed.owner_username}</Td>
         {/* Status column with progress donut */}
         <Td dataLabel="status">
