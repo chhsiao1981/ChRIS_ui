@@ -56,7 +56,5 @@ export const getFeedDetail = (
   feedID: ID,
   theType: FeedType,
 ): Thunk<State> => {
-  return (dispatch, _) => {
-    
-  }
+  return (dispatch, _) => {};
 };
