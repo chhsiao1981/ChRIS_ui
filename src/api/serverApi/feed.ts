@@ -34,7 +34,12 @@ export const getFeedList = (
   search?: string,
   offset: number = 0,
   limit: number = 100,
+  isPublic: boolean = false,
 ) => {
+  if (isPublic) {
+    return getPublicFeedList(searchType, search, offset, limit);
+  }
+
   const query: any = {
     offset,
     limit,
@@ -44,6 +49,27 @@ export const getFeedList = (
   }
   return api<List<Feed>>({
     endpoint: `/`,
+    method: "get",
+    query,
+    isList: true,
+  });
+};
+
+const getPublicFeedList = (
+  searchType?: FeedSearchType,
+  search?: string,
+  offset: number = 0,
+  limit: number = 100,
+) => {
+  const query: any = {
+    offset,
+    limit,
+  };
+  if (searchType && search) {
+    query[searchType] = search;
+  }
+  return api<List<Feed>>({
+    endpoint: `/publicfeeds/`,
     method: "get",
     query,
     isList: true,

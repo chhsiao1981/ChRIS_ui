@@ -9,13 +9,9 @@ import {
 import { ChartDonutUtilization } from "@patternfly/react-charts";
 import {
   Button,
-  EmptyState,
-  EmptyStateIcon,
-  EmptyStateVariant,
   PageSection,
   Pagination,
   Skeleton,
-  Title,
   Tooltip,
 } from "@patternfly/react-core";
 import {
@@ -38,16 +34,17 @@ import type { FeedSearchType } from "../../api/types/feed";
 import * as DoCart from "../../reducers/cart";
 import * as DoFeedList from "../../reducers/feedList";
 import * as DoUser from "../../reducers/user";
-import { Typography } from "../Antd";
 import { InfoSection } from "../Common";
 import { ThemeContext } from "../DarkTheme/useTheme";
-import { SearchIcon } from "../Icons";
 import { FolderContextMenu } from "../NewLibrary/components/ContextMenu";
 import Operations from "../NewLibrary/components/Operations";
 import { OperationContext } from "../NewLibrary/context";
 import useLongPress from "../NewLibrary/utils/longpress";
 import Wrapper from "../Wrapper";
+import { COLUMN_DEFINITIONS } from "./constants";
+import EmptyStateTable from "./EmptyStateTable";
 import FeedsSearch from "./FeedsSearch";
+import LoadingTable from "./LoadingTable";
 import {
   fetchAuthenticatedFeed,
   fetchPublicFeed,
@@ -58,54 +55,6 @@ import {
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 type TDoFeedList = ThunkModuleToFunc<typeof DoFeedList>;
-
-const { Paragraph } = Typography;
-
-interface ColumnDefinition {
-  id: string;
-  label: string;
-  comparator: (a: Feed, b: Feed) => number;
-}
-
-const COLUMN_DEFINITIONS: ColumnDefinition[] = [
-  {
-    id: "id",
-    label: "ID",
-    comparator: (a: Feed, b: Feed) => {
-      if (a.id > b.id) {
-        return 1;
-      } else if (a.id < b.id) {
-        return -1;
-      }
-      return 0;
-    },
-  },
-  {
-    id: "analysis",
-    label: "Analysis",
-    comparator: (a: Feed, b: Feed) => a.name.localeCompare(b.name),
-  },
-  {
-    id: "created",
-    label: "Created",
-    comparator: (a: Feed, b: Feed) =>
-      new Date(a.creation_date).getTime() - new Date(b.creation_date).getTime(),
-  },
-  {
-    id: "creator",
-    label: "Creator",
-    comparator: (a: Feed, b: Feed) =>
-      a.owner_username.localeCompare(b.owner_username),
-  },
-  {
-    id: "status",
-    label: "Status",
-    /**
-     * Cannot sort by progress since details are loaded at row level
-     */
-    comparator: (_a: Feed, _b: Feed) => 0,
-  },
-];
 
 type Props = {
   title: string;
@@ -193,7 +142,14 @@ export default (props: Props) => {
       `?search=${search}&searchType=${searchType}&page=${newPage}&perPage=${perPage}`,
     );
 
-    doFeedList.getFeedList(feedListID, searchType, search, newPage, perPage);
+    doFeedList.getFeedList(
+      feedListID,
+      searchType,
+      search,
+      newPage,
+      perPage,
+      isPublic,
+    );
   };
 
   /**
@@ -211,7 +167,14 @@ export default (props: Props) => {
       `?search=${search}&searchType=${searchType}&page=${newPage}&perPage=${newPerPage}`,
     );
 
-    doFeedList.getFeedList(feedListID, searchType, search, newPage, perPage);
+    doFeedList.getFeedList(
+      feedListID,
+      searchType,
+      search,
+      newPage,
+      perPage,
+      isPublic,
+    );
   };
 
   /**
@@ -222,7 +185,14 @@ export default (props: Props) => {
   const onChangeFilter = (search: string, searchType: FeedSearchType) => {
     navigate(`?search=${search}&searchType=${searchType}`);
 
-    doFeedList.getFeedList(feedListID, searchType, search, 0, perPage);
+    doFeedList.getFeedList(
+      feedListID,
+      searchType,
+      search,
+      0,
+      perPage,
+      isPublic,
+    );
   };
 
   /**
@@ -256,7 +226,7 @@ export default (props: Props) => {
    */
   const generatePagination = (count?: number) => {
     if (!count && isLoading) {
-      return <Skeleton width="25%" screenreaderText="Loaded Feed Count" />;
+      return <Skeleton width="25%" screenreaderText="Loading Count" />;
     }
 
     return (
@@ -265,8 +235,8 @@ export default (props: Props) => {
           marginTop: "0.5em",
         }}
         itemCount={count}
-        perPage={+perPage}
-        page={+page}
+        perPage={perPage}
+        page={page}
         onSetPage={onSetPage}
         onPerPageSelect={onPerPageSelect}
         isCompact
@@ -281,9 +251,7 @@ export default (props: Props) => {
   const TitleComponent = (
     <InfoSection
       title={`${title} (${feedCountText})`}
-      content="Analyses (aka ChRIS feeds) are computational experiments where data
-      are organized and processed by ChRIS plugins. In this view, you may
-      view your analyses and also the ones shared with you."
+      content="In this view, you can view your data and the ones shared with you."
     />
   );
 
@@ -766,76 +734,8 @@ const FeedInfoColumn = ({
       onClick(feed);
     }}
     style={{ padding: 0 }}
-    aria-label={`View details for ${feed.data.name}`}
+    aria-label={`View details for ${feed.name}`}
   >
-    {feed.data.name}
+    {feed.name}
   </Button>
-);
-
-// -------------- Column Order for Skeleton, etc. --------------
-const COLUMN_ORDER = [
-  { id: "id", label: "ID" },
-  { id: "analysis", label: "Analysis" },
-  { id: "created", label: "Created" },
-  { id: "creator", label: "Creator" },
-  { id: "status", label: "Status" },
-];
-
-// -------------- EmptyStateTable --------------
-const EmptyStateTable = () => (
-  <Table variant="compact" aria-label="Empty Table">
-    <Thead>
-      <Tr>
-        <Th />
-        {COLUMN_ORDER.map(({ label }) => (
-          <Th scope="col" key={label}>
-            {label}
-          </Th>
-        ))}
-      </Tr>
-    </Thead>
-    <Tbody>
-      <Tr>
-        <Td colSpan={COLUMN_ORDER.length + 1}>
-          <EmptyState variant={EmptyStateVariant.full}>
-            <EmptyStateIcon icon={SearchIcon} />
-            <Title headingLevel="h4" size="lg">
-              No Data Available
-            </Title>
-            <Paragraph>
-              There are no analyses to display at this time. Please check back
-              later or adjust your filters.
-            </Paragraph>
-          </EmptyState>
-        </Td>
-      </Tr>
-    </Tbody>
-  </Table>
-);
-
-// -------------- LoadingTable --------------
-const LoadingTable = () => (
-  <Table variant="compact" aria-label="Loading Table">
-    <Thead>
-      <Tr>
-        <Th screenReaderText="loading data" />
-        {COLUMN_ORDER.map(({ label }) => (
-          <Th key={label}>{label}</Th>
-        ))}
-      </Tr>
-    </Thead>
-    <Tbody>
-      {Array.from({ length: 20 }).map((_, index) => (
-        /**
-         * Using index as key is acceptable for static skeleton rows
-         */
-
-        <Tr key={index}>
-          <Td colSpan={COLUMN_ORDER.length + 1}>
-            <Skeleton width="100%" height="40px" />
-          </Td>
-        </Tr>
-      ))}
-    </Tbody>
-  </Table>
 );
