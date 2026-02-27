@@ -21,7 +21,7 @@ import { useNavigate } from "react-router";
 import type { FeedSearchType } from "../../api/types/feed";
 import * as DoCart from "../../reducers/cart";
 import * as DoFeedList from "../../reducers/feedList";
-import * as DoFolderOperation from "../../reducers/operation";
+import * as DoOperation from "../../reducers/operation";
 import * as DoUser from "../../reducers/user";
 import { InfoSection } from "../Common";
 import Operations from "../NewLibrary/components/Operations";
@@ -37,7 +37,7 @@ import Pagination from "./Pagination";
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 type TDoFeedList = ThunkModuleToFunc<typeof DoFeedList>;
-type TDoFolderOperation = ThunkModuleToFunc<typeof DoFolderOperation>;
+type TDoOperation = ThunkModuleToFunc<typeof DoOperation>;
 
 type Props = {
   title: string;
@@ -50,17 +50,17 @@ type Props = {
 export default (props: Props) => {
   const { title, isPublic } = props;
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
-  const [classStateUser, _] = useUser;
-  const user = getState(classStateUser) || DoUser.defaultState;
+  const [classUser, _] = useUser;
+  const user = getState(classUser) || DoUser.defaultState;
   const { isLoggedIn, username, isInit: isInitUser, isStaff } = user;
   const privateType = isPublic ? "public" : "private";
 
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
 
   const useFeedList = useThunk<DoFeedList.State, TDoFeedList>(DoFeedList);
-  const [classStateFeedList, doFeedList] = useFeedList;
-  const feedListID = getDefaultID(classStateFeedList);
-  const feedList = getState(classStateFeedList) || DoFeedList.defaultState;
+  const [classFeedList, doFeedList] = useFeedList;
+  const feedListID = getDefaultID(classFeedList);
+  const feedList = getState(classFeedList) || DoFeedList.defaultState;
   const {
     count,
     data: feedsToDisplay,
@@ -72,12 +72,9 @@ export default (props: Props) => {
     error,
   } = feedList;
 
-  const useFolderOperation = useThunk<
-    DoFolderOperation.State,
-    TDoFolderOperation
-  >(DoFolderOperation);
-  const [_classsFolderOperation, doFolderOperation] = useFolderOperation;
-  const [folderOperationID, _setFolderOperationID] = useState(genUUID());
+  const useOperation = useThunk<DoOperation.State, TDoOperation>(DoOperation);
+  const [_classsOperation, doOperation] = useOperation;
+  const [operationID, _setOperationID] = useState(genUUID());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
 
@@ -91,7 +88,7 @@ export default (props: Props) => {
 
   useEffect(() => {
     console.info("FeedListView: to doFolderOperation.init");
-    doFolderOperation.init(folderOperationID, fileInputRef, folderInputRef);
+    doOperation.init(operationID, fileInputRef, folderInputRef);
   }, []);
 
   const getSortParams = (columnIndex: number) => ({
@@ -205,7 +202,6 @@ export default (props: Props) => {
           <Operations
             username={username}
             isStaff={isStaff}
-            useCart={useCart}
             origin={{
               type: OperationContext.FEEDS,
             }}
@@ -218,6 +214,9 @@ export default (props: Props) => {
                 marginTop: isMobile ? "0.5em" : undefined,
               },
             }}
+            useCart={useCart}
+            operationID={operationID}
+            useOperation={useOperation}
           />
         )}
       </PageSection>
