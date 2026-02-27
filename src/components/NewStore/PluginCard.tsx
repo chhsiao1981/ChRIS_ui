@@ -18,7 +18,6 @@ import { notification } from "antd";
 import { format } from "date-fns";
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getPluginComputeResources } from "../../api/serverApi/plugin";
 import type { ComputeResource, Plugin } from "../../api/types";
 import * as DoUser from "../../reducers/user";
 import { CheckCircleIcon } from "../Icons";

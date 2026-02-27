@@ -4,12 +4,20 @@ import {
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
 import { Button } from "@patternfly/react-core";
+import { set } from "lodash";
 import type { CSSProperties } from "react";
+import { type ChangeEvent, useState } from "react";
+import type { FileBrowserType } from "../../../../api/types/fileBrowser";
+import type * as DoCart from "../../../../reducers/cart";
 import * as DoOperation from "../../../../reducers/operation";
+import type * as DoUser from "../../../../reducers/user";
 import { Dropdown } from "../../../Antd";
 import { AddIcon } from "../../../Icons";
+import UploadDataModal from "./UploadDataModal";
 
 type TDoOperation = ThunkModuleToFunc<typeof DoOperation>;
+type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 
 type OperationItem = {
   key: "fileUpload" | "folderUpload";
@@ -37,6 +45,10 @@ type Props = {
 
   operationID: string;
   useOperation: UseThunk<DoOperation.State, TDoOperation>;
+
+  useCart: UseThunk<DoCart.State, TDoCart>;
+
+  useUser: UseThunk<DoUser.State, TDoUser>;
 };
 
 export default (props: Props) => {
@@ -46,15 +58,19 @@ export default (props: Props) => {
 
     operationID,
     useOperation,
+    useCart,
+    useUser,
   } = props;
 
-  const [classStateOperation, doOperation] = useOperation;
+  const [classOperation, doOperation] = useOperation;
   const operation =
-    getState(classStateOperation, operationID) || DoOperation.defaultState;
+    getState(classOperation, operationID) || DoOperation.defaultState;
   const { fileInputRef, folderInputRef } = operation;
 
   const isSidebar = propsIsSidebar || false;
   const buttonVariant = isSidebar ? "plain" : "primary";
+  const [fileFiles, setFileFiles] = useState<FileList | null>(null);
+  const [folderFiles, setFolderFiles] = useState<FileList | null>(null);
 
   const style: CSSProperties = {};
   if (isSidebar) {
@@ -71,54 +87,91 @@ export default (props: Props) => {
     folderUpload: folderInputRef,
   };
 
+  const onChange = (
+    e: ChangeEvent<HTMLInputElement>,
+    theType: FileBrowserType,
+  ) => {
+    console.info(
+      "UploadData.onChange: start: operationID:",
+      operationID,
+      "files:",
+      e.target.files,
+    );
+
+    if (!e.target.files) {
+      return;
+    }
+
+    if (!fileInputRef || !fileInputRef.current) {
+      return;
+    }
+    if (!folderInputRef || !folderInputRef.current) {
+      return;
+    }
+
+    console.info(
+      "UploadData.onChange: to doOperation.createFeedWithFile: operationID:",
+      operationID,
+      "files:",
+      e.target.files,
+    );
+    doOperation.createFeedWithFile(operationID, e.target.files, theType);
+
+    // @ts-expect-error fileInputRef
+    fileInputRef.current.value = null;
+    // @ts-expect-error folderInputRef
+    folderInputRef.current.value = null;
+  };
+
+  const clearErrors = () => {};
+
   return (
-    <Dropdown
-      menu={{
-        items: OPERATION_ITEMS,
-        selectable: true,
-        // @ts-expect-error info is OperationItem.
-        onClick: (info: OperationItem) => refMap[info.key].current?.click(),
-      }}
-    >
-      <Button
-        size={buttonSize}
-        variant={buttonVariant}
-        icon={
-          <AddIcon style={{ color: "inherit", height: "1em", width: "1em" }} />
-        }
-        style={style}
+    <>
+      <Dropdown
+        menu={{
+          items: OPERATION_ITEMS,
+          selectable: true,
+          // @ts-expect-error info is OperationItem.
+          onClick: (info: OperationItem) => refMap[info.key].current?.click(),
+        }}
       >
-        Upload Data
-        <input
-          ref={fileInputRef}
-          multiple
-          type="file"
-          hidden
-          onChange={(e) => {
-            console.info(
-              "UploadData: to doOperation.createFeedWithFile: operationID:",
-              operationID,
-              "files:",
-              e.target.files,
-            );
-            doOperation.createFeedWithFile(operationID, e.target.files, "file");
-          }}
-        />
-        <input
-          ref={folderInputRef}
-          type="file"
-          hidden
-          webkitdirectory=""
-          directory=""
-          onChange={(e) => {
-            doOperation.createFeedWithFile(
-              operationID,
-              e.target.files,
-              "folder",
-            );
-          }}
-        />
-      </Button>
-    </Dropdown>
+        <Button
+          size={buttonSize}
+          variant={buttonVariant}
+          icon={
+            <AddIcon
+              style={{ color: "inherit", height: "1em", width: "1em" }}
+            />
+          }
+          style={style}
+        >
+          Upload Data
+          <input
+            ref={fileInputRef}
+            multiple
+            type="file"
+            hidden
+            files={fileFiles}
+            onChange={(e) => onChange(e, "file")}
+          />
+          <input
+            ref={folderInputRef}
+            type="file"
+            hidden
+            webkitdirectory=""
+            directory=""
+            files={folderFiles}
+            onChange={(e) => onChange(e, "folder")}
+          />
+        </Button>
+      </Dropdown>
+      <UploadDataModal
+        operationID={operationID}
+        useOperation={useOperation}
+        useCart={useCart}
+        useUser={useUser}
+        clearErrors={clearErrors}
+      />
+    </>
   );
 };

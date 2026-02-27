@@ -21,25 +21,34 @@ export const myClass = "chris-ui/folder-operation";
 
 export interface State extends rState {
   modalStateType: string;
+  modalStateID: string;
   modalStateIsOpen: boolean;
   userRelatedError: string;
 
-  createFeedWithFile: { theType: FileBrowserType; defaultFeedName: string };
+  uploadData: {
+    theType: FileBrowserType;
+    defaultFeedName: string;
+  };
 
   fileInputRef?: RefObject<HTMLInputElement>;
   folderInputRef?: RefObject<HTMLInputElement>;
 
   error: string;
 
+  files: File[];
+
   isInit: boolean;
 }
 
 export const defaultState: State = {
   modalStateType: "",
+  modalStateID: "",
   modalStateIsOpen: false,
   userRelatedError: "",
 
-  createFeedWithFile: { theType: "file", defaultFeedName: "" },
+  uploadData: { theType: "file", defaultFeedName: "" },
+
+  files: [],
 
   error: "",
   isInit: false,
@@ -76,7 +85,8 @@ export const onFileChange = (
   doCart: DispatchFuncMap<DoCart.State, TDoCart>,
 ): Thunk<State> => {
   return async (dispatch, _) => {
-    await upload(e, username, false, name, cartID, doCart);
+    const files = Array.from(e.target.files || []);
+    dispatch(upload(myID, files, username, false, name, cartID, doCart));
   };
 };
 
@@ -89,27 +99,29 @@ export const onFolderChange = (
   cartID: string,
   doCart: DispatchFuncMap<DoCart.State, TDoCart>,
 ): Thunk<State> => {
-  return async (dispatch, _) => {
-    await upload(e, username, true, name, cartID, doCart);
+  return (dispatch, _) => {
+    const files = Array.from(e.target.files || []);
+    dispatch(upload(myID, files, username, true, name, cartID, doCart));
   };
 };
 
-const upload = async (
-  e: ChangeEvent<HTMLInputElement>,
+export const upload = (
+  myID: string,
+  files: File[],
   username: string,
   isFolder: boolean,
   name: string,
+
   cartID: string,
   doCart: DispatchFuncMap<DoCart.State, TDoCart>,
-) => {
-  const fileList = e.target.files || [];
-  const files = Array.from(fileList);
+): Thunk<State> => {
+  return () => {
+    const uniqueName = name ? `${name}_${randomStr()}` : randomStr();
 
-  const uniqueName = name ? `${name}_${randomStr()}` : randomStr();
+    const uploadPath = `home/${username}/uploads/${uniqueName}`;
 
-  const uploadPath = `home/${username}/uploads/${uniqueName}`;
-
-  doCart.startUpload(cartID, files, isFolder, uploadPath, true, name);
+    doCart.startUpload(cartID, files, isFolder, uploadPath, true, name);
+  };
 };
 
 export const onModalSubmit = (myID: string): Thunk<State> => {
@@ -179,11 +191,33 @@ export const createFeedWithFile = (
         : files.length === 1
           ? `Data from ${files[0].name}`
           : "Multiple Data Upload";
+
+    console.info(
+      "doOperation.createFeedWithFile: defaultFeedName:",
+      defaultFeedName,
+      "files:",
+      files,
+    );
+
     dispatch(
       setData<State>(myID, {
         modalStateType: "createFeedWithFile",
+        modalStateID: myID,
         modalStateIsOpen: true,
-        createFeedWithFile: { theType, defaultFeedName },
+        uploadData: { theType, defaultFeedName },
+        files,
+      }),
+    );
+  };
+};
+
+export const closeModal = (myID: string): Thunk<State> => {
+  return (dispatch) => {
+    dispatch(
+      setData<State>(myID, {
+        modalStateIsOpen: false,
+        modalStateID: "",
+        modalStateType: "",
       }),
     );
   };

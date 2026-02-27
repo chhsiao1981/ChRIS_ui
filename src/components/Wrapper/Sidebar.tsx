@@ -234,6 +234,8 @@ export default (props: Props) => {
                     <UploadData
                       operationID={operationID}
                       useOperation={useOperation}
+                      useCart={useCart}
+                      useUser={useUser}
                       isSidebar={true}
                       buttonColor={uploadDataColor}
                     />

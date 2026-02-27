@@ -27,6 +27,7 @@ import {
 } from "@chhsiao1981/use-thunk";
 import * as DoCart from "../../../reducers/cart";
 import type * as DoOperation from "../../../reducers/operation";
+import type * as DoUser from "../../../reducers/user";
 import { AddNodeProvider } from "../../AddNode/context";
 import { CreateFeedProvider } from "../../CreateFeed/context";
 import { PipelineProvider } from "../../PipelinesCopy/context";
@@ -41,6 +42,7 @@ import UploadData from "./operations/UploadData";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 type TDoOperation = ThunkModuleToFunc<typeof DoOperation>;
+type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 
 export type AdditionalValues = {
   share: {
@@ -64,6 +66,8 @@ type Props = {
 
   operationID: string;
   useOperation: UseThunk<DoOperation.State, TDoOperation>;
+
+  useUser: UseThunk<DoUser.State, TDoUser>;
 };
 
 // Operations
@@ -78,10 +82,11 @@ export default (props: Props) => {
     folderList,
     customStyle,
     customClassName,
-    useCart,
 
+    useCart,
     operationID,
     useOperation,
+    useUser,
   } = props;
   const location = useLocation();
 
@@ -106,8 +111,8 @@ export default (props: Props) => {
 
   console.info("Operations: modalState:", modalState);
 
-  const [classStateCart, _doCart] = useCart;
-  const cart = getState(classStateCart) || DoCart.defaultState;
+  const [classCart, _doCart] = useCart;
+  const cart = getState(classCart) || DoCart.defaultState;
   const { selectedPaths } = cart;
 
   const selectedPathsCount = selectedPaths.length;
@@ -116,7 +121,12 @@ export default (props: Props) => {
     <Fragment>
       {contextHolder}
       <ToolbarItem>
-        <UploadData operationID={operationID} useOperation={useOperation} />
+        <UploadData
+          operationID={operationID}
+          useOperation={useOperation}
+          useCart={useCart}
+          useUser={useUser}
+        />
         {userRelatedError && (
           <AntdAlert
             style={{ marginLeft: "1rem" }}
