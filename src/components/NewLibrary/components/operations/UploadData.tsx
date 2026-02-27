@@ -95,6 +95,12 @@ export default (props: Props) => {
           type="file"
           hidden
           onChange={(e) => {
+            console.info(
+              "UploadData: to doOperation.createFeedWithFile: operationID:",
+              operationID,
+              "files:",
+              e.target.files,
+            );
             doOperation.createFeedWithFile(operationID, e.target.files, "file");
           }}
         />

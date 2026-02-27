@@ -34,9 +34,9 @@ type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 const Cart = () => {
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
-  const [classStateCart, doCart] = useCart;
-  const cartID = getDefaultID(classStateCart);
-  const cart = getState(classStateCart) || DoCart.defaultState;
+  const [classCart, doCart] = useCart;
+  const cartID = getDefaultID(classCart);
+  const cart = getState(classCart) || DoCart.defaultState;
   const {
     openCart,
     fileUploadStatus,

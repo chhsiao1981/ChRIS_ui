@@ -176,7 +176,7 @@ export const createFeedWithFile = (
     const defaultFeedName =
       theType === "folder"
         ? `${files[0].webkitRelativePath.split("/")[0]}`
-        : files.length < 2
+        : files.length === 1
           ? `Data from ${files[0].name}`
           : "Multiple Data Upload";
     dispatch(

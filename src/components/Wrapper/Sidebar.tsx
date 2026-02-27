@@ -15,7 +15,7 @@ import {
   PageSidebarBody,
 } from "@patternfly/react-core";
 import { type DefaultError, useQueryClient } from "@tanstack/react-query";
-import { isEmpty } from "lodash";
+import config from "config";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import brandImg from "../../assets/logo_chris_dashboard.png";
@@ -265,16 +265,20 @@ export default (props: Props) => {
                     {renderPipelineTags()}
                   </NavExpandable>
 
-                  {!isEmpty(import.meta.env.VITE_CHRIS_STORE_URL) && (
-                    <NavItem
-                      key="store"
-                      itemId="store"
-                      isActive={sidebarActiveItem === "store"}
-                      className={classNameImportPipeline}
-                    >
-                      {renderLink("/import", "Import Pipeline", "store")}
-                    </NavItem>
-                  )}
+                  {
+                    /* config is statically assigned,
+                       can be used as conditional statement */
+                    config.STORE_ROOT && (
+                      <NavItem
+                        key="store"
+                        itemId="store"
+                        isActive={sidebarActiveItem === "store"}
+                        className={classNameImportPipeline}
+                      >
+                        {renderLink("/import", "Import Pipeline", "store")}
+                      </NavItem>
+                    )
+                  }
                   <NavItem
                     key="compose"
                     itemId="compose"
