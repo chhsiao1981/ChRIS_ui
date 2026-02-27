@@ -4,9 +4,7 @@ import {
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
 import { Button } from "@patternfly/react-core";
-import { set } from "lodash";
-import type { CSSProperties } from "react";
-import { type ChangeEvent, useState } from "react";
+import type { ChangeEvent, CSSProperties } from "react";
 import type { FileBrowserType } from "../../../../api/types/fileBrowser";
 import type * as DoCart from "../../../../reducers/cart";
 import * as DoOperation from "../../../../reducers/operation";
@@ -69,8 +67,6 @@ export default (props: Props) => {
 
   const isSidebar = propsIsSidebar || false;
   const buttonVariant = isSidebar ? "plain" : "primary";
-  const [fileFiles, setFileFiles] = useState<FileList | null>(null);
-  const [folderFiles, setFolderFiles] = useState<FileList | null>(null);
 
   const style: CSSProperties = {};
   if (isSidebar) {
@@ -91,35 +87,13 @@ export default (props: Props) => {
     e: ChangeEvent<HTMLInputElement>,
     theType: FileBrowserType,
   ) => {
-    console.info(
-      "UploadData.onChange: start: operationID:",
-      operationID,
-      "files:",
-      e.target.files,
-    );
-
     if (!e.target.files) {
       return;
     }
-
-    if (!fileInputRef || !fileInputRef.current) {
-      return;
-    }
-    if (!folderInputRef || !folderInputRef.current) {
-      return;
-    }
-
-    console.info(
-      "UploadData.onChange: to doOperation.createFeedWithFile: operationID:",
-      operationID,
-      "files:",
-      e.target.files,
-    );
     doOperation.createFeedWithFile(operationID, e.target.files, theType);
-
-    // @ts-expect-error fileInputRef
+    // @ts-expect-error fileInputRef always exists
     fileInputRef.current.value = null;
-    // @ts-expect-error folderInputRef
+    // @ts-expect-error folderInputRef always exists
     folderInputRef.current.value = null;
   };
 
@@ -151,7 +125,6 @@ export default (props: Props) => {
             multiple
             type="file"
             hidden
-            files={fileFiles}
             onChange={(e) => onChange(e, "file")}
           />
           <input
@@ -160,7 +133,6 @@ export default (props: Props) => {
             hidden
             webkitdirectory=""
             directory=""
-            files={folderFiles}
             onChange={(e) => onChange(e, "folder")}
           />
         </Button>

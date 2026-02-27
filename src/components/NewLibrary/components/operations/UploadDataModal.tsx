@@ -82,6 +82,7 @@ export default (props: Props) => {
 
   const onClose = () => {
     setValue("");
+    doOperation.closeModal(operationID);
   };
 
   const onSubmit = (value: string) => {

@@ -213,12 +213,7 @@ export const createFeedWithFile = (
 
 export const closeModal = (myID: string): Thunk<State> => {
   return (dispatch) => {
-    dispatch(
-      setData<State>(myID, {
-        modalStateIsOpen: false,
-        modalStateID: "",
-        modalStateType: "",
-      }),
-    );
+    const toUpdate = Object.assign({}, defaultState, { isInit: true });
+    dispatch(setData<State>(myID, toUpdate));
   };
 };
