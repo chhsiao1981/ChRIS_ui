@@ -267,6 +267,9 @@ export default (props: Props) => {
                     folderList={folderList}
                     username={username}
                     isStaff={isStaff}
+                    operationID={operationID}
+                    useOperation={useOperation}
+                    useUser={useUser}
                   />
                   <div className="file-browser-header">
                     <div className="file-browser-header-row">

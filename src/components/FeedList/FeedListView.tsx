@@ -217,6 +217,7 @@ export default (props: Props) => {
             useCart={useCart}
             operationID={operationID}
             useOperation={useOperation}
+            useUser={useUser}
           />
         )}
       </PageSection>
