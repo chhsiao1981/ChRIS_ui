@@ -14,7 +14,7 @@ import { fetchPipelines, fetchResources } from "../../api/common";
 import { Alert, Collapse } from "../Antd";
 import { EmptyStateComponent, SpinContainer } from "../Common";
 import { ThemeContext } from "../DarkTheme/useTheme";
-import { usePaginate } from "../Feeds/usePaginate";
+import { usePaginate } from "../FeedList/usePaginate";
 import "./Pipelines.css";
 import { DownloadIcon } from "@patternfly/react-icons";
 import { PIPELINEQueryTypes, PipelineContext, Types } from "./context";

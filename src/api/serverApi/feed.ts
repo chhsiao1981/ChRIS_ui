@@ -1,6 +1,6 @@
 import api, { type ApiResult } from "../api";
 import type { Feed, ID, List } from "../types";
-import type { FeedSearchType } from "../types/feed";
+import type { FeedSearchType, FeedSearchValueType } from "../types/feed";
 import { createPluginInstanceByDirs } from "./pluginInstance";
 
 export const getFeed = (dataID: ID, isPublic: boolean = false) => {
@@ -15,6 +15,7 @@ export const getFeed = (dataID: ID, isPublic: boolean = false) => {
 };
 
 export const getPublicFeed = async (dataID: ID): Promise<ApiResult<Feed>> => {
+  // @ts-expect-error getPublicFeedList accepts ID.
   const { status, data, errmsg } = await getPublicFeedList("id", dataID, 0, 1);
   if (errmsg) {
     return { status, errmsg };
@@ -51,7 +52,7 @@ export const getFeeds = (
 
 export const getFeedList = (
   searchType?: FeedSearchType,
-  search?: string,
+  search?: FeedSearchValueType,
   offset: number = 0,
   limit: number = 100,
   isPublic: boolean = false,
@@ -77,7 +78,7 @@ export const getFeedList = (
 
 const getPublicFeedList = (
   searchType?: FeedSearchType,
-  search?: any,
+  search?: FeedSearchValueType,
   offset: number = 0,
   limit: number = 100,
 ) => {

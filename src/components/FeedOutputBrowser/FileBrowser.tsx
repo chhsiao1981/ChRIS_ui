@@ -29,8 +29,8 @@ import * as DoFeed from "../../reducers/feed";
 import * as DoUser from "../../reducers/user";
 import { notification } from "../Antd";
 import { ClipboardCopyContainer } from "../Common";
-import { DrawerActionButton } from "../Feeds/DrawerUtils";
-import { onMaximize, onMinimize } from "../Feeds/utilties";
+import { DrawerActionButton } from "../FeedList/DrawerUtils";
+import { onMaximize, onMinimize } from "../FeedList/utilties";
 import {
   getFileName,
   getLinkFileName,

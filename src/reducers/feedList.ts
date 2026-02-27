@@ -6,7 +6,11 @@ import {
 } from "@chhsiao1981/use-thunk";
 import { getFeedList as apiGetFeedList } from "../api/serverApi/feed";
 import type { Feed } from "../api/types";
-import type { FeedSearchType, FeedType } from "../api/types/feed";
+import type {
+  FeedSearchType,
+  FeedSearchValueType,
+  FeedType,
+} from "../api/types/feed";
 
 export const myClass = "chris-ui/feed-list";
 
@@ -18,7 +22,7 @@ export interface State extends rState {
   page: number;
   perPage: number;
   searchType: FeedSearchType;
-  search: string;
+  search: FeedSearchValueType;
 
   error: string;
   isLoading: boolean;
@@ -47,7 +51,7 @@ export const init = (): Thunk<State> => {
 export const getFeedList = (
   myID: string,
   searchType?: FeedSearchType,
-  search?: string,
+  search?: FeedSearchValueType,
   page: number = 0,
   perPage: number = 100,
   isPublic: boolean = false,

@@ -23,13 +23,13 @@ type Props = {
   feed: Feed;
   allFeeds: Feed[];
   type: string;
-  additionalKeys: string[];
+  // additionalKeys: string[];
   username: string;
   useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 export default (props: Props) => {
-  const { rowIndex, feed, additionalKeys, type, username, useCart } = props;
+  const { rowIndex, feed, type, username, useCart } = props;
 
   const [classStateCart, _doCart] = useCart;
   const cart = getState(classStateCart) || DoCart.defaultState;
@@ -91,7 +91,7 @@ export default (props: Props) => {
       username={username}
       origin={{
         type: OperationContext.FEEDS,
-        additionalKeys: additionalKeys,
+        /* additionalKeys: additionalKeys, */
       }}
     >
       <Tr

@@ -17,7 +17,7 @@ import { useNavigate } from "react-router";
 import * as DoUser from "../../reducers/user";
 import { Alert } from "../Antd";
 import { SpinContainer } from "../Common";
-import { useSearchQueryParams } from "../Feeds/usePaginate";
+import { useSearchQueryParams } from "../FeedList/usePaginate";
 import { ExclamationCircleIcon } from "../Icons";
 import Wrapper from "../Wrapper";
 

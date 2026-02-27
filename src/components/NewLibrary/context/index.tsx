@@ -15,10 +15,9 @@ export enum OperationContext {
   FILEBROWSER = "fileBrowser",
 }
 
-export interface OriginState {
+export type OriginState = {
   type: OperationContext;
-  additionalKeys: string[];
-}
+};
 
 interface OperationsContextType {
   invalidateQueries: () => void;

@@ -6,7 +6,7 @@ import {
 import type { ReactNode } from "react";
 import type * as DoDrawer from "../../reducers/drawer";
 import type { ActionType } from "../../reducers/drawer";
-import { ButtonWithTooltip } from "../Feeds/DrawerUtils";
+import { ButtonWithTooltip } from "../FeedList/DrawerUtils";
 
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 

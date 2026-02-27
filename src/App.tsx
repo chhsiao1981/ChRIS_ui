@@ -9,7 +9,7 @@ import { BrowserRouter } from "react-router-dom";
 import useAckee from "use-ackee";
 
 import { ThemeContext } from "./components/DarkTheme/useTheme";
-import "./components/Feeds/Feeds.css";
+import "./components/FeedList/Feeds.css";
 import {
   genUUID,
   getState,
@@ -25,6 +25,7 @@ import * as DoExplorer from "./reducers/explorer";
 import * as DoFeed from "./reducers/feed";
 import * as DoFeedList from "./reducers/feedList";
 import * as DoMainRouter from "./reducers/mainRouter";
+import * as DoOperation from "./reducers/operation";
 import * as DoPacs from "./reducers/pacs";
 import * as DoPlugin from "./reducers/plugin";
 import * as DoPluginInstance from "./reducers/pluginInstance";
@@ -46,6 +47,7 @@ type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 type TDoMainRouter = ThunkModuleToFunc<typeof DoMainRouter>;
 type TDoPacs = ThunkModuleToFunc<typeof DoPacs>;
 type TDoSystem = ThunkModuleToFunc<typeof DoSystem>;
+type TDoOperation = ThunkModuleToFunc<typeof DoOperation>;
 
 // @ts-expect-error registerThunk
 registerThunk(DoDrawer);
@@ -73,6 +75,8 @@ registerThunk(DoPluginInstance);
 registerThunk(DoMainRouter);
 // @ts-expect-error registerThunk
 registerThunk(DoSystem);
+// @ts-expect-error registerThunk
+registerThunk(DoOperation);
 
 // for react-query
 const queryClient = new QueryClient({

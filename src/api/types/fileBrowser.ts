@@ -1,6 +1,8 @@
 import type { Datetime } from "./datetime";
 import type { ID } from "./id";
 
+export type FileBrowserType = "file" | "folder" | "link";
+
 export type FileBrowserFolder = {
   id: ID;
   creation_date: Datetime;
