@@ -4,6 +4,7 @@ import type {
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
 } from "../api/types";
+import type { FileBrowserType } from "../api/types/fileBrowser";
 
 export enum Role {
   Guest = "a guest",
@@ -25,8 +26,14 @@ export type FolderUploadObject = {
   total: number;
   controller: AbortController | null;
   path: string;
-  type: string;
+  type: FileBrowserType;
 };
+
+export type FileUploadType =
+  | "Uploading..."
+  | "Upload Complete"
+  | "Upload Cancelled"
+  | "Error";
 
 export type FileUploadObject = {
   currentStep: string;
@@ -35,7 +42,7 @@ export type FileUploadObject = {
   total: number;
   controller: AbortController | null;
   path: string;
-  type: string;
+  type: FileBrowserType;
 };
 
 export interface FolderUpload {

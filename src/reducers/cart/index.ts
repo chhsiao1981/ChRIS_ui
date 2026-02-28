@@ -1,38 +1,30 @@
 import {
   init as _init,
   getState,
-  type State as rState,
   setData,
   type Thunk,
 } from "@chhsiao1981/use-thunk";
-import type { Feed } from "../api/types";
+import type { Feed } from "../../api/types";
 import type {
   FileBrowserFolder,
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
-} from "../api/types/fileBrowser";
-import type { CartSelectionPayload } from "./types";
+  FileBrowserType,
+} from "../../api/types/fileBrowser";
 import {
+  type CartSelectionPayload,
   type DownloadStatus,
   type DownloadStatusObject,
   DownloadTypes,
   type FileUpload,
   type FileUploadObject,
-  type FolderUpload,
-  type FolderUploadObject,
-} from "./types";
+} from "../types";
+import type { State } from "./state";
+import { upload } from "./upload";
 
 export const myClass = "chris-ui/cart";
 
-export interface State extends rState {
-  currentLayout: string;
-  selectedPaths: CartSelectionPayload[];
-  openCart: boolean;
-  folderDownloadStatus: DownloadStatus;
-  fileDownloadStatus: DownloadStatus;
-  folderUploadStatus: FolderUpload;
-  fileUploadStatus: FileUpload;
-}
+export type { State };
 
 export const defaultState: State = {
   currentLayout: "list",
@@ -64,11 +56,11 @@ export const startUpload = (
   files: File[],
   isFolder: boolean,
   currentPath: string,
-  createFeed?: boolean,
   nameForFeed?: string,
 ): Thunk<State> => {
   return (dispatch, _) => {
     dispatch(setData(myID, { openCart: true }));
+    dispatch(upload(myID, files, isFolder, currentPath, nameForFeed));
   };
 };
 
@@ -82,10 +74,22 @@ export const startDownload = (
 
 export const cancelUpload = (
   myID: string,
-  theType: string,
+  theType: FileBrowserType,
   theID: string,
 ): Thunk<State> => {
-  return (dispatch, _) => {};
+  return (_dispatch, getClass) => {
+    const classState = getClass();
+    const me = getState(classState, myID);
+    if (!me) {
+      return;
+    }
+    const { fileUploadStatus, folderUploadStatus } = me;
+    if (theType === "file") {
+      fileUploadStatus[theID]?.controller?.abort();
+    } else {
+      folderUploadStatus[theID]?.controller?.abort();
+    }
+  };
 };
 
 export const startAnonymize = (
@@ -272,93 +276,6 @@ export const setFolderDownloadStatus = (
 
     const newSelectedPaths = selectedPaths.filter(
       (selected) => selected.path !== filename,
-    );
-    dispatch(setData(myID, { selectedPaths: newSelectedPaths }));
-  };
-};
-
-export const setFileUploadStatus = (
-  myID: string,
-  step: string,
-  filename: string,
-  progress: number,
-  loaded: number,
-  total: number,
-  controller: AbortController | null,
-  path: string,
-  theType: string,
-): Thunk<State> => {
-  return (dispatch, getClassState) => {
-    const classState = getClassState();
-    const me = getState(classState, myID);
-    if (!me) {
-      return;
-    }
-    const { fileUploadStatus, selectedPaths } = me;
-    const fileUploadObj: FileUploadObject = {
-      currentStep: step,
-      progress: progress,
-      loaded,
-      total,
-      controller,
-      path,
-      type: theType,
-    };
-    const fileUpload: FileUpload = { [filename]: fileUploadObj };
-    const newFileUploadStatus = Object.assign({}, fileUploadStatus, fileUpload);
-    dispatch(setData(myID, { fileUploadStatus: newFileUploadStatus }));
-
-    if (step !== "Upload Complete") {
-      return;
-    }
-
-    const newSelectedPaths = selectedPaths.filter(
-      (selected) => selected.path !== path,
-    );
-    dispatch(setData(myID, { selectedPaths: newSelectedPaths }));
-  };
-};
-
-export const setFolderUploadStatus = (
-  myID: string,
-  step: string,
-  filename: string,
-  totalCount: number,
-  currentCount: number,
-  controller: AbortController | null,
-  path: string,
-  theType: string,
-): Thunk<State> => {
-  return (dispatch, getClassState) => {
-    const classState = getClassState();
-    const me = getState(classState, myID);
-    if (!me) {
-      return;
-    }
-
-    const { folderUploadStatus, selectedPaths } = me;
-    const folderUploadObj: FolderUploadObject = {
-      currentStep: step,
-      done: currentCount,
-      total: totalCount,
-      controller,
-      path,
-      type: theType,
-    };
-    const folderUpload = { [filename]: folderUploadObj };
-    const newFolderUploadStatus = Object.assign(
-      {},
-      folderUploadStatus,
-      folderUpload,
-    );
-    dispatch(setData(myID, { folderUploadStatus: newFolderUploadStatus }));
-
-    if (step !== "Upload Complete") {
-      return;
-    }
-
-    const newSelectedPaths = selectedPaths.filter(
-      (selected) => selected.path !== path,
     );
     dispatch(setData(myID, { selectedPaths: newSelectedPaths }));
   };
