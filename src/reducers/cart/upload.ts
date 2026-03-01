@@ -5,6 +5,7 @@ import {
   type Thunk,
 } from "@chhsiao1981/use-thunk";
 import axios, { type AxiosProgressEvent } from "axios";
+import config from "config";
 import { chunk } from "lodash";
 import { createFeedWithFilepaths } from "../../api/serverApi";
 import type { FileBrowserType } from "../../api/types/fileBrowser";
@@ -142,14 +143,15 @@ const uploadBatchFile = async (
   currentPath: string,
   folderController: AbortController,
 ) => {
-  const url = "";
+  const url = `${config.API_ROOT}/userfiles/`;
+
   const { formData, name, controller } = prepareUploadData(
     file,
     currentPath,
     isFolder,
     folderController,
   );
-  const config = createUploadConfig(url, formData, controller);
+  const uploadConfig = createUploadConfig(url, formData, controller);
   const onUploadProgress = (progressEvent: AxiosProgressEvent) => {
     if (progressEvent.progress) {
       const { loaded, total: propsTotal } = progressEvent;
@@ -172,7 +174,7 @@ const uploadBatchFile = async (
 
   const source = axios.CancelToken.source();
   const axiosConfig = {
-    ...config,
+    ...uploadConfig,
     cancelToken: source.token,
     onUploadProgress,
   };
@@ -183,7 +185,7 @@ const uploadBatchFile = async (
   axiosConfig.signal.addEventListener("abort", cancelHandler);
 
   axios
-    .post(config.url, config.data, axiosConfig)
+    .post(uploadConfig.url, uploadConfig.data, axiosConfig)
     .then((resp) => {
       processUploadBatchFileResponse(
         myID,
