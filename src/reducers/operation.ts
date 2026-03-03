@@ -120,7 +120,7 @@ export const upload = (
 
     const uploadPath = `home/${username}/uploads/${uniqueName}`;
 
-    doCart.startUpload(cartID, files, isFolder, uploadPath, true, name);
+    doCart.startUpload(cartID, files, isFolder, uploadPath, name);
   };
 };
 
