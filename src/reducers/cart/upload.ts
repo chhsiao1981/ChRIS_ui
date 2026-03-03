@@ -164,7 +164,7 @@ const uploadBatchFile = async (
         isFolder,
         name,
         currentPath,
-        folderController,
+        controller,
         progress,
         loaded,
         total,
@@ -179,10 +179,11 @@ const uploadBatchFile = async (
     onUploadProgress,
   };
 
-  const cancelHandler = () => {
+  const onAbort = () => {
+    console.info("cart.upload.uploadBatchFile.onAbort: start");
     source.cancel("Operation canceled by the user.");
   };
-  axiosConfig.signal.addEventListener("abort", cancelHandler);
+  axiosConfig.signal.addEventListener("abort", onAbort);
 
   axios
     .post(uploadConfig.url, uploadConfig.data, axiosConfig)
@@ -194,7 +195,7 @@ const uploadBatchFile = async (
         isFolder,
         name,
         currentPath,
-        folderController,
+        controller,
         file.size,
         resp,
       );
@@ -237,7 +238,7 @@ const uploadBatchFile = async (
       }
     });
 
-  axiosConfig.signal.removeEventListener("abort", cancelHandler);
+  axiosConfig.signal.removeEventListener("abort", onAbort);
 };
 
 const processUploadBatchFileProgress = (

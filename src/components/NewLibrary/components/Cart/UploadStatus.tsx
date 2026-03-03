@@ -49,6 +49,16 @@ export default (props: Props) => {
     status.currentStep === "Server Processing..." || isError || isComplete;
 
   const onClickCancelClear = () => {
+    console.info(
+      "UploadStatus: onClickCancelClear: cartID:",
+      cartID,
+      "type:",
+      type,
+      "name:",
+      name,
+      "currentStep:",
+      status.currentStep,
+    );
     if (status.currentStep === "Uploading...") {
       doCart.cancelUpload(cartID, type, name);
     } else {

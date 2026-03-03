@@ -84,6 +84,14 @@ export const cancelUpload = (
       return;
     }
     const { fileUploadStatus, folderUploadStatus } = me;
+    console.info(
+      "cart.cancelUpload: theType:",
+      theType,
+      "theID:",
+      theID,
+      "controller:",
+      fileUploadStatus[theID]?.controller,
+    );
     if (theType === "file") {
       fileUploadStatus[theID]?.controller?.abort();
     } else {
