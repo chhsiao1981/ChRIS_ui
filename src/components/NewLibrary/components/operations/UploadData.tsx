@@ -91,10 +91,6 @@ export default (props: Props) => {
       return;
     }
     doOperation.createFeedWithFile(operationID, e.target.files, theType);
-    // @ts-expect-error fileInputRef always exists
-    fileInputRef.current.value = null;
-    // @ts-expect-error folderInputRef always exists
-    folderInputRef.current.value = null;
   };
 
   const clearErrors = () => {};
