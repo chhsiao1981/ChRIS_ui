@@ -9,22 +9,21 @@ import type {
   FileBrowserFolder,
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
-  FileBrowserType,
 } from "../../api/types/fileBrowser";
 import {
   type CartSelectionPayload,
   type DownloadStatus,
   type DownloadStatusObject,
   DownloadTypes,
-  type FileUpload,
-  type FileUploadObject,
 } from "../types";
 import type { State } from "./state";
-import { upload } from "./upload";
+import { cancelUpload, clearUploadState, startUpload } from "./upload";
 
 export const myClass = "chris-ui/cart";
 
 export type { State };
+
+export { startUpload, cancelUpload, clearUploadState };
 
 export const defaultState: State = {
   currentLayout: "list",
@@ -51,53 +50,12 @@ export const switchLibraryLayout = (
   };
 };
 
-export const startUpload = (
-  myID: string,
-  files: File[],
-  isFolder: boolean,
-  currentPath: string,
-  nameForFeed?: string,
-): Thunk<State> => {
-  return (dispatch, _) => {
-    dispatch(setData(myID, { openCart: true }));
-    dispatch(upload(myID, files, isFolder, currentPath, nameForFeed));
-  };
-};
-
 export const startDownload = (
   myID: string,
   paths: CartSelectionPayload[],
   username: string,
 ): Thunk<State> => {
   return (dispatch, _) => {};
-};
-
-export const cancelUpload = (
-  myID: string,
-  theType: FileBrowserType,
-  theID: string,
-): Thunk<State> => {
-  return (_dispatch, getClass) => {
-    const classState = getClass();
-    const me = getState(classState, myID);
-    if (!me) {
-      return;
-    }
-    const { fileUploadStatus, folderUploadStatus } = me;
-    console.info(
-      "cart.cancelUpload: theType:",
-      theType,
-      "theID:",
-      theID,
-      "controller:",
-      fileUploadStatus[theID]?.controller,
-    );
-    if (theType === "file") {
-      fileUploadStatus[theID]?.controller?.abort();
-    } else {
-      folderUploadStatus[theID]?.controller?.abort();
-    }
-  };
 };
 
 export const startAnonymize = (
@@ -305,30 +263,6 @@ export const removeSelectedPayload = (
       (each) => each.path !== payload.path,
     );
     dispatch(setData(myID, { selectedPaths: newSelectedPaths }));
-  };
-};
-
-export const clearUploadState = (
-  myID: string,
-  theID: string,
-  theType: string,
-): Thunk<State> => {
-  return (dispatch, getClassState) => {
-    const classState = getClassState();
-    const me = getState(classState, myID);
-    if (!me) {
-      return;
-    }
-    const { folderUploadStatus, fileUploadStatus } = me;
-    if (theType === "folder") {
-      const newFolderUploadStatus = Object.assign({}, folderUploadStatus);
-      delete newFolderUploadStatus[theID];
-      dispatch(setData(myID, { folderUploadStatus: newFolderUploadStatus }));
-    } else {
-      const newFileUploadStatus = Object.assign({}, fileUploadStatus);
-      delete newFileUploadStatus[theID];
-      dispatch(setData(myID, { fileUploadStatus: newFileUploadStatus }));
-    }
   };
 };
 

@@ -16,10 +16,93 @@ import type {
 } from "../types";
 import type { State } from "./state";
 
-export const upload = (
+export const startUpload = (
   myID: string,
   files: File[],
   isFolder: boolean,
+  currentPath: string,
+  nameForFeed?: string,
+): Thunk<State> => {
+  return (dispatch, _) => {
+    dispatch(setData(myID, { openCart: true }));
+    dispatch(upload(myID, files, isFolder, currentPath, nameForFeed));
+  };
+};
+
+export const cancelUpload = (
+  myID: string,
+  theType: FileBrowserType,
+  theID: string,
+): Thunk<State> => {
+  return (_dispatch, getClass) => {
+    const classState = getClass();
+    const me = getState(classState, myID);
+    if (!me) {
+      return;
+    }
+    const { fileUploadStatus, folderUploadStatus } = me;
+    console.info(
+      "cart.cancelUpload: theType:",
+      theType,
+      "theID:",
+      theID,
+      "controller:",
+      fileUploadStatus[theID]?.controller,
+    );
+    if (theType === "file") {
+      fileUploadStatus[theID]?.controller?.abort();
+    } else {
+      folderUploadStatus[theID]?.controller?.abort();
+    }
+  };
+};
+
+export const clearUploadState = (
+  myID: string,
+  theID: string,
+  theType: string,
+): Thunk<State> => {
+  return (dispatch, getClassState) => {
+    const classState = getClassState();
+    const me = getState(classState, myID);
+    if (!me) {
+      return;
+    }
+    const { folderUploadStatus, fileUploadStatus } = me;
+    if (theType === "folder") {
+      const newFolderUploadStatus = Object.assign({}, folderUploadStatus);
+      delete newFolderUploadStatus[theID];
+      dispatch(setData(myID, { folderUploadStatus: newFolderUploadStatus }));
+    } else {
+      const newFileUploadStatus = Object.assign({}, fileUploadStatus);
+      delete newFileUploadStatus[theID];
+      dispatch(setData(myID, { fileUploadStatus: newFileUploadStatus }));
+    }
+  };
+};
+
+const upload = (
+  myID: string,
+  files: File[],
+  isFolder: boolean,
+  currentPath: string,
+  nameForFeed?: string,
+): Thunk<State> => {
+  return async (dispatch, _getClass) => {
+    if (isFolder) {
+      dispatch(uploadFolder(myID, files, currentPath, nameForFeed));
+    } else {
+      dispatch(uploadFiles(myID, files, currentPath, nameForFeed));
+    }
+  };
+};
+
+/***
+ * Upload Folder
+ */
+const uploadFolder = (
+  myID: string,
+  files: File[],
   currentPath: string,
   nameForFeed?: string,
 ): Thunk<State> => {
@@ -37,41 +120,87 @@ export const upload = (
 
     const folderController = new AbortController();
 
-    const error = await uploadBatchFiles(
+    setInitialFolderUploadStatus(
       myID,
-      dispatch,
-      getClass,
-      firstFiles,
-      isFolder,
+      files[0],
+      totalFiles,
       currentPath,
       folderController,
+      dispatch,
     );
-    if (error) {
-      console.error(
-        "cart.upload: unable to upload 1st files: firstFiles:",
-        firstFiles,
-        "e:",
-        error,
-      );
+
+    // createFeed only when all are successfully done.
+    if (!nameForFeed) {
       return;
     }
 
-    for (const idx in batchFiles) {
-      const eachBatchFiles = batchFiles[idx];
+    const { status, data, errmsg } = await createFeedWithFilepaths(
+      [currentPath],
+      nameForFeed,
+      ["uploaded"],
+      false,
+    );
+    if (errmsg) {
+      console.error(
+        "cart.uploadFolder: unable to createFeedWithFilepaths: e:",
+        errmsg,
+      );
+      return;
+    }
+  };
+};
+
+const setInitialFolderUploadStatus = (
+  myID: string,
+  file: File,
+  totalFiles: number,
+  currentPath: string,
+  controller: AbortController,
+  dispatch: any,
+) => {
+  const name = file.webkitRelativePath;
+  const fileName = name.split("/")[0];
+  dispatch(
+    setFolderUploadStatus(
+      myID,
+      "Upload Started",
+      fileName,
+      totalFiles,
+      0,
+      controller,
+      currentPath,
+      "folder",
+    ),
+  );
+};
+
+/***
+ * Upload Files
+ */
+const uploadFiles = (
+  myID: string,
+  files: File[],
+  currentPath: string,
+  nameForFeed?: string,
+): Thunk<State> => {
+  return async (dispatch, getClass) => {
+    const batchSize = 50;
+    const firstFiles = files.slice(0, 1); // upload the 1st file.
+    const batchFiles = chunk(files.slice(1), batchSize);
+    const allBatchFiles = [firstFiles].concat(batchFiles);
+
+    for (const idx in allBatchFiles) {
+      const eachBatchFiles = allBatchFiles[idx];
       const error = await uploadBatchFiles(
         myID,
         dispatch,
         getClass,
         eachBatchFiles,
-        isFolder,
         currentPath,
-        folderController,
       );
       if (error) {
         console.error(
-          "cart.upload: unable to upload files: idx:",
-          idx,
-          "files:",
+          `cart.uploadFiles (${idx}): unable to upload files: files:`,
           eachBatchFiles,
           "e:",
           error,
@@ -88,12 +217,12 @@ export const upload = (
     const { status, data, errmsg } = await createFeedWithFilepaths(
       [currentPath],
       nameForFeed,
-      [],
+      ["uploaded"],
       false,
     );
     if (errmsg) {
       console.error(
-        "cart.upload: unable to createFeedWithFilepaths: e:",
+        "cart.uploadFiles: unable to createFeedWithFilepaths: e:",
         errmsg,
       );
       return;
@@ -106,21 +235,11 @@ const uploadBatchFiles = async (
   dispatch: any,
   getClass: () => ClassState<State>,
   files: File[],
-  isFolder: boolean,
   currentPath: string,
-  folderController: AbortController,
 ): Promise<Error | null> => {
   const rets = await Promise.all(
     files.map(async (eachFile): Promise<Error | null> => {
-      await uploadBatchFile(
-        myID,
-        dispatch,
-        getClass,
-        eachFile,
-        isFolder,
-        currentPath,
-        folderController,
-      );
+      await uploadBatchFile(myID, dispatch, getClass, eachFile, currentPath);
 
       return null;
     }),
@@ -139,18 +258,11 @@ const uploadBatchFile = async (
   dispatch: any,
   getClass: () => ClassState<State>,
   file: File,
-  isFolder: boolean,
   currentPath: string,
-  folderController: AbortController,
 ) => {
   const url = `${config.API_ROOT}/userfiles/`;
 
-  const { formData, name, controller } = prepareUploadData(
-    file,
-    currentPath,
-    isFolder,
-    folderController,
-  );
+  const { formData, name, controller } = prepareUploadFile(file, currentPath);
   const uploadConfig = createUploadConfig(url, formData, controller);
   const onUploadProgress = (progressEvent: AxiosProgressEvent) => {
     if (progressEvent.progress) {
@@ -161,7 +273,6 @@ const uploadBatchFile = async (
         myID,
         dispatch,
         getClass,
-        isFolder,
         name,
         currentPath,
         controller,
@@ -180,7 +291,7 @@ const uploadBatchFile = async (
   };
 
   const onAbort = () => {
-    console.info("cart.upload.uploadBatchFile.onAbort: start");
+    console.info("cart.uploadBatchFile.onAbort: start");
     source.cancel("Operation canceled by the user.");
   };
   axiosConfig.signal.addEventListener("abort", onAbort);
@@ -192,22 +303,19 @@ const uploadBatchFile = async (
         myID,
         dispatch,
         getClass,
-        isFolder,
         name,
         currentPath,
         controller,
         file.size,
-        resp,
       );
     })
     .catch((error) => {
-      const errmsg = "Unexpected Error while uploading the file";
       if (axios.isCancel(error)) {
         processUploadBatchFileError(
           myID,
           dispatch,
           getClass,
-          isFolder,
+          false,
           name,
           currentPath,
           true,
@@ -218,18 +326,19 @@ const uploadBatchFile = async (
           myID,
           dispatch,
           getClass,
-          isFolder,
+          false,
           name,
           currentPath,
           false,
           error.message,
         );
       } else {
+        const errmsg = "Unexpected Error while uploading the file";
         processUploadBatchFileError(
           myID,
           dispatch,
           getClass,
-          isFolder,
+          false,
           name,
           currentPath,
           false,
@@ -245,7 +354,6 @@ const processUploadBatchFileProgress = (
   myID: string,
   dispatch: any,
   getClass: () => ClassState<State>,
-  isFolder: boolean,
   name: string,
   path: string,
   controller: AbortController,
@@ -272,18 +380,11 @@ const processUploadBatchFileResponse = (
   myID: string,
   dispatch: any,
   getClass: () => ClassState<State>,
-  isFolder: boolean,
   name: string,
   path: string,
   controller: AbortController,
   total: number,
-  resp: any,
 ) => {
-  const classState = getClass();
-  const me = getState(classState, myID);
-  if (!me) {
-    return;
-  }
   const step = "Upload Complete";
   dispatch(
     setFileUploadStatus(myID, step, name, 100, total, total, controller, path),
@@ -310,18 +411,13 @@ const processUploadBatchFileError = (
   }
 };
 
-const prepareUploadData = (
-  file: File,
-  currentPath: string,
-  isFolder: boolean,
-  folderController: AbortController,
-) => {
+const prepareUploadFile = (file: File, currentPath: string) => {
   const formData = new FormData();
-  const filename = isFolder ? file.webkitRelativePath : file.name;
+  const filename = file.name;
   const path = `${currentPath}/${filename}`;
   formData.append("upload_path", path);
   formData.append("fname", file, filename);
-  const controller = isFolder ? folderController : new AbortController();
+  const controller = new AbortController();
   return { formData, name: filename, path, controller };
 };
 
