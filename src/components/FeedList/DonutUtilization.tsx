@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useContext, useEffect, useMemo } from "react";
 import type { Feed } from "../../api/types";
 import { ThemeContext } from "../DarkTheme/useTheme";
+import styles from "./DonutUtilization.module.css";
 import {
   getPluginInstanceDetails,
   type PluginInstanceDetails,
@@ -149,11 +150,16 @@ export default (props: Props) => {
     threshold = progress;
   }
 
+  const skeletonClassName = isLoading ? undefined : styles.hide;
+  const noFeedClassName =
+    !isLoading && !details ? `chart ${mode}` : styles.hide;
+  const contentClassName =
+    !isLoading && details ? `chart ${mode}` : styles.hide;
   return (
     <>
-      <Skeleton height="40px" width="40px" />
+      <Skeleton className={skeletonClassName} height="40px" width="40px" />
       <Tooltip content="No feed progress data available">
-        <div className={`chart ${mode}`}>
+        <div className={noFeedClassName}>
           <ChartDonutUtilization
             ariaTitle="Unknown Status"
             data={{ x: "Analysis", y: 0 }}
@@ -166,7 +172,7 @@ export default (props: Props) => {
         </div>
       </Tooltip>
       <Tooltip content={feedProgressText}>
-        <div className={`chart ${mode}`}>
+        <div className={contentClassName}>
           <ChartDonutUtilization
             ariaTitle={feedProgressText}
             data={{ x: "Analysis", y: progress }}

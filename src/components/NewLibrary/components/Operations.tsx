@@ -12,7 +12,13 @@ import {
   ToolbarItem,
 } from "@patternfly/react-core";
 import type { DefaultError } from "@tanstack/react-query";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import {
+  type CSSProperties,
+  Fragment,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useLocation } from "react-router";
 import type { FileBrowserFolder } from "../../../api/types/fileBrowser";
 import { Alert as AntdAlert } from "../../Antd";
@@ -26,6 +32,7 @@ import {
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
 import * as DoCart from "../../../reducers/cart";
+import type * as DoFeedList from "../../../reducers/feedList";
 import type * as DoOperation from "../../../reducers/operation";
 import type * as DoUser from "../../../reducers/user";
 import { AddNodeProvider } from "../../AddNode/context";
@@ -43,11 +50,22 @@ import UploadData from "./operations/UploadData";
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 type TDoOperation = ThunkModuleToFunc<typeof DoOperation>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
+type TDoFeedList = ThunkModuleToFunc<typeof DoFeedList>;
 
 export type AdditionalValues = {
   share: {
     public?: boolean;
   };
+};
+
+export type OperationsClassNames = {
+  toolbar?: string; // to be used in Toolbar
+  toolbarItem?: string;
+};
+
+export type OperationsStyles = {
+  toolbar?: CSSProperties; // to be used in Toolbar
+  toolbarItem?: CSSProperties;
 };
 
 type Props = {
@@ -56,18 +74,18 @@ type Props = {
   origin: OriginState;
   computedPath?: string;
   folderList?: FileBrowserFolder[];
-  customStyle?: {
-    [key: string]: React.CSSProperties;
-  };
-  customClassName?: {
-    [key: string]: string;
-  };
+  styles?: OperationsStyles;
+  classNames?: OperationsClassNames;
+
   useCart: UseThunk<DoCart.State, TDoCart>;
 
   operationID: string;
   useOperation: UseThunk<DoOperation.State, TDoOperation>;
 
   useUser: UseThunk<DoUser.State, TDoUser>;
+
+  feedListID: string;
+  useFeedList: UseThunk<DoFeedList.State, TDoFeedList>;
 };
 
 // Operations
@@ -80,13 +98,15 @@ export default (props: Props) => {
     origin,
     computedPath,
     folderList,
-    customStyle,
-    customClassName,
+    styles,
+    classNames,
 
     useCart,
     operationID,
     useOperation,
     useUser,
+    feedListID,
+    useFeedList,
   } = props;
   const location = useLocation();
 
@@ -126,6 +146,8 @@ export default (props: Props) => {
           useOperation={useOperation}
           useCart={useCart}
           useUser={useUser}
+          feedListID={feedListID}
+          useFeedList={useFeedList}
         />
         {userRelatedError && (
           <AntdAlert
@@ -202,11 +224,11 @@ export default (props: Props) => {
       {/* Hidden file/folder pickers */}
 
       {/* The main toolbar */}
-      <Toolbar
-        style={customStyle?.toolbar}
-        className={customClassName?.toolbar}
-      >
-        <ToolbarContent style={customStyle?.toolbarItem}>
+      <Toolbar style={styles?.toolbar} className={classNames?.toolbar}>
+        <ToolbarContent
+          style={styles?.toolbarItem}
+          className={classNames?.toolbarItem}
+        >
           {toolbarItems}
           {location.pathname.startsWith("/library/") && (
             <ToolbarItem align={{ default: "alignRight" }}>

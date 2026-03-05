@@ -15,12 +15,14 @@ import {
 } from "@patternfly/react-core";
 import { useEffect, useState } from "react";
 import type * as DoCart from "../../../../reducers/cart";
+import type * as DoFeedList from "../../../../reducers/feedList";
 import * as DoOperation from "../../../../reducers/operation";
 import * as DoUser from "../../../../reducers/user";
 
 type TDoOperation = ThunkModuleToFunc<typeof DoOperation>;
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
+type TDoFeedList = ThunkModuleToFunc<typeof DoFeedList>;
 
 const title = "Upload Data";
 const label = "Name";
@@ -33,6 +35,9 @@ type Props = {
   useCart: UseThunk<DoCart.State, TDoCart>;
 
   useUser: UseThunk<DoUser.State, TDoUser>;
+
+  feedListID: string;
+  useFeedList: UseThunk<DoFeedList.State, TDoFeedList>;
 
   isLoading?: boolean;
   error?: string;
@@ -48,6 +53,8 @@ export default (props: Props) => {
     useOperation,
     useCart,
     useUser,
+    feedListID,
+    useFeedList,
   } = props;
   const isError = !!error;
 
@@ -68,6 +75,8 @@ export default (props: Props) => {
   const [classUser, _doUser] = useUser;
   const user = getState(classUser) || DoUser.defaultState;
   const { username } = user;
+
+  const [_classFeedList, doFeedList] = useFeedList;
 
   const isOpen =
     modalStateType === "createFeedWithFile" &&
@@ -94,6 +103,8 @@ export default (props: Props) => {
       value,
       cartID,
       doCart,
+      feedListID,
+      doFeedList,
     );
     doOperation.closeModal(operationID);
   };

@@ -7,6 +7,7 @@ import { Button } from "@patternfly/react-core";
 import type { ChangeEvent, CSSProperties } from "react";
 import type { FileBrowserType } from "../../../../api/types/fileBrowser";
 import type * as DoCart from "../../../../reducers/cart";
+import type * as DoFeedList from "../../../../reducers/feedList";
 import * as DoOperation from "../../../../reducers/operation";
 import type * as DoUser from "../../../../reducers/user";
 import { Dropdown } from "../../../Antd";
@@ -16,6 +17,7 @@ import UploadDataModal from "./UploadDataModal";
 type TDoOperation = ThunkModuleToFunc<typeof DoOperation>;
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
+type TDoFeedList = ThunkModuleToFunc<typeof DoFeedList>;
 
 type OperationItem = {
   key: "fileUpload" | "folderUpload";
@@ -47,6 +49,9 @@ type Props = {
   useCart: UseThunk<DoCart.State, TDoCart>;
 
   useUser: UseThunk<DoUser.State, TDoUser>;
+
+  feedListID: string;
+  useFeedList: UseThunk<DoFeedList.State, TDoFeedList>;
 };
 
 export default (props: Props) => {
@@ -58,6 +63,8 @@ export default (props: Props) => {
     useOperation,
     useCart,
     useUser,
+    feedListID,
+    useFeedList,
   } = props;
 
   const [classOperation, doOperation] = useOperation;
@@ -138,6 +145,8 @@ export default (props: Props) => {
         useOperation={useOperation}
         useCart={useCart}
         useUser={useUser}
+        feedListID={feedListID}
+        useFeedList={useFeedList}
         clearErrors={clearErrors}
       />
     </>

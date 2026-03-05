@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import { useLocation, useRoutes } from "react-router-dom";
 import ComputePage from "../components/ComputePage";
 import Dashboard from "../components/Dashboard";
-import FeedsListView from "../components/FeedList/FeedListView";
+import FeedListView from "../components/FeedList/FeedListView";
 import FeedView from "../components/FeedList/FeedView";
 import GnomeLibrary from "../components/GnomeLibrary";
 import Login from "../components/Login";
@@ -87,47 +87,31 @@ export default () => {
       ),
     },
     {
-      path: "data/tag/uploaded",
-      element: (
-        <PrivateRoute>
-          <OperationsProvider>
-            <FeedsListView title="Data: uploaded" isPublic={false} />
-          </OperationsProvider>
-        </PrivateRoute>
-      ),
-    },
-    {
       path: "data/tag/public",
       element: (
         <OperationsProvider>
-          <FeedsListView title="Data: public" isPublic={true} />
+          <FeedListView title="Data: public" isPublic={true} />
         </OperationsProvider>
       ),
     },
     {
-      path: "data/tag/pacs",
+      path: "data/tag/:tagID",
       element: (
         <PrivateRoute>
           <OperationsProvider>
-            <FeedsListView title="Data: pacs" isPublic={false} />
+            <FeedListView title="Data" isPublic={false} />
           </OperationsProvider>
         </PrivateRoute>
       ),
     },
     {
-      path: "data/tag/:id",
+      path: "data/:dataID",
       element: (
-        <OperationsProvider>
-          <FeedsListView title="Data" isPublic={false} />
-        </OperationsProvider>
-      ),
-    },
-    {
-      path: "data/:id",
-      element: (
-        <OperationsProvider>
-          <FeedView />
-        </OperationsProvider>
+        <PrivateRoute>
+          <OperationsProvider>
+            <FeedView />
+          </OperationsProvider>
+        </PrivateRoute>
       ),
     },
     {
@@ -135,7 +119,7 @@ export default () => {
       element: (
         <PrivateRoute>
           <OperationsProvider>
-            <FeedsListView title="My Data" isPublic={false} />
+            <FeedListView title="My Data" isPublic={false} />
           </OperationsProvider>
         </PrivateRoute>
       ),
@@ -145,7 +129,7 @@ export default () => {
       element: (
         <PrivateRoute>
           <OperationsProvider>
-            <FeedsListView title="Shared Data" isPublic={true} />
+            <FeedListView title="Shared Data" isPublic={false} />
           </OperationsProvider>
         </PrivateRoute>
       ),

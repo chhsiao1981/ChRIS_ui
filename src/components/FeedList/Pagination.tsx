@@ -21,6 +21,7 @@ type Props = {
   navigate: NavigateFunction;
   useFeedList: UseThunk<DoFeedList.State, TDoFeedList>;
   isPublic: boolean;
+  tag?: string;
 };
 
 export default (props: Props) => {
@@ -34,7 +35,10 @@ export default (props: Props) => {
     navigate,
     useFeedList,
     isPublic,
+    tag,
   } = props;
+
+  console.info("Pagination: count:", count, "page:", page, "perPage:", perPage);
 
   const [classStateFeedList, doFeedList] = useFeedList;
   const feedListID = getDefaultID(classStateFeedList);
@@ -47,6 +51,10 @@ export default (props: Props) => {
     _: React.MouseEvent | React.KeyboardEvent | MouseEvent,
     newPage: number,
   ) => {
+    console.info(
+      "Pagination: onSetPage: newPage: to navigate and getFeedList",
+      newPage,
+    );
     navigate(
       `?search=${search}&searchType=${searchType}&page=${newPage}&perPage=${perPage}`,
     );
@@ -58,6 +66,7 @@ export default (props: Props) => {
       newPage,
       perPage,
       isPublic,
+      tag,
     );
   };
 
@@ -66,6 +75,10 @@ export default (props: Props) => {
     newPerPage: number,
     newPage: number,
   ) => {
+    console.info(
+      "Pagination: onPerPageSelect: page: to navigate and doFeedList",
+      page,
+    );
     navigate(
       `?search=${search}&searchType=${searchType}&page=${newPage}&perPage=${newPerPage}`,
     );
@@ -77,6 +90,7 @@ export default (props: Props) => {
       newPage,
       perPage,
       isPublic,
+      tag,
     );
   };
 

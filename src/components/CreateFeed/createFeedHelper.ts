@@ -42,7 +42,7 @@ const createFeedCore = async (
     throw new Error("Failed to find pl-dircopy. Is pl-dircopy installed? ");
   }
 
-  const dircopy = searchPluginsResult.list[0];
+  const dircopy = searchPluginsResult.results[0];
 
   console.info("createFeedCore: dircopy:", dircopy);
 

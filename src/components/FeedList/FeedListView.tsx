@@ -17,7 +17,7 @@ import {
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMediaQuery } from "react-responsive";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import type { FeedSearchType } from "../../api/types/feed";
 import * as DoCart from "../../reducers/cart";
 import * as DoFeedList from "../../reducers/feedList";
@@ -29,6 +29,7 @@ import { OperationContext } from "../NewLibrary/context";
 import Wrapper from "../Wrapper";
 import { COLUMN_DEFINITIONS } from "./constants";
 import EmptyStateTable from "./EmptyStateTable";
+import styles from "./FeedListView.module.css";
 import FeedsSearch from "./FeedsSearch";
 import FeedTableRow from "./FeedTableRow";
 import LoadingTable from "./LoadingTable";
@@ -63,7 +64,7 @@ export default (props: Props) => {
   const feedList = getState(classFeedList) || DoFeedList.defaultState;
   const {
     count,
-    data: feedsToDisplay,
+    feeds: feedsToDisplay,
     page,
     perPage,
     searchType,
@@ -79,6 +80,13 @@ export default (props: Props) => {
   const folderInputRef = useRef<HTMLInputElement>(null);
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const routeParams = useParams();
+  const { tagID } = routeParams;
+
+  const theTitle = tagID ? `${title}: ${tagID}` : title;
+
+  console.info("FeedListView: tagID:", tagID);
 
   // Sorted Table data / parameters
   // https://www.patternfly.org/components/table/
@@ -87,9 +95,35 @@ export default (props: Props) => {
     useState<SortByDirection>(SortByDirection.desc);
 
   useEffect(() => {
-    console.info("FeedListView: to doFolderOperation.init");
+    console.info("FeedListView: to doOperation.init");
     doOperation.init(operationID, fileInputRef, folderInputRef);
   }, []);
+
+  useEffect(() => {
+    // Reload from page 1 when pathname is different.s
+    if (!feedListID) {
+      return;
+    }
+    if (!location.pathname.startsWith("/data")) {
+      return;
+    }
+
+    const pathSplit = location.pathname.split("/");
+    if (pathSplit.length === 3) {
+      // FeedView
+      return;
+    }
+
+    doFeedList.getFeedList(
+      feedListID,
+      searchType,
+      search,
+      1,
+      perPage,
+      isPublic,
+      tagID,
+    );
+  }, [feedListID, location.pathname, tagID]);
 
   const getSortParams = (columnIndex: number) => ({
     sortBy: {
@@ -133,6 +167,7 @@ export default (props: Props) => {
       0,
       perPage,
       isPublic,
+      tagID,
     );
   };
 
@@ -142,9 +177,9 @@ export default (props: Props) => {
       return;
     }
 
-    if (!privateType || (!isLoggedIn && privateType === "private")) {
+    if (!isLoggedIn && privateType === "private") {
       navigate(
-        `/shared?search=${search}&searchType=${searchType}&page=${page}&perPage=${perPage}`,
+        `/data/tag/public?search=${search}&searchType=${searchType}&page=${page}&perPage=${perPage}`,
       );
     }
   }, [
@@ -163,12 +198,31 @@ export default (props: Props) => {
 
   const TitleComponent = (
     <InfoSection
-      title={`${title} (${feedCountText})`}
+      title={`${theTitle} (${feedCountText})`}
       content="In this view, you can view your data and the ones shared with you."
     />
   );
 
   const isMobile = useMediaQuery({ maxWidth: 768 });
+
+  const toolbarClassName = !isLoggedIn
+    ? styles.hide
+    : isMobile
+      ? styles["toolbar-mobile"]
+      : styles.toolbar;
+  const operationsClassNames: {
+    toolbarItem?: string;
+    toolbar?: string;
+  } = {
+    toolbarItem: styles["toolbar-item"],
+    toolbar: toolbarClassName,
+  };
+
+  const loadingTableClassName = isLoading ? undefined : styles.hide;
+  const tableClassName =
+    !isLoading && feedsToDisplay.length ? "feed-table" : styles.hide;
+  const emptyStateTableClassName =
+    !isLoading && !feedsToDisplay.length ? undefined : styles.hide;
 
   return (
     <Wrapper title={TitleComponent}>
@@ -195,68 +249,57 @@ export default (props: Props) => {
             navigate={navigate}
             useFeedList={useFeedList}
             isPublic={isPublic}
+            tag={tagID}
           />
         </div>
 
-        {isLoggedIn && (
-          <Operations
-            username={username}
-            isStaff={isStaff}
-            origin={{
-              type: OperationContext.FEEDS,
-            }}
-            customStyle={{
-              toolbarItem: { paddingInlineStart: "0" },
-              toolbar: {
-                paddingTop: "0",
-                paddingBottom: "0",
-                background: "inherit",
-                marginTop: isMobile ? "0.5em" : undefined,
-              },
-            }}
-            useCart={useCart}
-            operationID={operationID}
-            useOperation={useOperation}
-            useUser={useUser}
-          />
-        )}
+        <Operations
+          username={username}
+          isStaff={isStaff}
+          origin={{
+            type: OperationContext.FEEDS,
+          }}
+          classNames={operationsClassNames}
+          useCart={useCart}
+          operationID={operationID}
+          useOperation={useOperation}
+          useUser={useUser}
+          feedListID={feedListID}
+          useFeedList={useFeedList}
+        />
       </PageSection>
-      <PageSection style={{ paddingBlockStart: "0.5em" }}>
-        {isLoading ? (
-          <LoadingTable />
-        ) : feedsToDisplay.length > 0 ? (
-          <Table
-            className="feed-table"
-            variant="compact"
-            aria-label="Feed Table"
-          >
-            <Thead>
-              <Tr>
-                <Th scope="col" screenReaderText="Select Feed" />
-                {COLUMN_DEFINITIONS.map((column, columnIndex) => (
-                  <Th key={column.id} sort={getSortParams(columnIndex)}>
-                    {column.label}
-                  </Th>
-                ))}
-              </Tr>
-            </Thead>
-            <Tbody>
-              {sortedFeeds.map((feed, rowIndex) => (
-                <FeedTableRow
-                  username={username}
-                  key={feed.id}
-                  feed={feed}
-                  rowIndex={rowIndex}
-                  allFeeds={feedsToDisplay}
-                  type={privateType}
-                  useCart={useCart}
-                />
+      <PageSection className={styles["page-section-table"]}>
+        <LoadingTable className={loadingTableClassName} />
+        <Table
+          className={tableClassName}
+          variant="compact"
+          aria-label="Feed Table"
+        >
+          <Thead>
+            <Tr>
+              <Th scope="col" screenReaderText="Select Feed" />
+              {COLUMN_DEFINITIONS.map((column, columnIndex) => (
+                <Th key={column.id} sort={getSortParams(columnIndex)}>
+                  {column.label}
+                </Th>
               ))}
-            </Tbody>
-          </Table>
-        ) : (
-          <EmptyStateTable />
-        )}
+            </Tr>
+          </Thead>
+          <Tbody>
+            {sortedFeeds.map((feed, rowIndex) => (
+              <FeedTableRow
+                username={username}
+                key={feed.id}
+                feed={feed}
+                rowIndex={rowIndex}
+                allFeeds={feedsToDisplay}
+                type={privateType}
+                useCart={useCart}
+              />
+            ))}
+          </Tbody>
+        </Table>
+        <EmptyStateTable className={emptyStateTableClassName} />
       </PageSection>
     </Wrapper>
   );

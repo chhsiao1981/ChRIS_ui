@@ -253,10 +253,10 @@ export default (props: Props) => {
                   }}
                 >
                   <Operations
-                    customClassName={{
+                    classNames={{
                       toolbar: "remove-toolbar-padding",
                     }}
-                    customStyle={{
+                    styles={{
                       toolbar: {
                         backgroundColor: "inherit",
                       },

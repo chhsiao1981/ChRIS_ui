@@ -1,20 +1,25 @@
 import {
   type ClassState,
+  type DispatchFuncMap,
   getState,
   setData,
   type Thunk,
+  type ThunkModuleToFunc,
 } from "@chhsiao1981/use-thunk";
 import axios, { type AxiosProgressEvent } from "axios";
 import config from "config";
 import { chunk } from "lodash";
 import { createFeedWithFilepaths } from "../../api/serverApi";
 import type { FileBrowserType } from "../../api/types/fileBrowser";
+import type * as DoFeedList from "../../reducers/feedList";
 import type {
   FileUpload,
   FileUploadObject,
   FolderUploadObject,
 } from "../types";
 import type { State } from "./state";
+
+type TDoFeedList = ThunkModuleToFunc<typeof DoFeedList>;
 
 type FolderUploadInfo = {
   count: number;
@@ -28,10 +33,23 @@ export const startUpload = (
   isFolder: boolean,
   currentPath: string,
   nameForFeed?: string,
+
+  feedListID?: string,
+  doFeedList?: DispatchFuncMap<DoFeedList.State, TDoFeedList>,
 ): Thunk<State> => {
   return (dispatch, _) => {
     dispatch(setData(myID, { openCart: true }));
-    dispatch(upload(myID, files, isFolder, currentPath, nameForFeed));
+    dispatch(
+      upload(
+        myID,
+        files,
+        isFolder,
+        currentPath,
+        nameForFeed,
+        feedListID,
+        doFeedList,
+      ),
+    );
   };
 };
 
@@ -93,12 +111,33 @@ const upload = (
   isFolder: boolean,
   currentPath: string,
   nameForFeed?: string,
+
+  feedListID?: string,
+  doFeedList?: DispatchFuncMap<DoFeedList.State, TDoFeedList>,
 ): Thunk<State> => {
   return async (dispatch, _getClass) => {
     if (isFolder) {
-      dispatch(uploadFolder(myID, files, currentPath, nameForFeed));
+      dispatch(
+        uploadFolder(
+          myID,
+          files,
+          currentPath,
+          nameForFeed,
+          feedListID,
+          doFeedList,
+        ),
+      );
     } else {
-      dispatch(uploadFiles(myID, files, currentPath, nameForFeed));
+      dispatch(
+        uploadFiles(
+          myID,
+          files,
+          currentPath,
+          nameForFeed,
+          feedListID,
+          doFeedList,
+        ),
+      );
     }
   };
 };
@@ -111,6 +150,9 @@ const uploadFolder = (
   files: File[],
   currentPath: string,
   nameForFeed?: string,
+
+  feedListID?: string,
+  doFeedList?: DispatchFuncMap<DoFeedList.State, TDoFeedList>,
 ): Thunk<State> => {
   return async (dispatch, getClass) => {
     const batchSize = 50;
@@ -175,24 +217,58 @@ const uploadFolder = (
     );
 
     // createFeed only when all are successfully done.
-    if (!nameForFeed) {
+    if (!nameForFeed || !feedListID || !doFeedList) {
       return;
     }
 
-    const { status, data, errmsg } = await createFeedWithFilepaths(
+    const errmsg = await createFeed(
       [currentPath],
       nameForFeed,
       ["uploaded"],
       false,
+      feedListID,
+      doFeedList,
     );
     if (errmsg) {
       console.error(
         "cart.uploadFolder: unable to createFeedWithFilepaths: e:",
         errmsg,
       );
-      return;
     }
   };
+};
+
+const createFeed = async (
+  paths: string[],
+  nameForFeed: string,
+  tags: string[],
+  isPublic: boolean = false,
+
+  feedListID: string,
+  doFeedList: DispatchFuncMap<DoFeedList.State, TDoFeedList>,
+): Promise<string | undefined> => {
+  const {
+    status,
+    data: feed,
+    errmsg,
+  } = await createFeedWithFilepaths(paths, nameForFeed, tags, isPublic);
+  if (errmsg) {
+    console.error(
+      "cart.createFeed: unable to createFeedWithFilepaths: status:",
+      status,
+      "e:",
+      errmsg,
+    );
+    return errmsg;
+  }
+  if (!feed) {
+    console.error("cart.createFeed: unable to get feed: status:", status);
+    return "unable to get feed";
+  }
+
+  doFeedList.prepandList(feedListID, feed);
+
+  return;
 };
 
 const setInitialFolderUploadStatus = (
@@ -366,6 +442,9 @@ const uploadFiles = (
   files: File[],
   currentPath: string,
   nameForFeed?: string,
+
+  feedListID?: string,
+  doFeedList?: DispatchFuncMap<DoFeedList.State, TDoFeedList>,
 ): Thunk<State> => {
   return async (dispatch, getClass) => {
     const batchSize = 50;
@@ -394,22 +473,23 @@ const uploadFiles = (
     }
 
     // createFeed only when all are successfully done.
-    if (!nameForFeed) {
+    if (!nameForFeed || !feedListID || !doFeedList) {
       return;
     }
 
-    const { status, data, errmsg } = await createFeedWithFilepaths(
+    const errmsg = await createFeed(
       [currentPath],
       nameForFeed,
       ["uploaded"],
       false,
+      feedListID,
+      doFeedList,
     );
     if (errmsg) {
       console.error(
-        "cart.uploadFiles: unable to createFeedWithFilepaths: e:",
+        "cart.uploadFolder: unable to createFeedWithFilepaths: e:",
         errmsg,
       );
-      return;
     }
   };
 };

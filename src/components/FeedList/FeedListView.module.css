@@ -1,0 +1,24 @@
+.hide {
+    display: none;
+}
+
+.toolbar-item {
+    padding-inline-start: 0px;
+}
+
+.toolbar {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    background: inherit;
+}
+
+.toolbar-mobile {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    background: inherit;
+    margin-top: 0.5em;
+}
+
+.page-section-table {
+    padding-block-start: 0.5em;
+}

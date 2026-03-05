@@ -20,6 +20,7 @@ import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import brandImg from "../../assets/logo_chris_dashboard.png";
 import type * as DoCart from "../../reducers/cart";
+import type * as DoFeedList from "../../reducers/feedList";
 import type * as DoOperation from "../../reducers/operation";
 import { Role } from "../../reducers/types";
 import * as DoUI from "../../reducers/ui";
@@ -34,6 +35,7 @@ type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 type TDoOperation = ThunkModuleToFunc<typeof DoOperation>;
+type TDoFeedList = ThunkModuleToFunc<typeof DoFeedList>;
 
 type Props = {
   useUI: UseThunk<DoUI.State, TDoUI>;
@@ -42,6 +44,8 @@ type Props = {
 
   operationID: string;
   useOperation: UseThunk<DoOperation.State, TDoOperation>;
+
+  useFeedList: UseThunk<DoFeedList.State, TDoFeedList>;
 
   isLoggedIn: boolean;
 };
@@ -52,16 +56,26 @@ type TagInfo = {
 
 export default (props: Props) => {
   const queryClient = useQueryClient();
-  const { useUI, useUser, useCart, operationID, useOperation, isLoggedIn } =
-    props;
-  const [classStateUI, doUI] = useUI;
-  const [classStateUser, _2] = useUser;
-  const ui = getState(classStateUI) || DoUI.defaultState;
-  const uiID = getDefaultID(classStateUI);
-  const user = getState(classStateUser) || DoUser.defaultState;
+  const {
+    useUI,
+    useUser,
+    useCart,
+    operationID,
+    useOperation,
+    useFeedList,
+    isLoggedIn,
+  } = props;
+  const [classUI, doUI] = useUI;
+  const [classUser, _2] = useUser;
+  const ui = getState(classUI) || DoUI.defaultState;
+  const uiID = getDefaultID(classUI);
+  const user = getState(classUser) || DoUser.defaultState;
   const { sidebarActiveItem, isNavOpen, isTagExpanded, isPipelineTagExpanded } =
     ui;
   const { role, username } = user;
+
+  const [classFeedList, _doFeedList] = useFeedList;
+  const feedListID = getDefaultID(classFeedList);
 
   const onToggleTag = (e: FormEvent) => {
     doUI.setIsTagExpanded(uiID, !isTagExpanded);
@@ -238,6 +252,8 @@ export default (props: Props) => {
                       useUser={useUser}
                       isSidebar={true}
                       buttonColor={uploadDataColor}
+                      feedListID={feedListID}
+                      useFeedList={useFeedList}
                     />
                   </NavItem>
 
