@@ -35,8 +35,10 @@ export default (props: Props) => {
   const cart = getState(classStateCart) || DoCart.defaultState;
   const { selectedPaths } = cart;
 
+  /*
   const { handlers } = useLongPress();
   const { handleOnClick } = handlers;
+  */
   const navigate = useNavigate();
   const { isDarkTheme } = useContext(ThemeContext);
 
@@ -52,6 +54,7 @@ export default (props: Props) => {
   /**
    * Get folder for this feed - with caching
    */
+  /*
   const getFolderForThisFeed = async () => {
     // Return cached data if available
     if (folderCache.current) {
@@ -63,6 +66,7 @@ export default (props: Props) => {
     folderCache.current = payload;
     return payload;
   };
+  */
 
   const backgroundColor = isDarkTheme ? "#002952" : "#E7F1FA";
   /**
@@ -100,15 +104,17 @@ export default (props: Props) => {
         style={{ backgroundColor: selectedBgRow, cursor: "pointer" }}
         data-test-id={`${feed.name}-test`}
         onContextMenu={async (e) => {
-          const payload = await getFolderForThisFeed();
-          handleOnClick(e, payload, feed.folder_path, "folder");
+          // const payload = await getFolderForThisFeed();
+          // handleOnClick(e, payload, feed.folder_path, "folder");
         }}
         onClick={async (e) => {
           e?.stopPropagation();
-          const payload = await getFolderForThisFeed();
+          // const payload = await getFolderForThisFeed();
+          /*
           handleOnClick(e, payload, feed.folder_path, "folder", () => {
             onFeedNameClick();
           });
+          */
         }}
         isRowSelected={isSelected}
       >
@@ -123,17 +129,19 @@ export default (props: Props) => {
 
               // Only fetch folder data if the checkbox is being checked
               // This prevents the delay when simply rendering checkboxes
-              let payload: FileBrowserFolder | null = null;
+              const payload: FileBrowserFolder | null = null;
               if (isChecked) {
-                payload = await getFolderForThisFeed();
+                // payload = await getFolderForThisFeed();
               } else if (isSelected) {
                 // If unchecking, we don't need to fetch again, just use the path
+                /*
                 handlers.handleCheckboxChange(
                   event,
                   feed.folder_path,
                   null,
                   "folder",
                 );
+                */
                 return;
               }
 
@@ -155,12 +163,14 @@ export default (props: Props) => {
                 },
               };
 
+              /*
               handlers.handleCheckboxChange(
                 newEvent as unknown as React.FormEvent<HTMLInputElement>,
                 feed.folder_path,
                 payload,
                 "folder",
               );
+              */
             },
           }}
         />

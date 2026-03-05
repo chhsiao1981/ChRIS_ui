@@ -23,7 +23,7 @@ import {
   useState,
 } from "react";
 import { useMediaQuery } from "react-responsive";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import type { FeedSearchType } from "../../api/types/feed";
 import * as DoCart from "../../reducers/cart";
 import * as DoFeedList from "../../reducers/feedList";
@@ -70,7 +70,7 @@ export default (props: Props) => {
   const feedList = getState(classFeedList) || DoFeedList.defaultState;
   const {
     count,
-    data: feedsToDisplay,
+    feeds: feedsToDisplay,
     page,
     perPage,
     searchType,
@@ -79,6 +79,17 @@ export default (props: Props) => {
     error,
   } = feedList;
 
+  console.info(
+    "FeedListView: feedListID:",
+    feedListID,
+    "feedsToDisplay:",
+    feedsToDisplay,
+    "count:",
+    count,
+    "feedList:",
+    feedList,
+  );
+
   const useOperation = useThunk<DoOperation.State, TDoOperation>(DoOperation);
   const [_classsOperation, doOperation] = useOperation;
   const [operationID, _setOperationID] = useState(genUUID());
@@ -86,6 +97,7 @@ export default (props: Props) => {
   const folderInputRef = useRef<HTMLInputElement>(null);
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Sorted Table data / parameters
   // https://www.patternfly.org/components/table/
@@ -94,9 +106,53 @@ export default (props: Props) => {
     useState<SortByDirection>(SortByDirection.desc);
 
   useEffect(() => {
-    console.info("FeedListView: to doFolderOperation.init");
+    console.info("FeedListView: to doOperation.init");
     doOperation.init(operationID, fileInputRef, folderInputRef);
   }, []);
+
+  useEffect(() => {
+    console.info(
+      "FeedListView.useEffect (getFeedList): start: location:",
+      location.pathname,
+      location.search,
+    );
+    if (!feedListID) {
+      return;
+    }
+    if (!location.pathname.startsWith("/data")) {
+      return;
+    }
+
+    const pathSplit = location.pathname.split("/");
+    if (pathSplit.length === 3) {
+      // FeedView
+      return;
+    }
+
+    const theSearchType = search ? searchType : undefined;
+    const theSearch = search ? search : undefined;
+
+    console.info(
+      "FeedListView (getFeedList): to getFeedList: feedListID:",
+      feedListID,
+      "searchType:",
+      searchType,
+      "theSearch:",
+      theSearch,
+      "perPage:",
+      perPage,
+      "isPublic:",
+      isPublic,
+    );
+    doFeedList.getFeedList(
+      feedListID,
+      theSearchType,
+      theSearch,
+      0,
+      perPage,
+      isPublic,
+    );
+  }, [feedListID, location.pathname, location.search]);
 
   const getSortParams = (columnIndex: number) => ({
     sortBy: {

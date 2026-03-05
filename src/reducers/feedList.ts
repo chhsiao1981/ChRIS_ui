@@ -15,7 +15,7 @@ import type {
 export const myClass = "chris-ui/feed-list";
 
 export interface State extends rState {
-  data: Feed[];
+  feeds: Feed[];
   count: number;
   theType: FeedType;
 
@@ -26,10 +26,11 @@ export interface State extends rState {
 
   error: string;
   isLoading: boolean;
+  isInit: boolean;
 }
 
 export const defaultState: State = {
-  data: [],
+  feeds: [],
   count: 0,
   theType: "private",
 
@@ -40,11 +41,13 @@ export const defaultState: State = {
 
   error: "",
   isLoading: false,
+  isInit: false,
 };
 
 export const init = (): Thunk<State> => {
   return (dispatch, _getClassState) => {
-    dispatch(_init({ state: defaultState }));
+    const state: State = Object.assign({}, defaultState, { isInit: true });
+    dispatch(_init({ state }));
   };
 };
 
@@ -65,6 +68,14 @@ export const getFeedList = (
       perPage,
       isPublic,
     );
+    console.info(
+      "feedList.getFeedList: after apiGetFeedList: status:",
+      status,
+      "data:",
+      data,
+      "errmsg:",
+      errmsg,
+    );
     dispatch(setData<State>(myID, { isLoading: false }));
     if (errmsg) {
       dispatch(setData<State>(myID, { error: errmsg }));
@@ -74,9 +85,21 @@ export const getFeedList = (
       return;
     }
     const { list, count } = data;
+    console.info(
+      "feedList.getFeedList: to setData: myID:",
+      myID,
+      "list:",
+      list,
+      "count:",
+      count,
+      "page:",
+      page,
+      "perPage:",
+      perPage,
+    );
     dispatch(
       setData<State>(myID, {
-        data: list,
+        feeds: list,
         count,
         page,
         perPage,
