@@ -159,14 +159,14 @@ const uploadFolder = (
       }
     }
 
-    const name = files[0].webkitRelativePath;
-    const fileName = name.split("/")[0];
+    const filename = files[0].webkitRelativePath;
+    const folderName = filename.split("/")[0];
 
     dispatch(
       setFolderUploadStatus(
         myID,
         "Upload Complete",
-        fileName,
+        folderName,
         totalCount,
         uploadInfo.count,
         folderController,
@@ -203,13 +203,13 @@ const setInitialFolderUploadStatus = (
   controller: AbortController,
   dispatch: any,
 ) => {
-  const name = file.webkitRelativePath;
-  const fileName = name.split("/")[0];
+  const filename = file.webkitRelativePath;
+  const folderName = filename.split("/")[0];
   dispatch(
     setFolderUploadStatus(
       myID,
       "Upload Started",
-      fileName,
+      folderName,
       totalFiles,
       0,
       controller,
@@ -267,7 +267,11 @@ const uploadBatchFolderFile = async (
 ): Promise<Error | null> => {
   const url = `${config.API_ROOT}/userfiles/`;
 
-  const { formData, name } = prepareUploadData(file, currentPath, true);
+  const { formData, name: filename } = prepareUploadData(
+    file,
+    currentPath,
+    true,
+  );
   const controller = folderController;
   const uploadConfig = createUploadConfig(url, formData, controller);
 
@@ -278,12 +282,12 @@ const uploadBatchFolderFile = async (
   };
 
   const onAbort = () => {
-    console.info("cart.uploadBatchFolderFile.onAbort: name:", name);
+    console.info("cart.uploadBatchFolderFile.onAbort: filename:", filename);
     source.cancel("Operation canceled by the user.");
   };
   axiosConfig.signal.addEventListener("abort", onAbort);
 
-  const fileName = name.split("/")[0];
+  const folderName = filename.split("/")[0];
 
   let err: Error | null = null;
   try {
@@ -293,12 +297,12 @@ const uploadBatchFolderFile = async (
       axiosConfig,
     );
     uploadInfo.count += 1;
-    console.info("cart.uploadBatchFolderFile: done: name:", name);
+    console.info("cart.uploadBatchFolderFile: done: filename:", filename);
     dispatch(
       setFolderUploadStatus(
         myID,
         "Uploading...",
-        fileName,
+        folderName,
         totalCount,
         uploadInfo.count,
         folderController,
@@ -312,7 +316,7 @@ const uploadBatchFolderFile = async (
         dispatch,
         getClass,
         true,
-        fileName,
+        folderName,
         currentPath,
         true,
         "",
@@ -323,7 +327,7 @@ const uploadBatchFolderFile = async (
         dispatch,
         getClass,
         true,
-        fileName,
+        folderName,
         currentPath,
         false,
         error.message,
@@ -335,7 +339,7 @@ const uploadBatchFolderFile = async (
         dispatch,
         getClass,
         true,
-        fileName,
+        folderName,
         currentPath,
         false,
         errmsg,
@@ -346,9 +350,9 @@ const uploadBatchFolderFile = async (
 
   console.info(
     "cart.uploadBatchFolderFile: to return: name:",
-    name,
-    "fileName:",
-    fileName,
+    filename,
+    "folderName:",
+    folderName,
   );
   axiosConfig.signal.removeEventListener("abort", onAbort);
   return err;
@@ -669,15 +673,15 @@ export const setFileUploadStatus = (
 const setFolderUploadStatus = (
   myID: string,
   step: string,
-  filename: string,
+  folderName: string,
   totalCount: number,
   currentCount: number,
   controller: AbortController | null,
   path: string,
 ): Thunk<State> => {
   console.info(
-    "cart.setFolderUploadStatus: start: filename:",
-    filename,
+    "cart.setFolderUploadStatus: start: folderName:",
+    folderName,
     "step:",
     step,
   );
@@ -697,7 +701,7 @@ const setFolderUploadStatus = (
       path,
       type: "folder",
     };
-    const folderUpload = { [filename]: folderUploadObj };
+    const folderUpload = { [folderName]: folderUploadObj };
     const newFolderUploadStatus = Object.assign(
       {},
       folderUploadStatus,
