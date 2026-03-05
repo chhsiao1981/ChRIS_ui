@@ -12,7 +12,13 @@ import {
   ToolbarItem,
 } from "@patternfly/react-core";
 import type { DefaultError } from "@tanstack/react-query";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import {
+  type CSSProperties,
+  Fragment,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useLocation } from "react-router";
 import type { FileBrowserFolder } from "../../../api/types/fileBrowser";
 import { Alert as AntdAlert } from "../../Antd";
@@ -50,18 +56,25 @@ export type AdditionalValues = {
   };
 };
 
+export type OperationsClassNames = {
+  toolbar?: string; // to be used in Toolbar
+  toolbarItem?: string;
+};
+
+export type OperationsStyles = {
+  toolbar?: CSSProperties; // to be used in Toolbar
+  toolbarItem?: CSSProperties;
+};
+
 type Props = {
   username: string;
   isStaff: boolean;
   origin: OriginState;
   computedPath?: string;
   folderList?: FileBrowserFolder[];
-  customStyle?: {
-    [key: string]: React.CSSProperties;
-  };
-  customClassName?: {
-    [key: string]: string;
-  };
+  styles?: OperationsStyles;
+  classNames?: OperationsClassNames;
+
   useCart: UseThunk<DoCart.State, TDoCart>;
 
   operationID: string;
@@ -80,8 +93,8 @@ export default (props: Props) => {
     origin,
     computedPath,
     folderList,
-    customStyle,
-    customClassName,
+    styles,
+    classNames,
 
     useCart,
     operationID,
@@ -202,11 +215,11 @@ export default (props: Props) => {
       {/* Hidden file/folder pickers */}
 
       {/* The main toolbar */}
-      <Toolbar
-        style={customStyle?.toolbar}
-        className={customClassName?.toolbar}
-      >
-        <ToolbarContent style={customStyle?.toolbarItem}>
+      <Toolbar style={styles?.toolbar} className={classNames?.toolbar}>
+        <ToolbarContent
+          style={styles?.toolbarItem}
+          className={classNames?.toolbarItem}
+        >
           {toolbarItems}
           {location.pathname.startsWith("/library/") && (
             <ToolbarItem align={{ default: "alignRight" }}>
