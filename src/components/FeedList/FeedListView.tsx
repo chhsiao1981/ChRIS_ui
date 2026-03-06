@@ -15,13 +15,7 @@ import {
   Tr,
 } from "@patternfly/react-table";
 import type React from "react";
-import {
-  type CSSProperties,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useLocation, useNavigate } from "react-router";
 import type { FeedSearchType } from "../../api/types/feed";
@@ -291,6 +285,8 @@ export default (props: Props) => {
           operationID={operationID}
           useOperation={useOperation}
           useUser={useUser}
+          feedListID={feedListID}
+          useFeedList={useFeedList}
         />
       </PageSection>
       <PageSection className={styles["page-section-table"]}>

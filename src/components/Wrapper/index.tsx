@@ -18,6 +18,7 @@ import {
 } from "@chhsiao1981/use-thunk";
 import { Page } from "@patternfly/react-core";
 import * as DoCart from "../../reducers/cart";
+import * as DoFeedList from "../../reducers/feedList";
 import * as DoOperation from "../../reducers/operation";
 import * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
@@ -28,6 +29,7 @@ type TDoUI = ThunkModuleToFunc<typeof DoUI>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 type TDoOperation = ThunkModuleToFunc<typeof DoOperation>;
+type TDoFeedList = ThunkModuleToFunc<typeof DoFeedList>;
 
 type Props = {
   children: ReactElement[] | ReactElement;
@@ -51,6 +53,9 @@ export default (props: Props) => {
 
   const useOperation = useThunk<DoOperation.State, TDoOperation>(DoOperation);
   const [_classOperation, doOperation] = useOperation;
+
+  const useFeedList = useThunk<DoFeedList.State, TDoFeedList>(DoFeedList);
+
   const [operationID, _setOeprationID] = useState(genUUID());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
@@ -98,6 +103,7 @@ export default (props: Props) => {
             useCart={useCart}
             operationID={operationID}
             useOperation={useOperation}
+            useFeedList={useFeedList}
             isLoggedIn={isLoggedIn}
           />
         </OperationsProvider>

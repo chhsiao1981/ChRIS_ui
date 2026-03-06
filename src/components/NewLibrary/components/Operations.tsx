@@ -32,6 +32,7 @@ import {
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
 import * as DoCart from "../../../reducers/cart";
+import type * as DoFeedList from "../../../reducers/feedList";
 import type * as DoOperation from "../../../reducers/operation";
 import type * as DoUser from "../../../reducers/user";
 import { AddNodeProvider } from "../../AddNode/context";
@@ -49,6 +50,7 @@ import UploadData from "./operations/UploadData";
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 type TDoOperation = ThunkModuleToFunc<typeof DoOperation>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
+type TDoFeedList = ThunkModuleToFunc<typeof DoFeedList>;
 
 export type AdditionalValues = {
   share: {
@@ -81,6 +83,9 @@ type Props = {
   useOperation: UseThunk<DoOperation.State, TDoOperation>;
 
   useUser: UseThunk<DoUser.State, TDoUser>;
+
+  feedListID: string;
+  useFeedList: UseThunk<DoFeedList.State, TDoFeedList>;
 };
 
 // Operations
@@ -100,6 +105,8 @@ export default (props: Props) => {
     operationID,
     useOperation,
     useUser,
+    feedListID,
+    useFeedList,
   } = props;
   const location = useLocation();
 
@@ -139,6 +146,8 @@ export default (props: Props) => {
           useOperation={useOperation}
           useCart={useCart}
           useUser={useUser}
+          feedListID={feedListID}
+          useFeedList={useFeedList}
         />
         {userRelatedError && (
           <AntdAlert

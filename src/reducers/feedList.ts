@@ -1,5 +1,6 @@
 import {
   init as _init,
+  getState,
   type State as rState,
   setData,
   type Thunk,
@@ -48,6 +49,22 @@ export const init = (): Thunk<State> => {
   return (dispatch, _getClassState) => {
     const state: State = Object.assign({}, defaultState, { isInit: true });
     dispatch(_init({ state }));
+  };
+};
+
+export const prepandList = (myID: string, feed: Feed): Thunk<State> => {
+  return (dispatch, getClass) => {
+    const classState = getClass();
+    const me = getState(classState, myID);
+    if (!me) {
+      return;
+    }
+    const { feeds, page } = me;
+    if (page !== 0) {
+      return;
+    }
+    const newFeeds = [feed].concat(feeds);
+    dispatch(setData<State>(myID, { feeds: newFeeds }));
   };
 };
 

@@ -12,10 +12,12 @@ import type { ChangeEvent, RefObject } from "react";
 import type { FileBrowserType } from "../api/types/fileBrowser";
 import { randomStr } from "../utils/randomStr";
 import * as DoCart from "./cart";
+import type * as DoFeedList from "./feedList";
 import type * as DoUser from "./user";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
+type TDoFeedList = ThunkModuleToFunc<typeof DoFeedList>;
 
 export const myClass = "chris-ui/folder-operation";
 
@@ -83,10 +85,25 @@ export const onFileChange = (
   username: string,
   cartID: string,
   doCart: DispatchFuncMap<DoCart.State, TDoCart>,
+
+  feedListID: string,
+  doFeedList: DispatchFuncMap<DoFeedList.State, TDoFeedList>,
 ): Thunk<State> => {
   return async (dispatch, _) => {
     const files = Array.from(e.target.files || []);
-    dispatch(upload(myID, files, username, false, name, cartID, doCart));
+    dispatch(
+      upload(
+        myID,
+        files,
+        username,
+        false,
+        name,
+        cartID,
+        doCart,
+        feedListID,
+        doFeedList,
+      ),
+    );
   };
 };
 
@@ -98,10 +115,25 @@ export const onFolderChange = (
   username: string,
   cartID: string,
   doCart: DispatchFuncMap<DoCart.State, TDoCart>,
+
+  feedListID: string,
+  doFeedList: DispatchFuncMap<DoFeedList.State, TDoFeedList>,
 ): Thunk<State> => {
   return (dispatch, _) => {
     const files = Array.from(e.target.files || []);
-    dispatch(upload(myID, files, username, true, name, cartID, doCart));
+    dispatch(
+      upload(
+        myID,
+        files,
+        username,
+        true,
+        name,
+        cartID,
+        doCart,
+        feedListID,
+        doFeedList,
+      ),
+    );
   };
 };
 
@@ -114,13 +146,24 @@ export const upload = (
 
   cartID: string,
   doCart: DispatchFuncMap<DoCart.State, TDoCart>,
+
+  feedListID: string,
+  doFeedList: DispatchFuncMap<DoFeedList.State, TDoFeedList>,
 ): Thunk<State> => {
   return () => {
     const uniqueName = name ? `${name}_${randomStr()}` : randomStr();
 
     const uploadPath = `home/${username}/uploads/${uniqueName}`;
 
-    doCart.startUpload(cartID, files, isFolder, uploadPath, name);
+    doCart.startUpload(
+      cartID,
+      files,
+      isFolder,
+      uploadPath,
+      name,
+      feedListID,
+      doFeedList,
+    );
   };
 };
 
