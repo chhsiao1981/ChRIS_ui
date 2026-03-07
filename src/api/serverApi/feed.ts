@@ -1,7 +1,7 @@
+import config from "config";
 import api, { type ApiResult } from "../api";
 import type { Feed, ID, List } from "../types";
 import type { FeedSearchType, FeedSearchValueType } from "../types/feed";
-import { createPluginInstanceByDirs } from "./pluginInstance";
 
 export const getFeed = (dataID: ID, isPublic: boolean = false) => {
   if (isPublic) {
@@ -118,30 +118,18 @@ export const updateFeedPublic = (dataID: ID, isPublic = true) =>
 export const createFeedWithFilepaths = async (
   filepaths: string[],
   theName: string,
-  // biome-ignore lint/correctness/noUnusedFunctionParameters: not using tags for now.
   tags?: string[],
   isPublic: boolean = false,
-): Promise<ApiResult<Feed>> => {
-  const { status, data, errmsg } = await createPluginInstanceByDirs(
-    1,
-    filepaths,
-  );
-  if (!data) {
-    return {
-      errmsg,
-      status,
-    };
-  }
-
-  const { feed_id: dataID } = data;
-
-  await updateFeedName(dataID, theName);
-
-  if (isPublic) {
-    await updateFeedPublic(dataID, true);
-  }
-
-  const dataResult = await getFeed(dataID, isPublic);
-
-  return dataResult;
-};
+): Promise<ApiResult<Feed>> =>
+  api<Feed>({
+    endpoint: "/data-with-filepaths",
+    method: "post",
+    json: {
+      name: theName,
+      filepaths,
+      tags: tags || [],
+      is_public: isPublic,
+    },
+    apiroot: config.API_V7_ROOT,
+    isJson: true,
+  });
