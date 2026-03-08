@@ -21,6 +21,7 @@ type Props = {
   navigate: NavigateFunction;
   useFeedList: UseThunk<DoFeedList.State, TDoFeedList>;
   isPublic: boolean;
+  tag?: string;
 };
 
 export default (props: Props) => {
@@ -34,6 +35,7 @@ export default (props: Props) => {
     navigate,
     useFeedList,
     isPublic,
+    tag,
   } = props;
 
   const [classStateFeedList, doFeedList] = useFeedList;
@@ -58,6 +60,7 @@ export default (props: Props) => {
       newPage,
       perPage,
       isPublic,
+      tag,
     );
   };
 
@@ -77,6 +80,7 @@ export default (props: Props) => {
       newPage,
       perPage,
       isPublic,
+      tag,
     );
   };
 

@@ -14,10 +14,11 @@ import {
   Thead,
   Tr,
 } from "@patternfly/react-table";
+import tag from "antd/es/tag";
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMediaQuery } from "react-responsive";
-import { useLocation, useNavigate } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import type { FeedSearchType } from "../../api/types/feed";
 import * as DoCart from "../../reducers/cart";
 import * as DoFeedList from "../../reducers/feedList";
@@ -73,17 +74,6 @@ export default (props: Props) => {
     error,
   } = feedList;
 
-  console.info(
-    "FeedListView: feedListID:",
-    feedListID,
-    "feedsToDisplay:",
-    feedsToDisplay,
-    "count:",
-    count,
-    "feedList:",
-    feedList,
-  );
-
   const useOperation = useThunk<DoOperation.State, TDoOperation>(DoOperation);
   const [_classsOperation, doOperation] = useOperation;
   const [operationID, _setOperationID] = useState(genUUID());
@@ -92,6 +82,12 @@ export default (props: Props) => {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const routeParams = useParams();
+  const { tagID } = routeParams;
+
+  const theTitle = tagID ? `${title}: ${tagID}` : title;
+
+  console.info("FeedListView: tagID:", tagID);
 
   // Sorted Table data / parameters
   // https://www.patternfly.org/components/table/
@@ -105,11 +101,6 @@ export default (props: Props) => {
   }, []);
 
   useEffect(() => {
-    console.info(
-      "FeedListView.useEffect (getFeedList): start: location:",
-      location.pathname,
-      location.search,
-    );
     if (!feedListID) {
       return;
     }
@@ -123,30 +114,16 @@ export default (props: Props) => {
       return;
     }
 
-    const theSearchType = search ? searchType : undefined;
-    const theSearch = search ? search : undefined;
-
-    console.info(
-      "FeedListView (getFeedList): to getFeedList: feedListID:",
-      feedListID,
-      "searchType:",
-      searchType,
-      "theSearch:",
-      theSearch,
-      "perPage:",
-      perPage,
-      "isPublic:",
-      isPublic,
-    );
     doFeedList.getFeedList(
       feedListID,
-      theSearchType,
-      theSearch,
+      searchType,
+      search,
       0,
       perPage,
       isPublic,
+      tagID,
     );
-  }, [feedListID, location.pathname, location.search]);
+  }, [feedListID, location.pathname, location.search, tagID]);
 
   const getSortParams = (columnIndex: number) => ({
     sortBy: {
@@ -190,6 +167,7 @@ export default (props: Props) => {
       0,
       perPage,
       isPublic,
+      tagID,
     );
   };
 
@@ -199,9 +177,9 @@ export default (props: Props) => {
       return;
     }
 
-    if (!privateType || (!isLoggedIn && privateType === "private")) {
+    if (!isLoggedIn && privateType === "private") {
       navigate(
-        `/shared?search=${search}&searchType=${searchType}&page=${page}&perPage=${perPage}`,
+        `/data/tag/public?search=${search}&searchType=${searchType}&page=${page}&perPage=${perPage}`,
       );
     }
   }, [
@@ -220,7 +198,7 @@ export default (props: Props) => {
 
   const TitleComponent = (
     <InfoSection
-      title={`${title} (${feedCountText})`}
+      title={`${theTitle} (${feedCountText})`}
       content="In this view, you can view your data and the ones shared with you."
     />
   );
@@ -271,6 +249,7 @@ export default (props: Props) => {
             navigate={navigate}
             useFeedList={useFeedList}
             isPublic={isPublic}
+            tag={tagID}
           />
         </div>
 

@@ -56,6 +56,7 @@ export const getFeedList = (
   offset: number = 0,
   limit: number = 100,
   isPublic: boolean = false,
+  tag?: string,
 ) => {
   if (isPublic) {
     return getPublicFeedList(searchType, search, offset, limit);
@@ -67,6 +68,9 @@ export const getFeedList = (
   };
   if (searchType && search) {
     query[searchType] = search;
+  }
+  if (tag) {
+    query.tag = tag;
   }
   return api<List<Feed>>({
     endpoint: `/`,

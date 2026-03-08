@@ -75,6 +75,7 @@ export const getFeedList = (
   page: number = 0,
   perPage: number = 100,
   isPublic: boolean = false,
+  tag?: string,
 ): Thunk<State> => {
   return async (dispatch, _getClassState) => {
     dispatch(setData<State>(myID, { isLoading: true }));
