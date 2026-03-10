@@ -13,7 +13,7 @@ export const collectionJsonToJson = (
     const ret = theData.collection.items.map(collectionJsonItemToJson);
     if (isList) {
       const next = collectionJsonGetNext(theData);
-      return { list: ret, count: theData.collection.total, next: next };
+      return { results: ret, count: theData.collection.total, next: next };
     }
 
     return typeof theData.collection.total === "undefined" ? ret[0] : ret;

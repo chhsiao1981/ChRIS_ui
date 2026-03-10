@@ -24,10 +24,10 @@ export const getPublicFeed = async (dataID: ID): Promise<ApiResult<Feed>> => {
   if (!data) {
     return { status, errmsg: "no data" };
   }
-  if (!data.list.length) {
+  if (!data.results.length) {
     return { status, errmsg: "no data" };
   }
-  return { status, data: data.list[0] };
+  return { status, data: data.results[0] };
 };
 
 export const getFeeds = (
@@ -73,10 +73,12 @@ export const getFeedList = (
     query.tag = tag;
   }
   return api<List<Feed>>({
-    endpoint: `/`,
+    endpoint: `/data-list`,
     method: "get",
     query,
     isList: true,
+    isJson: true,
+    apiroot: config.API_V7_ROOT,
   });
 };
 

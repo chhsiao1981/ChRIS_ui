@@ -102,12 +102,12 @@ export const getFeedList = (
     if (!data) {
       return;
     }
-    const { list, count } = data;
+    const { results, count } = data;
     console.info(
       "feedList.getFeedList: to setData: myID:",
       myID,
-      "list:",
-      list,
+      "results:",
+      results,
       "count:",
       count,
       "page:",
@@ -117,7 +117,7 @@ export const getFeedList = (
     );
     dispatch(
       setData<State>(myID, {
-        feeds: list,
+        feeds: results,
         count,
         page,
         perPage,
