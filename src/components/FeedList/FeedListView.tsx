@@ -14,7 +14,6 @@ import {
   Thead,
   Tr,
 } from "@patternfly/react-table";
-import tag from "antd/es/tag";
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMediaQuery } from "react-responsive";

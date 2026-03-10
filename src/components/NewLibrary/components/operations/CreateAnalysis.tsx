@@ -356,11 +356,11 @@ export default (props: Props) => {
           >
             {withSelectionAlert(<BasicInformation />)}
           </WizardStep>
-          <WizardStep id={3} name="Pipelines">
+          <WizardStep id={2} name="Pipelines">
             <PipelinesCopy isStaff={isStaff} />
           </WizardStep>
           <WizardStep
-            id={4}
+            id={3}
             name="Review"
             footer={{
               onNext: handleSave,
