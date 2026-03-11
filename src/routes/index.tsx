@@ -87,31 +87,11 @@ export default () => {
       ),
     },
     {
-      path: "data/tag/uploaded",
-      element: (
-        <PrivateRoute>
-          <OperationsProvider>
-            <FeedListView title="Data: uploaded" isPublic={false} />
-          </OperationsProvider>
-        </PrivateRoute>
-      ),
-    },
-    {
       path: "data/tag/public",
       element: (
         <OperationsProvider>
           <FeedListView title="Data: public" isPublic={true} />
         </OperationsProvider>
-      ),
-    },
-    {
-      path: "data/tag/pacs",
-      element: (
-        <PrivateRoute>
-          <OperationsProvider>
-            <FeedListView title="Data: pacs" isPublic={false} />
-          </OperationsProvider>
-        </PrivateRoute>
       ),
     },
     {

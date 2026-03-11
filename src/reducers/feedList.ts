@@ -5,6 +5,7 @@ import {
   setData,
   type Thunk,
 } from "@chhsiao1981/use-thunk";
+import tag from "antd/es/tag";
 import { getFeedList as apiGetFeedList } from "../api/serverApi/feed";
 import type { Feed } from "../api/types";
 import type {
@@ -85,6 +86,7 @@ export const getFeedList = (
       page,
       perPage,
       isPublic,
+      tag,
     );
     console.info(
       "feedList.getFeedList: after apiGetFeedList: status:",
