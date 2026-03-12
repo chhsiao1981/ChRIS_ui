@@ -38,6 +38,8 @@ export default (props: Props) => {
     tag,
   } = props;
 
+  console.info("Pagination: count:", count, "page:", page, "perPage:", perPage);
+
   const [classStateFeedList, doFeedList] = useFeedList;
   const feedListID = getDefaultID(classStateFeedList);
 
@@ -49,6 +51,10 @@ export default (props: Props) => {
     _: React.MouseEvent | React.KeyboardEvent | MouseEvent,
     newPage: number,
   ) => {
+    console.info(
+      "Pagination: onSetPage: newPage: to navigate and getFeedList",
+      newPage,
+    );
     navigate(
       `?search=${search}&searchType=${searchType}&page=${newPage}&perPage=${perPage}`,
     );
@@ -69,6 +75,10 @@ export default (props: Props) => {
     newPerPage: number,
     newPage: number,
   ) => {
+    console.info(
+      "Pagination: onPerPageSelect: page: to navigate and doFeedList",
+      page,
+    );
     navigate(
       `?search=${search}&searchType=${searchType}&page=${newPage}&perPage=${newPerPage}`,
     );

@@ -5,7 +5,6 @@ import {
   setData,
   type Thunk,
 } from "@chhsiao1981/use-thunk";
-import tag from "antd/es/tag";
 import { getFeedList as apiGetFeedList } from "../api/serverApi/feed";
 import type { Feed } from "../api/types";
 import type {
@@ -21,7 +20,7 @@ export interface State extends rState {
   count: number;
   theType: FeedType;
 
-  page: number;
+  page: number; // starting from 1, defined by PatternFly
   perPage: number;
   searchType: FeedSearchType;
   search: FeedSearchValueType;
@@ -36,7 +35,7 @@ export const defaultState: State = {
   count: 0,
   theType: "private",
 
-  page: 0,
+  page: 1, // starting from 1, defined by PatternFly
   perPage: 20,
   searchType: "name",
   search: "",
@@ -61,7 +60,7 @@ export const prepandList = (myID: string, feed: Feed): Thunk<State> => {
       return;
     }
     const { feeds, page } = me;
-    if (page !== 0) {
+    if (page !== 1) {
       return;
     }
     const newFeeds = [feed].concat(feeds);
@@ -73,17 +72,18 @@ export const getFeedList = (
   myID: string,
   searchType?: FeedSearchType,
   search?: FeedSearchValueType,
-  page: number = 0,
+  page: number = 1, // starting from 1, defined by PatternFly
   perPage: number = 100,
   isPublic: boolean = false,
   tag?: string,
 ): Thunk<State> => {
   return async (dispatch, _getClassState) => {
     dispatch(setData<State>(myID, { isLoading: true }));
+    const offset = (page - 1) * perPage;
     const { status, data, errmsg } = await apiGetFeedList(
       searchType,
       search,
-      page,
+      offset,
       perPage,
       isPublic,
       tag,

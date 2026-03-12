@@ -100,6 +100,7 @@ export default (props: Props) => {
   }, []);
 
   useEffect(() => {
+    // Reload from page 1 when pathname is different.s
     if (!feedListID) {
       return;
     }
@@ -117,12 +118,12 @@ export default (props: Props) => {
       feedListID,
       searchType,
       search,
-      0,
+      1,
       perPage,
       isPublic,
       tagID,
     );
-  }, [feedListID, location.pathname, location.search, tagID]);
+  }, [feedListID, location.pathname, tagID]);
 
   const getSortParams = (columnIndex: number) => ({
     sortBy: {
