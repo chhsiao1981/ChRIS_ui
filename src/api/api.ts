@@ -133,6 +133,10 @@ export default async <T>(apiParams: ApiParams): Promise<ApiResult<T>> => {
     headers["Content-Type"] = "application/json";
   }
 
+  if (isJson) {
+    headers.Accept = "application/json";
+  }
+
   // post-setup header
   const theHeaders = paramsHeaders || {};
   Object.assign(headers, theHeaders);
