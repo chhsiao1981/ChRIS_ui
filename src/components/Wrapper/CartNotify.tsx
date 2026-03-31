@@ -48,7 +48,7 @@ const CartNotify = () => {
       <Button
         variant="tertiary"
         icon={<BrainIcon />}
-        onClick={() => doCart.setToggleCart(cartID)}
+        onClick={() => doCart.toggle(cartID)}
       />
     </Badge>
   );

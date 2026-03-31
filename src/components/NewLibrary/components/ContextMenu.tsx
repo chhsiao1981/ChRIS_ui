@@ -15,7 +15,7 @@ import {
 } from "../../Icons";
 import type { OriginState } from "../context";
 import { useFolderOperations } from "../utils/useOperations";
-import { AddModal } from "./Operations";
+import AddModal from "./AddModal";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 

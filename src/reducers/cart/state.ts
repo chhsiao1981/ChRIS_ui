@@ -1,18 +1,30 @@
 import type { State as rState } from "@chhsiao1981/use-thunk";
 
 import type {
-  CartSelectionPayload,
-  DownloadStatus,
-  FileUpload,
-  FolderUpload,
+  CartSelection,
+  DownloadStatusMap,
+  FileUploadMap,
+  FolderUploadMap,
 } from "../types";
 
 export interface State extends rState {
   currentLayout: string;
-  selectedPaths: CartSelectionPayload[];
+  selectedPaths: CartSelection[];
   openCart: boolean;
-  folderDownloadStatus: DownloadStatus;
-  fileDownloadStatus: DownloadStatus;
-  folderUploadStatus: FolderUpload;
-  fileUploadStatus: FileUpload;
+  folderDownloadStatus: DownloadStatusMap;
+  fileDownloadStatus: DownloadStatusMap;
+  folderUploadStatus: FolderUploadMap;
+  fileUploadStatus: FileUploadMap;
+
+  error?: string;
 }
+
+export const defaultState: State = {
+  currentLayout: "list",
+  selectedPaths: [],
+  openCart: false,
+  folderDownloadStatus: {},
+  fileDownloadStatus: {},
+  folderUploadStatus: {},
+  fileUploadStatus: {},
+};

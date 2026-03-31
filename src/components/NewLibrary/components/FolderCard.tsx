@@ -18,14 +18,14 @@ import { useContext, useEffect, useState } from "react";
 import { Fragment } from "react/jsx-runtime";
 import { elipses } from "../../../api/common";
 import type { FileBrowserFolder } from "../../../api/types";
+import useLongPress, {
+  getBackgroundRowColor,
+  useAssociatedFeed,
+} from "../../../deprecated/components/NewLibrary/utils/longpress";
 import * as DoCart from "../../..//reducers/cart";
 import { ThemeContext } from "../../DarkTheme/useTheme";
 import { FolderIcon } from "../../Icons";
 import { OperationContext } from "../context";
-import useLongPress, {
-  getBackgroundRowColor,
-  useAssociatedFeed,
-} from "../utils/longpress";
 import { FolderContextMenu } from "./ContextMenu";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;

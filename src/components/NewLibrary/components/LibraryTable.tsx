@@ -27,6 +27,10 @@ import type {
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
 } from "../../../api/types";
+import useLongPress, {
+  getBackgroundRowColor,
+  useAssociatedFeed,
+} from "../../../deprecated/components/NewLibrary/utils/longpress";
 import * as DoCart from "../../..//reducers/cart";
 import * as DoUser from "../../../reducers/user";
 import { getIcon } from "../../Common";
@@ -34,10 +38,6 @@ import { ThemeContext } from "../../DarkTheme/useTheme";
 import { formatBytes } from "../../FeedList/utilties";
 import FileDetailView from "../../Preview/FileDetailView";
 import { OperationContext } from "../context";
-import useLongPress, {
-  getBackgroundRowColor,
-  useAssociatedFeed,
-} from "../utils/longpress";
 import useNewResourceHighlight from "../utils/useNewResourceHighlight";
 import { FolderContextMenu } from "./ContextMenu";
 import { getFileName, getLinkFileName } from "./FileCard";

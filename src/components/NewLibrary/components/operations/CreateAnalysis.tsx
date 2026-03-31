@@ -14,12 +14,16 @@ import {
 } from "@patternfly/react-core";
 import { useQueryClient } from "@tanstack/react-query";
 import { useContext, useState } from "react";
-import { catchError } from "../../../../api/common";
+import {
+  catchError,
+  getFeedIDFromFileName,
+  getFileName,
+} from "../../../../api/common";
 import { getFeed, getPluginInstances } from "../../../../api/serverApi";
 import type { PluginInstance } from "../../../../api/types";
 import * as DoCart from "../../../../reducers/cart";
 import * as DoMainRouter from "../../../../reducers/mainRouter";
-import type { CartSelectionPayload } from "../../../../reducers/types";
+import type { CartSelection } from "../../../../reducers/types";
 import { AddNodeContext } from "../../../AddNode/context";
 import BasicInformation from "../../../CreateFeed/BasicInformation";
 import { CreateFeedContext } from "../../../CreateFeed/context";
@@ -36,7 +40,6 @@ type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 type TDoMainRouter = ThunkModuleToFunc<typeof DoMainRouter>;
 
 type Props = {
-  handleOperations: (operationKey: string) => void;
   count: number;
   isStaff: boolean;
   useCart: UseThunk<DoCart.State, TDoCart>;
@@ -108,7 +111,7 @@ export default (props: Props) => {
     });
   };
 
-  const handleSave = async () => {
+  const onSave = async () => {
     console.info(
       "CreateAnalysis: handleSave: start: dataCreateFeed.chrisFiles:",
       dataCreateFeed.chrisFiles,
@@ -196,13 +199,11 @@ export default (props: Props) => {
     }
   };
 
-  const pathInfoToFeedID = (pathInfo: CartSelectionPayload): number => {
+  const pathInfoToFeedID = (pathInfo: CartSelection): number => {
     // home/chris/feeds/feed_14
-    const thePathList = pathInfo.path.split("/");
-    const feedID = Number.parseInt(
-      thePathList[thePathList.length - 1].split("_")[1],
-    );
-    return feedID;
+    const fileName = getFileName(pathInfo.path);
+    const feedID = getFeedIDFromFileName(fileName);
+    return feedID || 0;
   };
 
   const feedIDToLastChRISFile = async (feedID: number): Promise<ChRISFeed> => {
@@ -244,14 +245,14 @@ export default (props: Props) => {
     return { name, filename, theID: id, createDateTime };
   };
 
-  const pathInfoToChRISFiles = async (pathInfo: CartSelectionPayload) => {
+  const pathInfoToChRISFiles = async (pathInfo: CartSelection) => {
     const feedID = pathInfoToFeedID(pathInfo);
     const lastChRISFile = await feedIDToLastChRISFile(feedID);
 
     return lastChRISFile;
   };
 
-  const handleOperations = () => {
+  const onClick = () => {
     console.info(
       "CreateAnalysis.handleOperations: start: selectedPaths:",
       selectedPaths,
@@ -314,11 +315,10 @@ export default (props: Props) => {
   return (
     <>
       <OperationButton
-        handleOperations={handleOperations}
+        onClick={onClick}
         count={count}
         icon={<AnalysisIcon />}
         ariaLabel={ariaLabel}
-        operationKey="createFeed"
         label={label}
       />
 
@@ -363,12 +363,12 @@ export default (props: Props) => {
             id={3}
             name="Review"
             footer={{
-              onNext: handleSave,
+              onNext: onSave,
               nextButtonText: "Create Analysis",
               isNextDisabled: !!(!enableSave || feedProcessing),
             }}
           >
-            <Review handleSave={handleSave} />
+            <Review handleSave={onSave} />
           </WizardStep>
         </Wizard>
       </Modal>

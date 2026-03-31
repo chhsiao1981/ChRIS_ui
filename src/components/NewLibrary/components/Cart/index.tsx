@@ -1,12 +1,11 @@
 import { Button } from "@patternfly/react-core";
 import { isEmpty } from "lodash";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getFileName } from "../../../../api/common";
-import { DownloadTypes } from "../../../../reducers/types";
 import { Drawer, List, Popconfirm, Space } from "../../../Antd";
 import { EmptyStateComponent } from "../../../Common";
 import { FileIcon, FolderIcon } from "../../../Icons";
-import { TitleNameClipped } from "../../utils/longpress";
+import TitleNameClipped from "./TitleNameClipped";
 import "./Cart.css";
 import {
   getDefaultID,
@@ -21,6 +20,13 @@ import UploadList from "./UploadList";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
+/* Cart
+ *
+ * Displaying the status of:
+ *   1. file/folder upload.
+ *   2. selected data-feeds/folders.
+ *   3. data-feed/folder download status (zip).
+ */
 export default () => {
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
   const [classCart, doCart] = useCart;
@@ -33,6 +39,8 @@ export default () => {
     fileDownloadStatus,
     folderDownloadStatus,
   } = cart;
+
+  const navigate = useNavigate();
 
   const fileDownloadClassName = isEmpty(fileDownloadStatus)
     ? styles.hide
@@ -48,7 +56,7 @@ export default () => {
       title={<>Notification Panel</>}
       open={openCart}
       onClose={() => {
-        doCart.setToggleCart(cartID);
+        doCart.toggle(cartID);
       }}
       extra={
         <Space>
@@ -56,8 +64,6 @@ export default () => {
             style={{ color: "inherit" }}
             variant="danger"
             onClick={() => {
-              // Implement clear cart logic here
-              // This version of cart only clears out finished operations
               doCart.clearCart(cartID);
             }}
           >
@@ -103,7 +109,7 @@ export default () => {
         className={folderDownloadClassName}
         dataSource={Object.entries(folderDownloadStatus)}
         renderItem={([id, status]) => {
-          const isInProgress = status.step === DownloadTypes.progress;
+          const isInProgress = status.step === "processing";
           const buttonText = isInProgress ? "Cancel" : "Clear";
 
           const handleAction = () => {
@@ -183,11 +189,13 @@ export default () => {
         uploadStatus={fileUploadStatus}
         type="file"
         useCart={useCart}
+        navigate={navigate}
       />
       <UploadList
         uploadStatus={folderUploadStatus}
         type="folder"
         useCart={useCart}
+        navigate={navigate}
       />
 
       {isEmpty(folderUploadStatus) &&

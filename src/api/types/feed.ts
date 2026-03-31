@@ -1,5 +1,7 @@
 import type { Datetime } from "./datetime";
+import type { FileBrowserFolder } from "./fileBrowser";
 import type { ID } from "./id";
+import type { PluginInstance } from "./pluginInstance";
 
 export type FeedType = "private" | "public";
 
@@ -23,6 +25,8 @@ export interface Feed {
   finished_jobs: number;
   errored_jobs: number;
   cancelled_jobs: number;
+  pluginInstance?: PluginInstance; // XXX for cache.
+  folder?: FileBrowserFolder; // XXX for cache.
 }
 
 export type NodeOperation = {
@@ -31,4 +35,9 @@ export type NodeOperation = {
   childPipeline: boolean;
   childGraph: boolean;
   deleteNode: boolean;
+};
+
+export type FeedAndPluginInstance = {
+  feed: Feed;
+  pluginInstance: PluginInstance;
 };

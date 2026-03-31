@@ -16,19 +16,13 @@ export const createWorkflow = (
     endpoint: `/pipelines/${pipelineID}/workflows/`,
     method: "post",
     json: {
-      template: {
-        data: [
-          {
-            name: "previous_plugin_inst_id",
-            value: thePreviousPluginInstanceID,
-          },
-          { name: "nodes_info", value: JSON.stringify(nodesInfo) },
-        ],
-      },
+      previous_plugin_inst_id: thePreviousPluginInstanceID,
+      nodes_info: JSON.stringify(nodesInfo),
     },
     headers: {
-      "Content-Type": "application/vnd.collection+json",
+      "Content-Type": "application/json",
     },
+    isJson: true,
   });
 };
 

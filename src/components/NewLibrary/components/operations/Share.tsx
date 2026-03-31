@@ -1,24 +1,28 @@
+import type { MouseEventHandler } from "react";
+import type { HTMLButtonElement } from "../../../../../node_modules.docker/happy-dom/cjs";
+
 import { ShareIcon } from "../../../Icons";
 import OperationButton from "./OperationButton";
 
 type Props = {
-  handleOperations: (operationKey: string) => void;
+  onClick: MouseEventHandler<HTMLButtonElement>;
   count: number;
 };
 
 export default (props: Props) => {
-  const { handleOperations, count } = props;
+  const { onClick, count } = props;
 
   const ariaLabel =
     count === 1 ? "Share selected item" : "Share selected items";
 
   return (
-    <OperationButton
-      handleOperations={handleOperations}
-      count={count}
-      icon={<ShareIcon />}
-      ariaLabel={ariaLabel}
-      operationKey="share"
-    />
+    <>
+      <OperationButton
+        onClick={onClick}
+        count={count}
+        icon={<ShareIcon />}
+        ariaLabel={ariaLabel}
+      />
+    </>
   );
 };

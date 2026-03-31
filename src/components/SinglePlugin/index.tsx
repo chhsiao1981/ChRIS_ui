@@ -26,8 +26,6 @@ import {
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
-import { id } from "fp-ts/lib/Refinement";
-import plugin from "vite-plugin-babel-macros";
 import { getPluginsByPluginMeta } from "../../api/serverApi/plugin";
 import { getPluginMeta } from "../../api/serverApi/pluginMeta";
 import * as DoUser from "../../reducers/user";

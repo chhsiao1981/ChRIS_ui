@@ -6,12 +6,12 @@ import {
 import { Chip, ChipGroup } from "@patternfly/react-core";
 import { getFileName } from "../../../../api/common";
 import type * as DoCart from "../../../../reducers/cart";
-import type { CartSelectionPayload } from "../../../../reducers/types";
+import type { CartSelection } from "../../../../reducers/types";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type Props = {
-  selectedPaths: CartSelectionPayload[];
+  selectedPaths: CartSelection[];
   useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
@@ -23,12 +23,12 @@ export default (props: Props) => {
 
   return (
     <ChipGroup>
-      {selectedPaths.map((selection) => (
+      {selectedPaths.map((selectedPath) => (
         <Chip
-          key={selection.path}
-          onClick={() => doCart.removeSelectedPayload(cartID, selection)}
+          key={selectedPath.path}
+          onClick={() => doCart.removeSelected(cartID, selectedPath)}
         >
-          {getFileName(selection.path)}
+          {getFileName(selectedPath.path)}
         </Chip>
       ))}
     </ChipGroup>

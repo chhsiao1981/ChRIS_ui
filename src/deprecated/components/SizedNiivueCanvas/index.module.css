@@ -1,0 +1,11 @@
+/* XXX hack height and margin-top to show button and colorbar */
+.niivueContainer {
+  height: 92%;
+  width: 100%;
+  margin-top: 30px;
+}
+
+/* workaround for https://github.com/niivue/niivue/issues/862 */
+.niivueContainer canvas {
+  display: block;
+}

@@ -1,24 +1,24 @@
+import type { MouseEventHandler } from "react";
 import { MergeIcon } from "../../../Icons";
 import OperationButton from "./OperationButton";
 
 type Props = {
-  handleOperations: (operationKey: string) => void;
+  onClick: MouseEventHandler<HTMLButtonElement>;
   count: number;
 };
 
 export default (props: Props) => {
-  const { handleOperations, count } = props;
+  const { onClick, count } = props;
 
   const ariaLabel =
     count === 1 ? "Merge selected item" : "Merge selected items";
 
   return (
     <OperationButton
-      handleOperations={handleOperations}
+      onClick={onClick}
       count={count}
       icon={<MergeIcon />}
       ariaLabel={ariaLabel}
-      operationKey="merge"
     />
   );
 };

@@ -1,22 +1,22 @@
+import type { MouseEventHandler } from "react";
 import { EditIcon } from "../../../Icons";
 import OperationButton from "./OperationButton";
 
 type Props = {
-  handleOperations: (operationKey: string) => void;
+  onClick: MouseEventHandler<HTMLButtonElement>;
   count: number;
 };
 
 export default (props: Props) => {
-  const { handleOperations, count } = props;
+  const { onClick, count } = props;
   const isHide = count > 1;
 
   return (
     <OperationButton
-      handleOperations={handleOperations}
+      onClick={onClick}
       count={count}
       icon={<EditIcon />}
       ariaLabel="Rename"
-      operationKey="rename"
       isHide={isHide}
     />
   );

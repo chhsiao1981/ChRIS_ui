@@ -1,19 +1,24 @@
 import type { ThunkModuleToFunc, UseThunk } from "@chhsiao1981/use-thunk";
 import { List } from "antd";
+import type { NavigateFunction } from "react-router";
 import type * as DoCart from "../../../../reducers/cart";
-import type { FileUpload, FolderUpload } from "../../../../reducers/types";
+import type {
+  FileUploadMap,
+  FolderUploadMap,
+} from "../../../../reducers/types";
 import UploadStatus from "./UploadStatus";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type Props = {
-  uploadStatus: FileUpload | FolderUpload;
+  uploadStatus: FileUploadMap | FolderUploadMap;
   type: "file" | "folder";
   useCart: UseThunk<DoCart.State, TDoCart>;
+  navigate: NavigateFunction;
 };
 
 export default (props: Props) => {
-  const { uploadStatus, type, useCart } = props;
+  const { uploadStatus, type, useCart, navigate } = props;
   return (
     <List
       className="operation-cart"
@@ -24,6 +29,7 @@ export default (props: Props) => {
           type={type}
           name={name}
           useCart={useCart}
+          navigate={navigate}
         />
       )}
     />

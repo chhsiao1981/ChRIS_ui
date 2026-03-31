@@ -18,14 +18,14 @@ import type {
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
 } from "../../../api/types";
+import { fetchFeedForPath } from "../../../deprecated/components/NewLibrary/utils/longpress";
 import * as DoCart from "../../../reducers/cart";
-import type { CartSelectionPayload } from "../../../reducers/types";
+import type { CartSelection } from "../../../reducers/types";
 import { notification } from "../../Antd";
 import { getFolderName } from "../components/FolderCard";
-import type { AdditionalValues } from "../components/Operations";
+import type { OperationsAdditionalValues } from "../components/types";
 import { type OriginState, useOperationsContext } from "../context";
 import useDeletePayload from "../utils/useDeletePayload";
-import { fetchFeedForPath } from "./longpress";
 import useFeedOperations from "./useFeedOperations";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
@@ -214,9 +214,9 @@ export const useFolderOperations = (
   // Share Folder
   const shareFolder = async (
     targetUsername: string,
-    additionalValues?: AdditionalValues,
+    additionalValues?: OperationsAdditionalValues,
   ) => {
-    for (const { payload } of selectedPaths) {
+    for (const { rawData: payload } of selectedPaths) {
       try {
         if (createFeed) {
           // Make the feed public or set permissions on the feed
@@ -251,7 +251,7 @@ export const useFolderOperations = (
   const renameFolder = async (inputValue: string): Promise<void> => {
     handleOrigin(origin);
 
-    for (const { payload, type } of selectedPaths) {
+    for (const { rawData: payload, type } of selectedPaths) {
       try {
         if (createFeed) {
           // rename a feed by .put({name: newName})
@@ -304,7 +304,7 @@ export const useFolderOperations = (
       default:
         throw new Error(`Unsupported type: ${type}`);
     }
-    doCart.clearSelectedPaths(cartID, oldPath);
+    doCart.removeSelectedPath(cartID, oldPath);
   };
 
   const handleRenameError = (error: any): void => {
@@ -320,7 +320,7 @@ export const useFolderOperations = (
   // Handle modal submit
   const handleModalSubmit = async (
     inputValue: string,
-    additionalValues?: AdditionalValues,
+    additionalValues?: OperationsAdditionalValues,
   ) => {
     switch (modalState.type) {
       case "group": {
@@ -376,7 +376,7 @@ export const useFolderOperations = (
       additionalValues,
     }: {
       inputValue: string;
-      additionalValues?: AdditionalValues;
+      additionalValues?: OperationsAdditionalValues;
     }) => handleModalSubmit(inputValue, additionalValues),
     onSuccess: () => {
       // Show success notification based on the operation that just completed
@@ -413,13 +413,13 @@ export const useFolderOperations = (
       },
       download: () => {
         handleOrigin(origin);
-        doCart.setToggleCart(cartID);
+        doCart.toggle(cartID);
         doCart.startDownload(cartID, selectedPaths, username);
         invalidateQueries();
       },
       anonymize: () => {
         handleOrigin(origin);
-        doCart.setToggleCart(cartID);
+        doCart.toggle(cartID);
         doCart.startAnonymize(cartID, selectedPaths, username);
       },
       delete: () => deleteMutation.mutate(selectedPaths),
@@ -437,8 +437,8 @@ export const useFolderOperations = (
   };
 
   // Get the feed name for a single path
-  const getFeedNameForSinglePath = (selectedPayload: CartSelectionPayload) => {
-    const { payload } = selectedPayload;
+  const getFeedNameForSinglePath = (selectedPayload: CartSelection) => {
+    const { rawData: payload } = selectedPayload;
     // @ts-expect-error taking care of type differences.
     const name = payload.path || payload.fname;
     return getFileName(name);
@@ -448,7 +448,7 @@ export const useFolderOperations = (
   const setRenameModalWithDefaultName = () => {
     if (selectedPaths.length === 0) return;
     // Assume rename is applied on the first selected resource.
-    const { payload } = selectedPaths[0];
+    const { rawData: payload } = selectedPaths[0];
 
     if (createFeed) {
       // @ts-expect-error taking care of type difference.

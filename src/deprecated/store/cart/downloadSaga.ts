@@ -24,9 +24,9 @@ import {
   startDownload,
 } from "./cartSlice";
 import {
-  type CartSelectionPayload,
   DownloadTypes,
   type PayloadTypes,
+  type SelectionPayload,
 } from "./types";
 
 export function* setStatus(
@@ -65,7 +65,7 @@ export async function createFeed(
     }
     createdInstance = (await client.createPluginInstance(
       dircopy.data.id,
-      //@ts-expect-error
+      //@ts-ignore
       { dir: path.length > 0 ? path.join(",") : path[0] },
     )) as PluginInstance;
     if (!createdInstance) {
@@ -130,7 +130,7 @@ function* downloadFolder(
     // Add a workflow
     const workflow: Workflow = yield client.createWorkflow(
       currentPipeline.data.id,
-      //@ts-expect-error
+      //@ts-ignore
       {
         previous_plugin_inst_id: createdInstance.data.id,
       },
@@ -199,7 +199,7 @@ function* downloadFolder(
 }
 
 function* handleIndividualDownload(
-  path: CartSelectionPayload,
+  path: SelectionPayload,
   username: string,
   pipelineType: string,
 ) {

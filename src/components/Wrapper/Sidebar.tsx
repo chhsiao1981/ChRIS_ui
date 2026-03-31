@@ -14,7 +14,6 @@ import {
   PageSidebar,
   PageSidebarBody,
 } from "@patternfly/react-core";
-import { type DefaultError, useQueryClient } from "@tanstack/react-query";
 import config from "config";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
@@ -25,10 +24,8 @@ import type * as DoOperation from "../../reducers/operation";
 import { Role } from "../../reducers/types";
 import * as DoUI from "../../reducers/ui";
 import * as DoUser from "../../reducers/user";
-import { AddModal } from "../NewLibrary/components/Operations";
 import UploadData from "../NewLibrary/components/operations/UploadData";
-import { OperationContext } from "../NewLibrary/context";
-import { useFolderOperations } from "../NewLibrary/utils/useOperations";
+import UploadDataModal from "../NewLibrary/components/operations/UploadDataModal";
 import styles from "./Sidebar.module.css";
 
 type TDoUI = ThunkModuleToFunc<typeof DoUI>;
@@ -55,7 +52,6 @@ type TagInfo = {
 };
 
 export default (props: Props) => {
-  const queryClient = useQueryClient();
   const {
     useUI,
     useUser,
@@ -72,7 +68,7 @@ export default (props: Props) => {
   const user = getState(classUser) || DoUser.defaultState;
   const { sidebarActiveItem, isNavOpen, isTagExpanded, isPipelineTagExpanded } =
     ui;
-  const { role, username } = user;
+  const { role } = user;
 
   const [classFeedList, _doFeedList] = useFeedList;
   const feedListID = getDefaultID(classFeedList);
@@ -90,9 +86,6 @@ export default (props: Props) => {
     const { itemId } = selectedItem;
     // Invalidate feeds if "analyses" is selected
     if (itemId === "analyses") {
-      queryClient.refetchQueries({
-        queryKey: ["feeds"], // This assumes your query key for feeds is ["feeds"]
-      });
     }
   };
 
@@ -141,6 +134,7 @@ export default (props: Props) => {
   const renderTags = () => {
     const tagList: TagInfo[] = [
       { title: "uploaded" },
+      { title: "archive" },
       { title: "public" },
       { title: "pacs" },
     ];
@@ -179,14 +173,6 @@ export default (props: Props) => {
     );
   };
 
-  const origin = {
-    type: OperationContext.FEEDS,
-    additionalKeys: [],
-  };
-
-  const { modalState, handleModalSubmitMutation, setModalState } =
-    useFolderOperations(username, origin, useCart, undefined, undefined, true);
-
   const uploadDataColor =
     sidebarActiveItem === "uploadData" ? "#ffffff" : "#aaaaaa";
 
@@ -198,6 +184,8 @@ export default (props: Props) => {
 
   const stylesNavUser = isLoggedIn ? styles.nav : styles.hide;
   const stylesNavGuest = isLoggedIn ? styles.hide : styles.nav;
+  const clearErrors = () => {};
+
   return (
     <PageSidebar isSidebarOpen={isNavOpen}>
       <PageSidebarBody>
@@ -308,24 +296,14 @@ export default (props: Props) => {
                 </NavGroup>
               </NavList>
             </Nav>
-            <AddModal
-              modalState={modalState}
-              onClose={() => {
-                handleModalSubmitMutation.reset();
-                setModalState({ isOpen: false, type: "" });
-              }}
-              onSubmit={(inputValue, additionalValues) =>
-                handleModalSubmitMutation.mutate({
-                  inputValue,
-                  additionalValues,
-                })
-              }
-              indicators={{
-                isPending: handleModalSubmitMutation.isPending,
-                isError: handleModalSubmitMutation.isError,
-                error: handleModalSubmitMutation.error as DefaultError,
-                clearErrors: () => handleModalSubmitMutation.reset(),
-              }}
+            <UploadDataModal
+              operationID={operationID}
+              useOperation={useOperation}
+              useCart={useCart}
+              useUser={useUser}
+              feedListID={feedListID}
+              useFeedList={useFeedList}
+              clearErrors={clearErrors}
             />
           </div>
 

@@ -3,14 +3,14 @@ import type {
   FileBrowserFolder,
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
-} from "../../api/types";
+} from "@fnndsc/chrisapi";
 
 export type PayloadTypes =
   | FileBrowserFolder
   | FileBrowserFolderFile
   | FileBrowserFolderLinkFile;
 
-export interface CartSelectionPayload {
+export interface SelectionPayload {
   path: string;
   type: string;
   payload: PayloadTypes;
@@ -67,7 +67,7 @@ export interface FeedCreationStatus {
 
 export interface ICartState {
   currentLayout: "grid" | "list";
-  selectedPaths: CartSelectionPayload[];
+  selectedPaths: SelectionPayload[];
   openCart: boolean;
   folderDownloadStatus: DownloadStatus;
   fileDownloadStatus: DownloadStatus;
@@ -85,6 +85,6 @@ export interface UploadPayload {
 }
 
 export type OperationPayload = {
-  paths: CartSelectionPayload[];
+  paths: SelectionPayload[];
   username: string;
 };

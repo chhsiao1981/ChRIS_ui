@@ -10,30 +10,27 @@ import {
   FileIcon,
   FolderIcon,
 } from "@patternfly/react-icons";
+import type { NavigateFunction } from "react-router";
 import type { FileBrowserType } from "../../../../api/types/fileBrowser";
 import type * as DoCart from "../../../../reducers/cart";
-import type {
-  FileUploadObject,
-  FolderUploadObject,
-} from "../../../../reducers/types";
+import type { FileUpload, FolderUpload } from "../../../../reducers/types";
 import { List } from "../../../Antd";
-import {
-  formatBytesWithPadding,
-  ShowInFolder,
-  TitleNameClipped,
-} from "../../utils/longpress";
+import formatBytesWithPadding from "../../utils/formatBytesWithPadding";
+import ShowInFolder from "./ShowInFolder";
+import TitleNameClipped from "./TitleNameClipped";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 export type Props = {
-  status: FileUploadObject | FolderUploadObject;
+  status: FileUpload | FolderUpload;
   type: FileBrowserType;
   name: string;
   useCart: UseThunk<DoCart.State, TDoCart>;
+  navigate: NavigateFunction;
 };
 
 export default (props: Props) => {
-  const { status, type, name, useCart } = props;
+  const { status, type, name, useCart, navigate } = props;
   const [classStateCart, doCart] = useCart;
   const cartID = getDefaultID(classStateCart);
 
@@ -67,11 +64,9 @@ export default (props: Props) => {
   };
 
   const loadedBytes = formatBytesWithPadding(
-    (status as FileUploadObject).loaded || 0,
+    (status as FileUpload).loaded || 0,
   );
-  const totalBytes = formatBytesWithPadding(
-    (status as FileUploadObject).total || 0,
-  );
+  const totalBytes = formatBytesWithPadding((status as FileUpload).total || 0);
 
   // Build the actions array based on the current status
   const actions = [];
@@ -119,18 +114,23 @@ export default (props: Props) => {
   } else if (type === "folder") {
     actions.push(
       <div key={`anon-${name}-progress`}>
-        {(status as FolderUploadObject).done}/
-        {(status as FolderUploadObject).total}
+        {(status as FolderUpload).done}/{(status as FolderUpload).total}
       </div>,
     );
   }
+
+  const onClickShowInFolder = () => {
+    navigate(`/library/${status.path}`);
+    doCart.close(cartID);
+  };
 
   // Add the "Show in Folder" component
   actions.push(
     <ShowInFolder
       isError={isError}
       key={`anon-${name}-show`}
-      path={status.path}
+      prompt="Show in Data Feed"
+      onClick={onClickShowInFolder}
     />,
   );
 

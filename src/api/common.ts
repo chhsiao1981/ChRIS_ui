@@ -2,7 +2,11 @@ import axios, { type AxiosProgressEvent } from "axios";
 import { quote } from "shlex";
 import { getPipelinesByName } from "./serverApi";
 import { getComputeResourcesByPluginID } from "./serverApi/computeResource";
-import { createPipeline, getPipeline } from "./serverApi/pipeline";
+import {
+  createPipeline,
+  getPipeline,
+  getPipelines,
+} from "./serverApi/pipeline";
 import type {
   ComputeResource,
   Feed,
@@ -98,19 +102,7 @@ export const fetchPipelines = async (
     [`${searchType}`]: search,
   };
 
-  try {
-    //@ts-expect-error
-    const { _status, data, _errmsg } = await getPipelines(params);
-    const registeredPipelines = data || [];
-
-    return {
-      registeredPipelines,
-      totalCount: registeredPipelines.length,
-    };
-  } catch (error) {
-    const errorObj = catchError(error);
-    throw new Error(errorObj.error_message);
-  }
+  return await getPipelines(params);
 };
 
 interface ResourceList<T> {
@@ -140,6 +132,7 @@ export const fetchResource = async <T>(
     }
 
     while (resourceList.hasNextPage) {
+      // @ts-expect-error offset and limit are numbers.
       params.offset += params.limit;
       resourceList = await fn(params);
       const newItems = resourceList.getItems();
@@ -206,12 +199,19 @@ export async function fetchResources(
 }
 
 export const generatePipelineWithName = async (pipelineName: string) => {
-  const { status, data, errmsg } = await getPipelinesByName(pipelineName);
-  const pipelineInstanceList = data || [];
-  if (!pipelineInstanceList.length) {
+  const {
+    status,
+    data: pipelineInstanceList,
+    errmsg,
+  } = await getPipelinesByName(pipelineName);
+  if (errmsg || !pipelineInstanceList) {
     return;
   }
-  const pipelineInstanceId = pipelineInstanceList[0].id;
+  const pipelineInstances = pipelineInstanceList.results;
+  if (!pipelineInstances.length) {
+    return;
+  }
+  const pipelineInstanceId = pipelineInstances[0].id;
   const {
     status: _status,
     data: pipelineInstance,
@@ -494,9 +494,14 @@ export function customQuote(value: string) {
 }
 
 export const getFileName = (name: string) => {
-  return name.split("/").slice(-1).join("");
+  return name.split("/").slice(-1)[0];
 };
 
-export const getFileHref = (file: FileBrowserFolderFile) => {
-  return "";
+export const getFileHref = (theFile: FileBrowserFolderFile) => {
+  return `/api/v1/filebrowser/files/${theFile.id}/${getFileName(theFile.fname)}`;
+};
+
+export const getFeedIDFromFileName = (filename: string) => {
+  const idMatch = filename.match(/feed_(\d+)/);
+  return idMatch ? Number.parseInt(idMatch[1], 10) : null;
 };

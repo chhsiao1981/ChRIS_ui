@@ -7,7 +7,7 @@ import {
 import { Tooltip } from "@patternfly/react-core";
 import { useRef, useState } from "react";
 import * as DoCart from "../../../reducers/cart";
-import type { CartPayloadTypes } from "../../../reducers/types";
+import type { CartSelectionDataType } from "../../../reducers/types";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
@@ -41,11 +41,15 @@ export default () => {
   };
 
   const selectFolder = (pathForCart: string, type: string, payload: any) => {
-    doCart.setSelectedPaths(cartID, { path: pathForCart, type, payload });
+    doCart.setSelectedPath(cartID, {
+      path: pathForCart,
+      type,
+      rawData: payload,
+    });
   };
 
   const deselectFolder = (pathForCart: string) => {
-    doCart.clearSelectedPaths(cartID, pathForCart);
+    doCart.removeSelectedPath(cartID, pathForCart);
   };
 
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -58,7 +62,7 @@ export default () => {
       | React.TouchEvent
       | React.KeyboardEvent
       | React.PointerEvent,
-    payload: CartPayloadTypes,
+    payload: CartSelectionDataType,
     pathForCart: string,
     type: string,
   ) => {
@@ -75,12 +79,12 @@ export default () => {
 
   // Common logic for handling Ctrl+Click
   function handleCtrlClick(
-    payload: CartPayloadTypes,
+    payload: CartSelectionDataType,
     pathForCart: string,
     type: string,
   ) {
     const isExist = selectedPaths.some(
-      (item) => item.payload.data.id === payload.data.id,
+      (item) => item.rawData.path === payload.path,
     );
     if (isExist) {
       deselectFolder(pathForCart);
@@ -91,13 +95,13 @@ export default () => {
 
   function handlePointerEvent(
     e: React.PointerEvent | React.KeyboardEvent,
-    payload: CartPayloadTypes,
+    payload: CartSelectionDataType,
     pathForCart: string,
     type: string,
     optionalCallback?: () => void,
   ) {
     const isExist = selectedPaths.some(
-      (item) => item.payload.data.id === payload.data.id,
+      (item) => item.rawData.data.id === payload.data.id,
     );
 
     // Handle special clicks (Ctrl+Click or context menu) immediately
@@ -173,13 +177,13 @@ export default () => {
   // Keep original handleOnClick specifically for context menu
   function handleOnClick(
     e: React.MouseEvent | React.TouchEvent | React.KeyboardEvent,
-    payload: CartPayloadTypes,
+    payload: CartSelectionDataType,
     pathForCart: string,
     type: string,
     optionalCallback?: () => void,
   ) {
     const isExist = selectedPaths.some(
-      (item) => item.payload.data.id === payload.data.id,
+      (item) => item.rawData.data.id === payload.data.id,
     );
 
     // Handle special clicks (Ctrl+Click or context menu) immediately

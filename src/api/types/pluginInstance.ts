@@ -10,6 +10,7 @@ export enum PluginInstanceStatus {
   REGISTERING_FILES = "registeringFiles",
   CREATED = "created",
   WAITING = "waiting",
+  UNKNOWN_ERROR = "unknownError",
 }
 
 // legacy: plugin-instance

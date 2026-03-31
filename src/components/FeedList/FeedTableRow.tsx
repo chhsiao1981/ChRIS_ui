@@ -1,10 +1,18 @@
 import {
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
-import { Td, Tr } from "@patternfly/react-table";
-import { useContext, useRef, useState } from "react";
+import { type OnSelect, Td, Tr } from "@patternfly/react-table";
+import type { TdSelectType } from "@patternfly/react-table/dist/esm/components/Table/base/types";
+import {
+  type CSSProperties,
+  type MouseEvent,
+  useContext,
+  useRef,
+  useState,
+} from "react";
 import { useNavigate } from "react-router";
 import type { Feed, FileBrowserFolder } from "../../api/types";
 import * as DoCart from "../../reducers/cart";
@@ -31,8 +39,9 @@ type Props = {
 export default (props: Props) => {
   const { rowIndex, feed, type, username, useCart } = props;
 
-  const [classStateCart, _doCart] = useCart;
-  const cart = getState(classStateCart) || DoCart.defaultState;
+  const [classCart, doCart] = useCart;
+  const cartID = getDefaultID(classCart);
+  const cart = getState(classCart) || DoCart.defaultState;
   const { selectedPaths } = cart;
 
   /*
@@ -83,6 +92,11 @@ export default (props: Props) => {
 
   const selectedBgRow = isSelected ? backgroundColor : backgroundRow;
 
+  const contextOrigin = {
+    type: OperationContext.FEEDS,
+    /* additionalKeys: additionalKeys, */
+  };
+
   /**
    * Handle feed name click
    */
@@ -90,90 +104,52 @@ export default (props: Props) => {
     navigate(`/data/${feed.id}?type=${feed.public ? "public" : "private"}`);
   };
 
-  return (
-    <FolderContextMenu
-      username={username}
-      origin={{
-        type: OperationContext.FEEDS,
-        /* additionalKeys: additionalKeys, */
-      }}
-    >
-      <Tr
-        key={feed.id}
-        id={`feed-row-${feed.id}`}
-        style={{ backgroundColor: selectedBgRow, cursor: "pointer" }}
-        data-test-id={`${feed.name}-test`}
-        onContextMenu={async (e) => {
-          // const payload = await getFolderForThisFeed();
-          // handleOnClick(e, payload, feed.folder_path, "folder");
-        }}
-        onClick={async (e) => {
-          e?.stopPropagation();
-          // const payload = await getFolderForThisFeed();
-          /*
+  const trStyle: CSSProperties = {
+    backgroundColor: selectedBgRow,
+    cursor: "pointer",
+  };
+  const onTrContextMenu = async (e: MouseEvent) => {
+    // const payload = await getFolderForThisFeed();
+    // handleOnClick(e, payload, feed.folder_path, "folder");
+  };
+  const onTrClick = (e: MouseEvent) => {
+    e.stopPropagation();
+    // const payload = await getFolderForThisFeed();
+    /*
           handleOnClick(e, payload, feed.folder_path, "folder", () => {
             onFeedNameClick();
           });
           */
-        }}
+  };
+  const onCheckboxSelect: OnSelect = (e, isSelected) => {
+    e.stopPropagation();
+    doCart.toggleSelectedFeed(cartID, feed, isSelected);
+  };
+  const checkBoxSelect: TdSelectType = {
+    rowIndex: rowIndex,
+    isSelected: isSelected,
+    onSelect: onCheckboxSelect,
+  };
+
+  const onStatusProgressUpdate = (
+    progress: number | null,
+    isError: boolean,
+  ) => {
+    setRowProgress(progress);
+    setRowError(isError);
+  };
+
+  return (
+    <FolderContextMenu username={username} origin={contextOrigin}>
+      <Tr
+        key={feed.id}
+        style={trStyle}
+        data-testid={`${feed.name}-test`}
+        onContextMenu={onTrContextMenu}
+        onClick={onTrClick}
         isRowSelected={isSelected}
       >
-        <Td
-          onClick={(e) => e.stopPropagation()}
-          select={{
-            rowIndex: rowIndex,
-            isSelected: isSelected,
-            onSelect: async (event) => {
-              event.stopPropagation();
-              const isChecked = event.currentTarget.checked;
-
-              // Only fetch folder data if the checkbox is being checked
-              // This prevents the delay when simply rendering checkboxes
-              const payload: FileBrowserFolder | null = null;
-              if (isChecked) {
-                // payload = await getFolderForThisFeed();
-              } else if (isSelected) {
-                // If unchecking, we don't need to fetch again, just use the path
-                /*
-                handlers.handleCheckboxChange(
-                  event,
-                  feed.folder_path,
-                  null,
-                  "folder",
-                );
-                */
-                return;
-              }
-
-              /**
-               * Create a new event object with the captured value
-               */
-              const newEvent = {
-                ...event,
-                stopPropagation: () => event.stopPropagation(),
-                preventDefault: () => event.preventDefault(),
-                target: {
-                  ...event.currentTarget,
-                  checked: isChecked,
-                },
-                // Make sure currentTarget also has the checked property
-                currentTarget: {
-                  ...event.currentTarget,
-                  checked: isChecked,
-                },
-              };
-
-              /*
-              handlers.handleCheckboxChange(
-                newEvent as unknown as React.FormEvent<HTMLInputElement>,
-                feed.folder_path,
-                payload,
-                "folder",
-              );
-              */
-            },
-          }}
-        />
+        <Td onClick={(e) => e.stopPropagation()} select={checkBoxSelect} />
         <Td dataLabel="ID">{feed.id}</Td>
         <Td dataLabel="analysis">
           <FeedInfoColumn feed={feed} onClick={onFeedNameClick} />
@@ -185,10 +161,7 @@ export default (props: Props) => {
           <DonutUtilization
             feed={feed}
             type={type}
-            onProgressUpdate={(progress, error) => {
-              setRowProgress(progress);
-              setRowError(error);
-            }}
+            onProgressUpdate={onStatusProgressUpdate}
           />
         </Td>
       </Tr>

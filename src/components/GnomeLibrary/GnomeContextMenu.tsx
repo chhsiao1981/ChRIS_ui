@@ -15,7 +15,7 @@ import {
   MergeIcon,
   ShareIcon,
 } from "../Icons";
-import { AddModal } from "../NewLibrary/components/Operations";
+import AddModal from "../NewLibrary/components/AddModal";
 import type { OriginState } from "../NewLibrary/context";
 import { useFolderOperations } from "../NewLibrary/utils/useOperations";
 

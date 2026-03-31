@@ -12,10 +12,12 @@ import { chunk } from "lodash";
 import { createFeedWithFilepaths } from "../../api/serverApi";
 import type { FileBrowserType } from "../../api/types/fileBrowser";
 import type * as DoFeedList from "../../reducers/feedList";
+import { randomStr } from "../../utils/randomStr";
 import type {
   FileUpload,
-  FileUploadObject,
-  FolderUploadObject,
+  FileUploadMap,
+  FileUploadStepType,
+  FolderUpload,
 } from "../types";
 import type { State } from "./state";
 
@@ -31,24 +33,19 @@ export const startUpload = (
   myID: string,
   files: File[],
   isFolder: boolean,
-  currentPath: string,
-  nameForFeed?: string,
-
+  username?: string,
+  name?: string,
   feedListID?: string,
   doFeedList?: DispatchFuncMap<DoFeedList.State, TDoFeedList>,
 ): Thunk<State> => {
+  const uniqueName = name ? `${name}_${randomStr()}` : randomStr();
+
+  const currentPath = `home/${username}/uploads/${uniqueName}`;
+
   return (dispatch, _) => {
     dispatch(setData(myID, { openCart: true }));
     dispatch(
-      upload(
-        myID,
-        files,
-        isFolder,
-        currentPath,
-        nameForFeed,
-        feedListID,
-        doFeedList,
-      ),
+      upload(myID, files, isFolder, currentPath, name, feedListID, doFeedList),
     );
   };
 };
@@ -676,7 +673,7 @@ const processUploadBatchFileError = (
   isCancelled: boolean,
   errmsg: string,
 ) => {
-  const step = isCancelled ? "Upload Cancelled" : `Error: ${errmsg}`;
+  const step = isCancelled ? "Upload Cancelled" : `Error`;
   if (isFolder) {
     dispatch(setFolderUploadStatus(myID, step, name, 0, 0, null, path));
   } else {
@@ -711,7 +708,7 @@ const createUploadConfig = (
 
 export const setFileUploadStatus = (
   myID: string,
-  step: string,
+  step: FileUploadStepType,
   filename: string,
   progress: number,
   loaded: number,
@@ -726,7 +723,7 @@ export const setFileUploadStatus = (
       return;
     }
     const { fileUploadStatus, selectedPaths } = me;
-    const fileUploadObj: FileUploadObject = {
+    const fileUploadObj: FileUpload = {
       currentStep: step,
       progress: progress,
       loaded,
@@ -735,7 +732,7 @@ export const setFileUploadStatus = (
       path,
       type: "file",
     };
-    const fileUpload: FileUpload = { [filename]: fileUploadObj };
+    const fileUpload: FileUploadMap = { [filename]: fileUploadObj };
     const newFileUploadStatus = Object.assign({}, fileUploadStatus, fileUpload);
     dispatch(setData(myID, { fileUploadStatus: newFileUploadStatus }));
 
@@ -773,7 +770,7 @@ const setFolderUploadStatus = (
     }
 
     const { folderUploadStatus, selectedPaths } = me;
-    const folderUploadObj: FolderUploadObject = {
+    const folderUploadObj: FolderUpload = {
       currentStep: step,
       done: currentCount,
       total: totalCount,

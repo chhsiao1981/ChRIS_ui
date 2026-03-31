@@ -1,69 +1,47 @@
-import {
-  ActionGroup,
-  Button,
-  Checkbox,
-  Form,
-  HelperText,
-  HelperTextItem,
-  Modal,
-  TextInput,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
-} from "@patternfly/react-core";
-import type { DefaultError } from "@tanstack/react-query";
-import {
-  type CSSProperties,
-  Fragment,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { Toolbar, ToolbarContent, ToolbarItem } from "@patternfly/react-core";
+import { type CSSProperties, Fragment } from "react";
 import { useLocation } from "react-router";
-import type { FileBrowserFolder } from "../../../api/types/fileBrowser";
-import { Alert as AntdAlert } from "../../Antd";
-import type { OriginState } from "../context";
-import { type ModalState, useFolderOperations } from "../utils/useOperations";
+import { Alert as AntdAlert, notification } from "../../Antd";
 import LayoutSwitch from "./LayoutSwitch";
 import "./Operations.css";
 import {
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
 import * as DoCart from "../../../reducers/cart";
 import type * as DoFeedList from "../../../reducers/feedList";
-import type * as DoOperation from "../../../reducers/operation";
+import * as DoOperation from "../../../reducers/operation";
 import type * as DoUser from "../../../reducers/user";
 import { AddNodeProvider } from "../../AddNode/context";
 import { CreateFeedProvider } from "../../CreateFeed/context";
 import { PipelineProvider } from "../../PipelinesCopy/context";
 import CreateAnalysis from "./operations/CreateAnalysis";
 import Delete from "./operations/Delete";
+import DeleteModal from "./operations/DeleteModal";
 import Download from "./operations/Download";
 import Merge from "./operations/Merge";
+import MergeModal from "./operations/MergeModal";
 import PayloadList from "./operations/PayloadList";
 import Rename from "./operations/Rename";
+import RenameModal from "./operations/RenameModal";
 import Share from "./operations/Share";
+import ShareModal from "./operations/ShareModal";
 import UploadData from "./operations/UploadData";
+import UploadDataModal from "./operations/UploadDataModal";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 type TDoOperation = ThunkModuleToFunc<typeof DoOperation>;
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoFeedList = ThunkModuleToFunc<typeof DoFeedList>;
 
-export type AdditionalValues = {
-  share: {
-    public?: boolean;
-  };
-};
-
-export type OperationsClassNames = {
+type ClassNames = {
   toolbar?: string; // to be used in Toolbar
   toolbarItem?: string;
 };
 
-export type OperationsStyles = {
+type Styles = {
   toolbar?: CSSProperties; // to be used in Toolbar
   toolbarItem?: CSSProperties;
 };
@@ -71,11 +49,8 @@ export type OperationsStyles = {
 type Props = {
   username: string;
   isStaff: boolean;
-  origin: OriginState;
-  computedPath?: string;
-  folderList?: FileBrowserFolder[];
-  styles?: OperationsStyles;
-  classNames?: OperationsClassNames;
+  styles?: Styles;
+  classNames?: ClassNames;
 
   useCart: UseThunk<DoCart.State, TDoCart>;
 
@@ -95,51 +70,38 @@ export default (props: Props) => {
   const {
     username,
     isStaff,
-    origin,
-    computedPath,
-    folderList,
     styles,
     classNames,
 
     useCart,
+
     operationID,
     useOperation,
+
     useUser,
+
     feedListID,
     useFeedList,
   } = props;
+
   const location = useLocation();
 
-  const isFeedsTable = true;
+  const [_notifyAPI, notifyComponent] = notification.useNotification();
 
-  const {
-    modalState,
-    userRelatedError,
-    handleModalSubmitMutation,
-    handleOperations,
-    contextHolder,
-    setUserRelatedError,
-    setModalState,
-  } = useFolderOperations(
-    username,
-    origin,
-    useCart,
-    computedPath,
-    folderList,
-    isFeedsTable,
-  );
+  const [classOperation, doOperation] = useOperation;
+  const operation =
+    getState(classOperation, operationID) || DoOperation.defaultState;
+  const { userRelatedError } = operation;
 
-  console.info("Operations: modalState:", modalState);
-
-  const [classCart, _doCart] = useCart;
+  const [classCart, doCart] = useCart;
+  const cartID = getDefaultID(classCart);
   const cart = getState(classCart) || DoCart.defaultState;
   const { selectedPaths } = cart;
-
-  const selectedPathsCount = selectedPaths.length;
+  const selectedCount = selectedPaths.length;
 
   const toolbarItems = (
     <Fragment>
-      {contextHolder}
+      {notifyComponent}
       <ToolbarItem>
         <UploadData
           operationID={operationID}
@@ -155,7 +117,7 @@ export default (props: Props) => {
             type="error"
             description={userRelatedError}
             closable
-            onClose={() => setUserRelatedError("")}
+            onClose={() => doOperation.clearError(operationID)}
           />
         )}
       </ToolbarItem>
@@ -165,8 +127,7 @@ export default (props: Props) => {
           <PipelineProvider>
             <AddNodeProvider>
               <CreateAnalysis
-                handleOperations={handleOperations}
-                count={selectedPathsCount}
+                count={selectedCount}
                 isStaff={isStaff}
                 useCart={useCart}
               />
@@ -175,24 +136,30 @@ export default (props: Props) => {
         </CreateFeedProvider>
 
         <Download
-          handleOperations={handleOperations}
-          count={selectedPathsCount}
+          onClick={() => doCart.startDownload(cartID, username)}
+          count={selectedCount}
         />
 
-        <Merge handleOperations={handleOperations} count={selectedPathsCount} />
+        <Merge
+          onClick={() => doOperation.merge(operationID)}
+          count={selectedCount}
+        />
 
-        <Share handleOperations={handleOperations} count={selectedPathsCount} />
+        <Share
+          onClick={() => doOperation.share(operationID)}
+          count={selectedCount}
+        />
 
         <Delete
-          handleOperations={handleOperations}
-          count={selectedPathsCount}
+          onClick={() => doOperation.remove(operationID)}
+          count={selectedCount}
         />
       </ToolbarItem>
 
       <ToolbarItem>
         <Rename
-          handleOperations={handleOperations}
-          count={selectedPathsCount}
+          onClick={() => doOperation.rename(operationID)}
+          count={selectedCount}
         />
       </ToolbarItem>
 
@@ -202,28 +169,10 @@ export default (props: Props) => {
     </Fragment>
   );
 
+  const clearErrors = () => {};
+
   return (
     <>
-      <AddModal
-        modalState={modalState}
-        onClose={() => {
-          handleModalSubmitMutation.reset();
-          setModalState({ isOpen: false, type: "" });
-        }}
-        onSubmit={(inputValue, additionalValues) =>
-          handleModalSubmitMutation.mutate({ inputValue, additionalValues })
-        }
-        indicators={{
-          isPending: handleModalSubmitMutation.isPending,
-          isError: handleModalSubmitMutation.isError,
-          error: handleModalSubmitMutation.error as DefaultError,
-          clearErrors: () => handleModalSubmitMutation.reset(),
-        }}
-      />
-
-      {/* Hidden file/folder pickers */}
-
-      {/* The main toolbar */}
       <Toolbar style={styles?.toolbar} className={classNames?.toolbar}>
         <ToolbarContent
           style={styles?.toolbarItem}
@@ -237,224 +186,41 @@ export default (props: Props) => {
           )}
         </ToolbarContent>
       </Toolbar>
+
+      {/* modal */}
+      <UploadDataModal
+        operationID={operationID}
+        useOperation={useOperation}
+        useCart={useCart}
+        useUser={useUser}
+        feedListID={feedListID}
+        useFeedList={useFeedList}
+        clearErrors={clearErrors}
+      />
+
+      <ShareModal
+        operationID={operationID}
+        useOperation={useOperation}
+        useCart={useCart}
+      />
+
+      <DeleteModal
+        operationID={operationID}
+        useOperation={useOperation}
+        useCart={useCart}
+      />
+
+      <RenameModal
+        operationID={operationID}
+        useOperation={useOperation}
+        useCart={useCart}
+      />
+
+      <MergeModal
+        operationID={operationID}
+        useOperation={useOperation}
+        useCart={useCart}
+      />
     </>
-  );
-};
-
-const MODAL_TYPE_LABELS: Record<
-  string,
-  { modalTitle: string; inputLabel: string; buttonLabel: string }
-> = {
-  group: {
-    modalTitle: "Create a new Group",
-    inputLabel: "Group Name",
-    buttonLabel: "Create",
-  },
-  share: {
-    modalTitle: "Share this Folder",
-    inputLabel: "User Name (optional if making public)",
-    buttonLabel: "Share",
-  },
-  rename: {
-    modalTitle: "Rename",
-    inputLabel: "Rename",
-    buttonLabel: "Rename",
-  },
-  createFeed: {
-    modalTitle: "Create Feed",
-    inputLabel: "Feed Name",
-    buttonLabel: "Create",
-  },
-  createFeedWithFile: {
-    modalTitle: "Create Feed",
-    inputLabel: "Feed Name",
-    buttonLabel: "Create",
-  },
-  default: {
-    modalTitle: "Create a new Folder",
-    inputLabel: "Folder Name",
-    buttonLabel: "Create",
-  },
-};
-
-interface AddModalProps {
-  modalState: ModalState;
-  onClose: () => void;
-  onSubmit: (inputValue: string, additionalValues?: AdditionalValues) => void;
-  indicators: {
-    isPending: boolean;
-    isError: boolean;
-    error: DefaultError | null;
-    clearErrors: () => void;
-  };
-}
-
-export const AddModal = ({
-  modalState,
-  onClose,
-  onSubmit,
-  indicators,
-}: AddModalProps) => {
-  const [inputValue, setInputValue] = useState("");
-  const [additionalValues, setAdditionalValues] = useState<AdditionalValues>({
-    share: { public: false },
-  });
-
-  const { modalTitle, inputLabel, buttonLabel } = useMemo(() => {
-    const modalType =
-      MODAL_TYPE_LABELS[modalState.type] ?? MODAL_TYPE_LABELS.default;
-    return {
-      modalTitle: modalType.modalTitle,
-      inputLabel: modalType.inputLabel,
-      buttonLabel: modalType.buttonLabel,
-    };
-  }, [modalState.type]);
-
-  const userIsTypingUsername =
-    modalState.type === "share" && inputValue.length > 0;
-  const userSelectedPublic =
-    modalState.type === "share" && additionalValues.share.public;
-  const showMutualExclusiveAlert = userIsTypingUsername || userSelectedPublic;
-
-  useEffect(() => {
-    if (modalState.additionalProps?.createFeedWithFile) {
-      setInputValue(
-        modalState.additionalProps.createFeedWithFile.defaultFeedName,
-      );
-    }
-    if (modalState.additionalProps?.createFeed) {
-      setInputValue(modalState.additionalProps.createFeed.defaultFeedName);
-    }
-
-    if (
-      modalState.type === "rename" &&
-      modalState.additionalProps?.defaultName
-    ) {
-      setInputValue(modalState.additionalProps.defaultName);
-    }
-  }, [modalState.additionalProps, modalState.type]);
-
-  const handleClose = () => {
-    setInputValue("");
-    onClose();
-  };
-
-  const isShareModal = modalState.type === "share";
-
-  const isDisabled = isShareModal
-    ? !additionalValues.share.public && !inputValue
-    : !inputValue;
-
-  return (
-    <Modal
-      isOpen={modalState.isOpen}
-      variant="small"
-      aria-label={modalTitle}
-      title={modalTitle}
-      onClose={handleClose}
-    >
-      <Form>
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <div>
-            <TextInput
-              name="input"
-              value={inputValue}
-              onChange={(_e, value) => setInputValue(value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  onSubmit(inputValue, additionalValues);
-                }
-              }}
-              aria-label={inputLabel}
-              placeholder={inputLabel}
-              isDisabled={isShareModal && additionalValues.share.public}
-            />
-            {/* Reserved space for helper text to prevent layout shifts */}
-            <div style={{ minHeight: "20px", marginTop: "2px" }}>
-              {modalState.type === "createFeedWithFile" ||
-              modalState.type === "createFeed" ? (
-                <HelperText>
-                  <HelperTextItem>
-                    Please provide a name for your feed or hit 'Create' to use
-                    the default name
-                  </HelperTextItem>
-                </HelperText>
-              ) : isShareModal ? (
-                <HelperText>
-                  <HelperTextItem variant="warning">
-                    You can either share with a specific user OR make the
-                    resource public, not both.
-                  </HelperTextItem>
-                </HelperText>
-              ) : (
-                /* Empty space to maintain consistent layout */
-                <div />
-              )}
-            </div>
-          </div>
-
-          {isShareModal && (
-            <div style={{ marginTop: "0.5rem" }}>
-              <Checkbox
-                id="make-public"
-                label="Make this resource public"
-                isChecked={additionalValues.share.public}
-                isDisabled={userIsTypingUsername}
-                onChange={(_event, checked) => {
-                  setAdditionalValues({
-                    ...additionalValues,
-                    share: { public: checked },
-                  });
-                }}
-              />
-            </div>
-          )}
-
-          {/* Reserved space for error alerts to prevent layout shifts */}
-          <div style={{ minHeight: "20px", marginTop: "2px" }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                border: "1px solid rgba(220, 53, 69, 0.5)",
-                borderRadius: "3px",
-                padding: "0 16px",
-                backgroundColor: "rgba(220, 53, 69, 0.08)",
-                color: "#dc3545",
-                opacity: indicators.isError ? 1 : 0,
-                transition: "opacity 0.2s ease-in-out",
-              }}
-            >
-              <span style={{ fontWeight: "bold", marginRight: "8px" }}>
-                Failed operation:
-              </span>{" "}
-              {indicators.error?.message || ""}
-              {indicators.isError && (
-                <Button
-                  variant="plain"
-                  style={{ marginLeft: "auto", padding: "0" }}
-                  onClick={() => indicators.clearErrors()}
-                >
-                  ×
-                </Button>
-              )}
-            </div>
-          </div>
-          <ActionGroup>
-            <Button
-              onClick={() => onSubmit(inputValue, additionalValues)}
-              isLoading={indicators.isPending}
-              isDisabled={isDisabled}
-            >
-              {buttonLabel}
-            </Button>
-            <Button variant="link" onClick={handleClose}>
-              Cancel
-            </Button>
-          </ActionGroup>
-        </div>
-      </Form>
-    </Modal>
   );
 };

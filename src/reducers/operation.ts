@@ -1,30 +1,35 @@
 import {
   init as _init,
-  type DispatchFuncMap,
   getState,
   type State as rState,
   setData,
   type Thunk,
-  type ThunkModuleToFunc,
-  type UseThunk,
 } from "@chhsiao1981/use-thunk";
-import type { ChangeEvent, RefObject } from "react";
+import type { RefObject } from "react";
 import type { FileBrowserType } from "../api/types/fileBrowser";
-import { randomStr } from "../utils/randomStr";
-import * as DoCart from "./cart";
-import type * as DoFeedList from "./feedList";
-import type * as DoUser from "./user";
 
-type TDoCart = ThunkModuleToFunc<typeof DoCart>;
-type TDoUser = ThunkModuleToFunc<typeof DoUser>;
-type TDoFeedList = ThunkModuleToFunc<typeof DoFeedList>;
+export const myClass = "chris-ui/operation";
 
-export const myClass = "chris-ui/folder-operation";
+export type ModalStateType =
+  | ""
+  | "group"
+  | "share"
+  | "rename"
+  | "createFeed"
+  | "createFeedWithFile"
+  | "delete"
+  | "merge"
+  | "default";
+
+export type ModalState = {
+  type: ModalStateType;
+  ID: string;
+  isOpen: boolean;
+  additionalProps?: Record<string, any>;
+};
 
 export interface State extends rState {
-  modalStateType: string;
-  modalStateID: string;
-  modalStateIsOpen: boolean;
+  modalState: ModalState;
   userRelatedError: string;
 
   uploadData: {
@@ -43,9 +48,11 @@ export interface State extends rState {
 }
 
 export const defaultState: State = {
-  modalStateType: "",
-  modalStateID: "",
-  modalStateIsOpen: false,
+  modalState: {
+    type: "",
+    ID: "",
+    isOpen: false,
+  },
   userRelatedError: "",
 
   uploadData: { theType: "file", defaultFeedName: "" },
@@ -77,145 +84,6 @@ export const clearError = (myID: string): Thunk<State> => {
   };
 };
 
-export const onFileChange = (
-  myID: string,
-  e: ChangeEvent<HTMLInputElement>,
-  name: string,
-
-  username: string,
-  cartID: string,
-  doCart: DispatchFuncMap<DoCart.State, TDoCart>,
-
-  feedListID: string,
-  doFeedList: DispatchFuncMap<DoFeedList.State, TDoFeedList>,
-): Thunk<State> => {
-  return async (dispatch, _) => {
-    const files = Array.from(e.target.files || []);
-    dispatch(
-      upload(
-        myID,
-        files,
-        username,
-        false,
-        name,
-        cartID,
-        doCart,
-        feedListID,
-        doFeedList,
-      ),
-    );
-  };
-};
-
-export const onFolderChange = (
-  myID: string,
-  e: ChangeEvent<HTMLInputElement>,
-  name: string,
-
-  username: string,
-  cartID: string,
-  doCart: DispatchFuncMap<DoCart.State, TDoCart>,
-
-  feedListID: string,
-  doFeedList: DispatchFuncMap<DoFeedList.State, TDoFeedList>,
-): Thunk<State> => {
-  return (dispatch, _) => {
-    const files = Array.from(e.target.files || []);
-    dispatch(
-      upload(
-        myID,
-        files,
-        username,
-        true,
-        name,
-        cartID,
-        doCart,
-        feedListID,
-        doFeedList,
-      ),
-    );
-  };
-};
-
-export const upload = (
-  myID: string,
-  files: File[],
-  username: string,
-  isFolder: boolean,
-  name: string,
-
-  cartID: string,
-  doCart: DispatchFuncMap<DoCart.State, TDoCart>,
-
-  feedListID: string,
-  doFeedList: DispatchFuncMap<DoFeedList.State, TDoFeedList>,
-): Thunk<State> => {
-  return () => {
-    const uniqueName = name ? `${name}_${randomStr()}` : randomStr();
-
-    const uploadPath = `home/${username}/uploads/${uniqueName}`;
-
-    doCart.startUpload(
-      cartID,
-      files,
-      isFolder,
-      uploadPath,
-      name,
-      feedListID,
-      doFeedList,
-    );
-  };
-};
-
-export const onModalSubmit = (myID: string): Thunk<State> => {
-  return (dispatch, getClassState) => {
-    const classState = getClassState();
-    const me = getState(classState, myID);
-    if (!me) {
-      return;
-    }
-  };
-};
-
-export const onDeduplicate = (
-  myID: string,
-  useCart: UseThunk<DoCart.State, TDoCart>,
-): Thunk<State> => {
-  return () => {};
-};
-
-export const onMerge = (
-  myID: string,
-  useCart: UseThunk<DoCart.State, TDoCart>,
-): Thunk<State> => {
-  return () => {};
-};
-
-export const onOperations = (myID: string): Thunk<State> => {
-  return () => {};
-};
-
-export const download = (
-  myID: string,
-  username: string,
-
-  cartID: string,
-  useCart: UseThunk<DoCart.State, TDoCart>,
-): Thunk<State> => {
-  return () => {
-    const [classStateCart, doCart] = useCart;
-    const cart = getState(classStateCart, cartID) || DoCart.defaultState;
-    const { selectedPaths } = cart;
-
-    doCart.setToggleCart(cartID);
-    doCart.startDownload(cartID, selectedPaths, username);
-  };
-};
-
-export const clearAllSelections = (myID: string): Thunk<State> => {
-  return () => {};
-};
-
 export const createFeedWithFile = (
   myID: string,
   fileList: FileList | null,
@@ -244,9 +112,11 @@ export const createFeedWithFile = (
 
     dispatch(
       setData<State>(myID, {
-        modalStateType: "createFeedWithFile",
-        modalStateID: myID,
-        modalStateIsOpen: true,
+        modalState: {
+          type: "createFeedWithFile",
+          ID: myID,
+          isOpen: true,
+        },
         uploadData: { theType, defaultFeedName },
         files,
       }),
@@ -258,5 +128,51 @@ export const closeModal = (myID: string): Thunk<State> => {
   return (dispatch) => {
     const toUpdate = Object.assign({}, defaultState, { isInit: true });
     dispatch(setData<State>(myID, toUpdate));
+  };
+};
+
+export const merge = (myID: string): Thunk<State> => {
+  return (dispatch, _getClass) => {
+    dispatch(setModalStateType(myID, "merge"));
+  };
+};
+
+export const share = (myID: string): Thunk<State> => {
+  return (dispatch, _getClass) => {
+    dispatch(setModalStateType(myID, "share"));
+  };
+};
+
+export const remove = (myID: string): Thunk<State> => {
+  return (dispatch, _getClass) => {
+    dispatch(setModalStateType(myID, "delete"));
+  };
+};
+
+export const rename = (myID: string): Thunk<State> => {
+  return (dispatch, _getClass) => {
+    dispatch(setModalStateType(myID, "rename"));
+  };
+};
+
+export const setModalStateType = (
+  myID: string,
+  theType: ModalStateType,
+): Thunk<State> => {
+  return (dispatch, getClass) => {
+    const classState = getClass();
+    const me = getState(classState, myID);
+    if (!me) {
+      return;
+    }
+
+    const { modalState } = me;
+    const toUpdate: Partial<ModalState> = {
+      type: theType,
+      ID: myID,
+      isOpen: true,
+    };
+    const newModalState: ModalState = Object.assign({}, modalState, toUpdate);
+    dispatch(setData<State>(myID, { modalState: newModalState }));
   };
 };

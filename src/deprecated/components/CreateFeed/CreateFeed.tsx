@@ -1,0 +1,315 @@
+import type { Feed } from "@fnndsc/chrisapi";
+import {
+  Button,
+  Modal,
+  ModalVariant,
+  Wizard,
+  WizardHeader,
+  WizardStep,
+} from "@patternfly/react-core";
+import { useQueryClient } from "@tanstack/react-query";
+import * as React from "react";
+import { useContext } from "react";
+import { catchError } from "../../api/common";
+import { MainRouterContext } from "../../routes";
+import { AddNodeContext } from "../AddNode/context";
+import { notification } from "../Antd";
+import { AnalysisIcon } from "../Icons";
+import PipelinesCopy from "../PipelinesCopy";
+import { PipelineContext } from "../PipelinesCopy/context";
+import BasicInformation from "./BasicInformation";
+import ChooseConfig from "./ChooseConfig";
+import { CreateFeedContext } from "./context";
+import Review from "./Review";
+import withSelectionAlert from "./SelectionAlert";
+import "./createFeed.css";
+import {
+  getState,
+  type ThunkModuleToFunc,
+  type UseThunk,
+} from "@chhsiao1981/use-thunk";
+import * as DoUser from "../../reducers/user";
+import { createFeedInstanceWithFS, createFeeds } from "./createFeedHelper";
+import { Types } from "./types/feed";
+
+type TDoUser = ThunkModuleToFunc<typeof DoUser>;
+
+type Props = {
+  useUser: UseThunk<DoUser.State, TDoUser>;
+};
+
+export default (props: Props) => {
+  const { useUser } = props;
+  const [classStateUser, _] = useUser;
+  const user = getState(classStateUser) || DoUser.defaultState;
+  const { isLoggedIn, username, isStaff } = user;
+
+  const [feedProcessing, setFeedProcessing] = React.useState(false);
+  const queryClient = useQueryClient();
+  const router = useContext(MainRouterContext);
+
+  const { state: stateCreateFeed, dispatch: dispatchCreateFeed } =
+    useContext(CreateFeedContext);
+  const { state: addNodeState, dispatch: nodeDispatch } =
+    useContext(AddNodeContext);
+  const { state: pipelineState, dispatch: pipelineDispatch } =
+    useContext(PipelineContext);
+
+  const {
+    pluginMeta,
+
+    dropdownInput,
+    requiredInput,
+  } = addNodeState;
+  const { wizardOpen, data, selectedConfig } = stateCreateFeed;
+
+  const getUploadFileCount = (value: number) => {
+    dispatchCreateFeed({
+      type: Types.SetProgress,
+      payload: {
+        value,
+      },
+    });
+  };
+  const getFeedError = (error: any) => {
+    dispatchCreateFeed({
+      type: Types.SetError,
+      payload: {
+        feedError: error,
+      },
+    });
+  };
+
+  const resetAfterCompletion = () => {
+    dispatchCreateFeed({
+      type: Types.ResetState,
+    });
+    pipelineDispatch({
+      type: Types.ResetState,
+    });
+    router.actions.clearFeedData();
+  };
+
+  const enableSave = !!(
+    data.chrisFiles.length > 0 ||
+    data.localFiles.length > 0 ||
+    Object.keys(requiredInput).length > 0 ||
+    Object.keys(dropdownInput).length > 0 ||
+    pluginMeta !== undefined
+  );
+
+  const onSave = async () => {
+    setFeedProcessing(true);
+    dispatchCreateFeed({
+      type: Types.SetFeedCreationState,
+      payload: {
+        status: "Creating Feed",
+      },
+    });
+
+    try {
+      let feed: Feed | undefined | null = null;
+
+      if (
+        selectedConfig.includes("local_select") ||
+        selectedConfig.includes("swift_storage")
+      ) {
+        await createFeeds(
+          data,
+          username,
+          getUploadFileCount,
+          selectedConfig,
+          pipelineState,
+        );
+      }
+
+      if (selectedConfig.includes("fs_plugin")) {
+        feed = await createFeedInstanceWithFS(addNodeState);
+      }
+
+      if (feed) {
+        // Set analysis name
+        await feed.put({
+          name: stateCreateFeed.data.feedName,
+        });
+
+        /**
+         * @deprecated
+         * The following code is deprecated and should not be used.
+         * It sets analysis tags on the feed.
+
+
+          for (const tag of state.data.tags) {
+          feed.tagFeed(tag.data.id);
+           }
+          */
+
+        // Set analysis description
+        const note = await feed.getNote();
+
+        await note.put({
+          title: "Description",
+          content: stateCreateFeed.data.feedDescription,
+        });
+
+        queryClient.refetchQueries({
+          queryKey: ["feeds"],
+        });
+
+        dispatchCreateFeed({
+          type: Types.SetFeedCreationState,
+          payload: {
+            status: "Feed Created Successfully",
+          },
+        });
+
+        setTimeout(() => {
+          setFeedProcessing(false);
+          resetAfterCompletion();
+        }, 1500);
+      }
+    } catch (error) {
+      const errorObj = catchError(error);
+      getFeedError(errorObj);
+      setFeedProcessing(false);
+    }
+  };
+
+  const handleDispatch = React.useCallback(
+    (files: File[]) => {
+      const seen = new Set();
+      const withDuplicateFiles = [...stateCreateFeed.data.localFiles, ...files];
+      const result = withDuplicateFiles.filter((el) => {
+        const duplicate = seen.has(el.name);
+        seen.add(el.name);
+        return !duplicate;
+      });
+      dispatchCreateFeed({
+        type: Types.AddLocalFile,
+        payload: {
+          files: result,
+        },
+      });
+
+      notification.info({
+        message: `${files.length > 1 ? "New Files added" : "New File added"} `,
+        description: `${files.length} ${
+          files.length > 1 ? "Files added" : "File added"
+        }`,
+        duration: 1,
+      });
+
+      if (!selectedConfig.includes("local_select")) {
+        const nonDuplicateConfig = new Set([...selectedConfig, "local_select"]);
+        dispatchCreateFeed({
+          type: Types.SelectedConfig,
+          payload: {
+            selectedConfig: nonDuplicateConfig,
+          },
+        });
+      }
+    },
+    [dispatchCreateFeed, selectedConfig, stateCreateFeed.data.localFiles],
+  );
+
+  const handleChoseFilesClick = React.useCallback(
+    (files: File[]) => {
+      handleDispatch(files);
+    },
+    [handleDispatch],
+  );
+
+  const allRequiredFieldsNotEmpty: boolean =
+    !!selectedConfig.includes("fs_plugin");
+
+  const filesChoosen = data.chrisFiles.length > 0 || data.localFiles.length > 0;
+
+  const closeWizard = () => {
+    dispatchCreateFeed({
+      type: Types.ToggleWizard,
+    });
+
+    nodeDispatch({
+      type: Types.ResetState,
+    });
+  };
+
+  return (
+    <div>
+      <Button
+        icon={<AnalysisIcon />}
+        variant="primary"
+        onClick={() => closeWizard()}
+        isDisabled={!isLoggedIn}
+        size="sm"
+      >
+        Create Analysis
+      </Button>
+      <Modal
+        aria-label="Wizard Modal"
+        showClose={false}
+        hasNoBodyWrapper
+        variant={ModalVariant.large}
+        isOpen={wizardOpen}
+      >
+        <Wizard
+          onClose={() => closeWizard()}
+          header={
+            <WizardHeader
+              onClose={() => {
+                if (wizardOpen) {
+                  resetAfterCompletion();
+                }
+              }}
+              title="Create a New Analysis"
+              description="This wizard allows you to create a new Analysis and choose some data to process"
+            />
+          }
+          height={500}
+          width={"100%"}
+          title="Create a New Analysis"
+        >
+          <WizardStep
+            id={1}
+            name="Basic-Information"
+            footer={{
+              isNextDisabled: !data.feedName,
+              isBackDisabled: true,
+            }}
+          >
+            {withSelectionAlert(<BasicInformation />)}
+          </WizardStep>
+          <WizardStep
+            id={2}
+            name="Analysis Data Selection"
+            footer={{
+              isNextDisabled: !(filesChoosen || allRequiredFieldsNotEmpty),
+            }}
+          >
+            {withSelectionAlert(
+              <ChooseConfig
+                user={user}
+                handleFileUpload={handleChoseFilesClick}
+                showAlert={!(filesChoosen || allRequiredFieldsNotEmpty)}
+              />,
+            )}
+          </WizardStep>
+          <WizardStep id={3} name="Pipelines">
+            <PipelinesCopy isStaff={isStaff} />
+          </WizardStep>
+          <WizardStep
+            id={4}
+            name="Review"
+            footer={{
+              onNext: onSave,
+              nextButtonText: "Create Analysis",
+              isNextDisabled: !!(!enableSave || feedProcessing),
+            }}
+          >
+            <Review handleSave={onSave} />
+          </WizardStep>
+        </Wizard>
+      </Modal>
+    </div>
+  );
+};

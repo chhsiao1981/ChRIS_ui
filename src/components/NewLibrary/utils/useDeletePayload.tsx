@@ -7,7 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { useState } from "react";
 import * as DoCart from "../../../reducers/cart";
-import type { CartSelectionPayload } from "../../../reducers/types";
+import type { CartSelection } from "../../../reducers/types";
 import { type OriginState, useOperationsContext } from "../context";
 
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
@@ -22,14 +22,14 @@ const useDeletePayload = (origin: OriginState, api: any) => {
   const { handleOrigin, invalidateQueries } = useOperationsContext();
   const [notificationKey, setNotificationKey] = useState<string | null>(null);
 
-  const handleDelete = async (paths: CartSelectionPayload[]) => {
+  const handleDelete = async (paths: CartSelection[]) => {
     handleOrigin(origin);
     const errors: DeletionErrors = [];
     const successfulPaths: string[] = [];
 
     await Promise.all(
       paths.map(async (path) => {
-        const { payload, path: pathToClear } = path;
+        const { rawData: payload, path: pathToClear } = path;
         try {
           const urlForDeletion = payload.url;
           await axios.delete(urlForDeletion, {
@@ -53,12 +53,12 @@ const useDeletePayload = (origin: OriginState, api: any) => {
     );
 
     // biome-ignore lint/suspicious/useIterableCallbackReturn: no return in doCart.clearSelectedPaths
-    successfulPaths.forEach((path) => doCart.clearSelectedPaths(cartID, path));
+    successfulPaths.forEach((path) => doCart.removeSelectedPath(cartID, path));
     return errors.length > 0 ? errors : null;
   };
 
   const mutation = useMutation({
-    mutationFn: (paths: CartSelectionPayload[]) => handleDelete(paths),
+    mutationFn: (paths: CartSelection[]) => handleDelete(paths),
     onMutate: () => {
       const key = `open${Date.now()}`;
       setNotificationKey(key);

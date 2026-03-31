@@ -1,3 +1,4 @@
+import type { Feed, FileBrowserFolderFile } from "@fnndsc/chrisapi";
 import {
   type UseQueryOptions,
   useMutation,
@@ -7,8 +8,7 @@ import { App } from "antd";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ChrisAPIClient from "../api/chrisapiclient";
-import { getFileHref, getFileName } from "../api/common";
-import type { Feed, FileBrowserFolderFile } from "../api/types";
+import { getFileName } from "../api/common";
 import type { AppDispatch } from "./configureStore.ts";
 import type { RootState } from "./root/applicationState";
 
@@ -26,8 +26,8 @@ export const createLinkAndDownload = (url: string, fileName: string) => {
 };
 
 export const downloadPublicFile = (file: FileBrowserFolderFile) => {
-  const fileName = getFileName(file.fname);
-  const url = getFileHref(file);
+  const fileName = getFileName(file.data.fname);
+  const url = file.collection.items[0].links[0].href;
   if (!url) {
     throw new Error("Failed to construct the URL");
   }
@@ -36,17 +36,17 @@ export const downloadPublicFile = (file: FileBrowserFolderFile) => {
 };
 
 export const downloadFile = async (file: FileBrowserFolderFile) => {
-  const fileName = getFileName(file.fname);
+  const fileName = getFileName(file.data.fname);
 
   // The base URL for downloading
-  const baseUrl = getFileHref(file);
+  const baseUrl = file.collection.items[0].links[0].href;
   if (!baseUrl) {
     throw new Error("Failed to construct the URL");
   }
 
   let authorizedUrl: string;
 
-  if (file.public === true) {
+  if (file.data.public === true) {
     // If the file is public, no token needed
     authorizedUrl = baseUrl;
   } else {
@@ -70,7 +70,7 @@ export const downloadFile = async (file: FileBrowserFolderFile) => {
 const useDownload = (feed?: Feed) => {
   const handleDownload = async (file: FileBrowserFolderFile) => {
     try {
-      if (feed?.public) {
+      if (feed?.data.public) {
         await downloadPublicFile(file);
       } else {
         await downloadFile(file);

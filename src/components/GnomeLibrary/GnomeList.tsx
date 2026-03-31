@@ -34,7 +34,6 @@ import {
 } from "../NewLibrary/components/FileCard";
 import { getFolderName } from "../NewLibrary/components/FolderCard";
 import { OperationContext } from "../NewLibrary/context";
-import { useAssociatedFeed } from "../NewLibrary/utils/longpress";
 import useNewResourceHighlight from "../NewLibrary/utils/useNewResourceHighlight";
 import FileDetailView from "../Preview/FileDetailView";
 import GnomeBulkActionBar from "./GnomeActionBar";
@@ -106,12 +105,12 @@ export const GnomeBaseRow = (props: RowProps) => {
 
   const toggleSelection = () => {
     if (isSelected) {
-      doCart.clearSelectedPaths(cartID, pathForCart);
+      doCart.removeSelectedPath(cartID, pathForCart);
     } else {
-      doCart.setSelectedPaths(cartID, {
+      doCart.setSelectedPath(cartID, {
         path: pathForCart,
         type,
-        payload: resource,
+        rawData: resource,
       });
     }
   };
@@ -141,10 +140,10 @@ export const GnomeBaseRow = (props: RowProps) => {
 
     // Select the item that was right-clicked if not already selected
     if (!isSelected) {
-      doCart.setSelectedPaths(cartID, {
+      doCart.setSelectedPath(cartID, {
         path: pathForCart,
         type,
-        payload: resource,
+        rawData: resource,
       });
     }
   };
@@ -224,17 +223,7 @@ export const GnomeBaseRow = (props: RowProps) => {
 };
 
 export const GnomeFolderRow: React.FC<Omit<RowProps, "type">> = (props) => {
-  const { data, isLoading } = useAssociatedFeed(props.name);
-  if (isLoading) {
-    return (
-      <li className={styles.fileListItem}>
-        <Skeleton width="100%" />
-      </li>
-    );
-  }
-  return (
-    <GnomeBaseRow {...props} name={data ? data : props.name} type="folder" />
-  );
+  return <GnomeBaseRow {...props} name={props.name} type="folder" />;
 };
 
 export const GnomeFileRow: React.FC<Omit<RowProps, "type">> = (props) => (

@@ -6,7 +6,7 @@ import type {
   PipelineSourceFile,
   UploadPipeline,
 } from "../types";
-import type { ListQuery } from "../types/list";
+import type { List, ListQuery } from "../types/list";
 
 export const createPipeline = (pipeline: UploadPipeline) =>
   api<Pipeline>({
@@ -17,11 +17,12 @@ export const createPipeline = (pipeline: UploadPipeline) =>
   });
 
 export const getPipelinesByName = (name: string) =>
-  api<Pipeline[]>({
+  api<List<Pipeline>>({
     endpoint: "/pipelines/search/",
     query: {
       name: name,
     },
+    isJson: true,
   });
 
 export const getPipeline = (theID: ID) =>
@@ -30,11 +31,12 @@ export const getPipeline = (theID: ID) =>
   });
 
 export const getPipelines = (
-  query: Partial<Pipeline> & { limit: number; offset: number },
+  query: Partial<Pipeline> & { limit?: number; offset?: number },
 ) =>
-  api<Pipeline[]>({
+  api<List<Pipeline>>({
     endpoint: "/pipelines/search/",
     query: query,
+    isJson: true,
   });
 
 export const getPipelineSourceFiles = (

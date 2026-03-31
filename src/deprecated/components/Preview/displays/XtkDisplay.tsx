@@ -1,0 +1,88 @@
+import { type CSSProperties, useEffect, useRef } from "react";
+import type { IFileBlob } from "../../../api/model";
+import { getXtkFileMode } from "../../XtkViewer/XtkViewer";
+
+type AllProps = {
+  fileItem?: IFileBlob;
+  isHide?: boolean;
+};
+
+// Added with a global script
+declare const X: any;
+
+export default (props: AllProps) => {
+  const { fileItem, isHide } = props;
+  const mode = getXtkFileMode(fileItem?.fileType);
+
+  useEffect(() => {
+    let r: any;
+
+    const renderFileData = async () => {
+      const fileData = await fileItem?.blob?.arrayBuffer();
+      const fileName = fileItem?.file?.data.fname;
+      let object: any = {};
+
+      if (mode === "volume") {
+        r = new X.renderer2D();
+        r.orientation = "x";
+        object = new X.volume();
+        // X requires file name to know which file type to render
+        object.file = fileName;
+        object.filedata = fileData;
+      } else if (mode === "mesh") {
+        r = new X.renderer3D();
+        object = new X.mesh();
+        object.file = fileName;
+        object.filedata = fileData;
+      } else {
+        return;
+      }
+
+      r.container = renderContainerRef.current;
+      r.init();
+      r.add(object);
+      r.camera.position = [0, 400, 0];
+      r.render();
+    };
+
+    renderFileData();
+
+    return () => {
+      if (r) {
+        r.destroy();
+      }
+    };
+  }, [fileItem?.blob, fileItem?.file?.data.fname, mode]);
+
+  const renderContainerRef = useRef(null);
+
+  const style: CSSProperties = { height: "100%" };
+  if (isHide) {
+    style.display = "none";
+  }
+
+  return (
+    <div style={style}>
+      {mode === "other" ? (
+        <div
+          style={{
+            height: "100%",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: -40,
+            fontSize: 18,
+            fontStyle: "italic",
+          }}
+        >
+          Please open the XTK Viewer to preview this file
+        </div>
+      ) : (
+        <div
+          style={{ height: "100%", background: "black" }}
+          ref={renderContainerRef}
+        />
+      )}
+    </div>
+  );
+};

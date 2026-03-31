@@ -12,7 +12,6 @@ import * as DoOperation from "../../../../reducers/operation";
 import type * as DoUser from "../../../../reducers/user";
 import { Dropdown } from "../../../Antd";
 import { AddIcon } from "../../../Icons";
-import UploadDataModal from "./UploadDataModal";
 
 type TDoOperation = ThunkModuleToFunc<typeof DoOperation>;
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
@@ -100,8 +99,6 @@ export default (props: Props) => {
     doOperation.createFeedWithFile(operationID, e.target.files, theType);
   };
 
-  const clearErrors = () => {};
-
   return (
     <>
       <Dropdown
@@ -140,15 +137,6 @@ export default (props: Props) => {
           />
         </Button>
       </Dropdown>
-      <UploadDataModal
-        operationID={operationID}
-        useOperation={useOperation}
-        useCart={useCart}
-        useUser={useUser}
-        feedListID={feedListID}
-        useFeedList={useFeedList}
-        clearErrors={clearErrors}
-      />
     </>
   );
 };

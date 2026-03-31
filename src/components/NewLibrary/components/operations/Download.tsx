@@ -1,24 +1,24 @@
+import type { MouseEventHandler } from "react";
 import { DownloadIcon } from "../../../Icons";
 import OperationButton from "./OperationButton";
 
 type Props = {
-  handleOperations: (operationKey: string) => void;
+  onClick: MouseEventHandler<HTMLButtonElement>;
   count: number;
 };
 
 export default (props: Props) => {
-  const { handleOperations, count } = props;
+  const { onClick, count } = props;
 
   const ariaLabel =
     count === 1 ? "Download selected item" : "Download selected items";
 
   return (
     <OperationButton
-      handleOperations={handleOperations}
+      onClick={onClick}
       count={count}
       icon={<DownloadIcon />}
       ariaLabel={ariaLabel}
-      operationKey="download"
     />
   );
 };

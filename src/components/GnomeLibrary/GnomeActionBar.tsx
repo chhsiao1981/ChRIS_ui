@@ -26,7 +26,7 @@ import {
   ExternalLinkSquareAltIcon,
   ShareIcon,
 } from "../Icons";
-import { AddModal } from "../NewLibrary/components/Operations";
+import AddModal from "../NewLibrary/components/AddModal";
 import type { OriginState } from "../NewLibrary/context";
 import {
   type ModalState,
@@ -115,7 +115,7 @@ const GnomeBulkActionBar = (props: Props) => {
     const isLastItem = selectedPaths.length === 1;
 
     // Dispatch the action to clear this path
-    doCart.clearSelectedPaths(cartID, path);
+    doCart.removeSelectedPath(cartID, path);
 
     // If it was the last item, also close the popover
     if (isLastItem) {

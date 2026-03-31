@@ -24,7 +24,7 @@ import {
 } from "react";
 import type { FileBrowserFolder } from "../../api/types";
 import * as DoCart from "../../reducers/cart";
-import { AddModal } from "../NewLibrary/components/Operations";
+import AddModal from "../NewLibrary/components/AddModal";
 import type { OriginState } from "../NewLibrary/context";
 import {
   type ModalState,

@@ -256,9 +256,6 @@ export default (props: Props) => {
         <Operations
           username={username}
           isStaff={isStaff}
-          origin={{
-            type: OperationContext.FEEDS,
-          }}
           classNames={operationsClassNames}
           useCart={useCart}
           operationID={operationID}

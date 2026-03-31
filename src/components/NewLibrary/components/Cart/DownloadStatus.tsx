@@ -1,29 +1,26 @@
 import { Button, Text, Tooltip } from "@patternfly/react-core";
 import { CheckCircleIcon } from "@patternfly/react-icons";
-import {
-  type DownloadStatusObject,
-  DownloadTypes,
-} from "../../../../reducers/types";
+import { elipses } from "../../../../api/common";
+import type { DownloadStatus } from "../../../../reducers/types";
 import { DotsIndicator } from "../../../Common";
-import { elipses } from "../../utils/longpress";
 
 type Props = {
-  currentStatus: DownloadStatusObject;
+  currentStatus: DownloadStatus;
 };
 export default (props: Props) => {
   const { currentStatus } = props;
   const { step, error } = currentStatus;
   switch (step) {
-    case DownloadTypes.started:
+    case "started":
       return <DotsIndicator title="" />;
-    case DownloadTypes.finished:
+    case "finished":
       return (
         <Button
           variant="plain"
           icon={<CheckCircleIcon color="#3E8635" width="2em" height="2em" />}
         />
       );
-    case DownloadTypes.cancelled:
+    case "cancelled":
       return (
         <Tooltip content={error}>
           <Text>{error ? elipses(error, 45) : "Uncaught error"}</Text>

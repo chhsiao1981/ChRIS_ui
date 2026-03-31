@@ -29,3 +29,8 @@ export type FileBrowserFolderLinkFile = {
   public: boolean;
   owner_username: string;
 };
+
+export type FileBrowserFolderType =
+  | FileBrowserFolder
+  | FileBrowserFolderFile
+  | FileBrowserFolderLinkFile;

@@ -13,7 +13,7 @@ import {
   Modal,
   TextInput,
 } from "@patternfly/react-core";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type * as DoCart from "../../../../reducers/cart";
 import type * as DoFeedList from "../../../../reducers/feedList";
 import * as DoOperation from "../../../../reducers/operation";
@@ -62,9 +62,7 @@ export default (props: Props) => {
   const operation =
     getState(classOperation, operationID) || DoOperation.defaultState;
   const {
-    modalStateType,
-    modalStateIsOpen,
-    modalStateID,
+    modalState,
     uploadData: { theType, defaultFeedName },
     files,
   } = operation;
@@ -79,15 +77,28 @@ export default (props: Props) => {
   const [_classFeedList, doFeedList] = useFeedList;
 
   const isOpen =
-    modalStateType === "createFeedWithFile" &&
-    modalStateID === operationID &&
-    modalStateIsOpen;
+    modalState.type === "createFeedWithFile" &&
+    modalState.ID === operationID &&
+    modalState.isOpen;
   const isFolder = theType === "folder";
 
   const [value, setValue] = useState(defaultFeedName);
+  const inputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
+    if (!inputRef.current) {
+      return;
+    }
     setValue(defaultFeedName);
-  }, [defaultFeedName]);
+    inputRef.current.focus();
+  }, [defaultFeedName, inputRef.current]);
+
+  console.info(
+    "UploadDataModal: defaultFeedName:",
+    defaultFeedName,
+    "value:",
+    value,
+  );
 
   const onClose = () => {
     setValue("");
@@ -95,18 +106,25 @@ export default (props: Props) => {
   };
 
   const onSubmit = (value: string) => {
-    doOperation.upload(
-      operationID,
-      files,
-      username,
-      isFolder,
-      value,
+    doCart.startUpload(
       cartID,
-      doCart,
+      files,
+      isFolder,
+      username,
+      value,
       feedListID,
       doFeedList,
     );
     doOperation.closeModal(operationID);
+  };
+
+  const onFocus = (_e: any) => {
+    console.info("UploadDataModal: onFocus: start");
+  };
+
+  const onChange = (_e: any, newValue: string) => {
+    console.info("UploadDataModal: onChange: newValue:", newValue);
+    setValue(newValue);
   };
 
   return (
@@ -122,8 +140,10 @@ export default (props: Props) => {
           <div>
             <TextInput
               name="input"
+              ref={inputRef}
               value={value}
-              onChange={(_e, value) => setValue(value)}
+              onFocus={onFocus}
+              onChange={onChange}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();

@@ -25,6 +25,11 @@ import type {
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
 } from "../../../api/types";
+import useLongPress, {
+  elipses,
+  getBackgroundRowColor,
+} from "../../../deprecated/components/NewLibrary/utils/longpress";
+import { useDownload } from "../../../hooks/useDownload";
 import * as DoCart from "../../..//reducers/cart";
 import type * as DoUser from "../../../reducers/user";
 import { notification } from "../../Antd";
@@ -33,10 +38,6 @@ import { ThemeContext } from "../../DarkTheme/useTheme";
 import { ExternalLinkSquareAltIcon } from "../../Icons";
 import FileDetailView from "../../Preview/FileDetailView";
 import { OperationContext, type OriginState } from "../context";
-import useLongPress, {
-  elipses,
-  getBackgroundRowColor,
-} from "../utils/longpress";
 import { FolderContextMenu } from "./ContextMenu";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;

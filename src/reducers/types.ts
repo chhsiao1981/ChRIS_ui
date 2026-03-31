@@ -20,7 +20,7 @@ export const Roles = [Role.Clinician, Role.Researcher];
 
 export const StaffRoles = [Role.Clinician, Role.Researcher, Role.Admin];
 
-export type FolderUploadObject = {
+export type FolderUpload = {
   currentStep: string;
   done: number;
   total: number;
@@ -29,14 +29,14 @@ export type FolderUploadObject = {
   type: FileBrowserType;
 };
 
-export type FileUploadType =
+export type FileUploadStepType =
   | "Uploading..."
   | "Upload Complete"
   | "Upload Cancelled"
   | "Error";
 
-export type FileUploadObject = {
-  currentStep: string;
+export type FileUpload = {
+  currentStep: FileUploadStepType;
   progress: number;
   loaded: number;
   total: number;
@@ -45,30 +45,29 @@ export type FileUploadObject = {
   type: FileBrowserType;
 };
 
-export interface FolderUpload {
-  [key: string]: FolderUploadObject;
+export interface FolderUploadMap {
+  [path: string]: FolderUpload;
 }
 
-export interface FileUpload {
-  [key: string]: FileUploadObject;
+export interface FileUploadMap {
+  [path: string]: FileUpload;
 }
 
-export enum DownloadTypes {
-  started = "started",
-  progress = "processing",
-  finished = "finished",
-  cancelled = "cancelled",
-}
+export type DownloadStepType =
+  | "started"
+  | "processing"
+  | "finished"
+  | "cancelled";
 
-export type DownloadStatusObject = {
-  step: DownloadTypes;
+export type DownloadStatus = {
+  step: DownloadStepType;
   error?: string;
   filename?: string;
   feed?: Feed;
 };
 
-export type DownloadStatus = {
-  [theID: number]: DownloadStatusObject;
+export type DownloadStatusMap = {
+  [path: string]: DownloadStatus;
 };
 
 export interface FeedCreationStatus {
@@ -77,13 +76,18 @@ export interface FeedCreationStatus {
   feed_id: number;
 }
 
-export type CartPayloadTypes =
+export type CartSelectionDataType =
+  | Feed
   | FileBrowserFolder
   | FileBrowserFolderFile
   | FileBrowserFolderLinkFile;
 
-export interface CartSelectionPayload {
+export type CartSelectionType = FileBrowserType | "feed";
+
+export interface CartSelection {
   path: string;
-  type: string;
-  payload: CartPayloadTypes;
+  type: CartSelectionType;
+  isPublic: boolean;
+  name: string;
+  rawData?: CartSelectionDataType;
 }

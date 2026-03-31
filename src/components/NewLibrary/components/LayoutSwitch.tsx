@@ -23,7 +23,7 @@ const LayoutSwitch = () => {
   const { currentLayout } = cart;
 
   const handleChange: ToggleGroupItemProps["onChange"] = (event) => {
-    doCart.switchLibraryLayout(cartID, event.currentTarget.id);
+    doCart.switchLayout(cartID, event.currentTarget.id);
   };
   return (
     <ToggleGroup>

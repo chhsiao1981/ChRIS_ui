@@ -19,7 +19,7 @@ import {
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../DarkTheme/useTheme";
-import { getBackgroundRowColor } from "../../NewLibrary/utils/longpress.tsx";
+import getBackgroundRowColor from "../../NewLibrary/utils/getBackgroundRowColor";
 import { type PacsSeriesState, SeriesPullState } from "../types.ts";
 import { isSeriesLoading } from "./helpers.ts";
 import ModalityBadges from "./ModalityBadges.tsx";
@@ -32,20 +32,21 @@ import {
 import styles from "./SeriesList.module.css";
 import { useSeriesSelection } from "./SeriesSelectionContext";
 
-type SeriesRowProps = PacsSeriesState & {
+type Props = PacsSeriesState & {
   showUid?: boolean;
   onRetrieve?: () => void;
 };
 
-const SeriesRow: React.FC<SeriesRowProps> = ({
-  info,
-  errors,
-  pullState,
-  inCube,
-  receivedCount,
-  showUid,
-  onRetrieve,
-}) => {
+export default (props: Props) => {
+  const {
+    info,
+    errors,
+    pullState,
+    inCube,
+    receivedCount,
+    showUid,
+    onRetrieve,
+  } = props;
   console.info(
     "SeriesRow: start: seriesUid:",
     info.SeriesInstanceUID,
@@ -353,6 +354,3 @@ const SeriesRow: React.FC<SeriesRowProps> = ({
     </>
   );
 };
-
-export type { SeriesRowProps };
-export default SeriesRow;

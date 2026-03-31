@@ -1,12 +1,11 @@
 import { Button, Tooltip } from "@patternfly/react-core";
+import type { CSSProperties, MouseEventHandler } from "react";
 
 type Props = {
-  handleOperations: (operationKey: string) => void;
+  onClick: MouseEventHandler<HTMLButtonElement>;
   count: number;
-
   icon: React.ReactElement;
   ariaLabel: string;
-  operationKey: string;
   label?: string;
   isHide?: boolean;
 };
@@ -14,24 +13,20 @@ type Props = {
 export default (props: Props) => {
   const {
     ariaLabel,
-    handleOperations,
-    operationKey,
     count,
     label: propsLabel,
     icon,
     isHide: propsIsHide,
+    onClick,
   } = props;
   const label = propsLabel || "";
   const isHide = propsIsHide || false;
 
-  const tooltipStyle = {};
-  const buttonStyle = {
+  const tooltipStyle: CSSProperties = {};
+  const buttonStyle: CSSProperties = {
     marginRight: "1em",
   };
   if (isHide || count === 0) {
-    // @ts-ignore
-    tooltipStyle.display = "none";
-    // @ts-ignore
     buttonStyle.display = "none";
   }
 
@@ -41,7 +36,7 @@ export default (props: Props) => {
         style={buttonStyle}
         icon={icon}
         size="sm"
-        onClick={() => handleOperations(operationKey)}
+        onClick={onClick}
         variant="tertiary"
         aria-label={ariaLabel}
       >

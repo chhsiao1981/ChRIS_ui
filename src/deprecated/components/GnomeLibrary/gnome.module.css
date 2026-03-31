@@ -1,0 +1,708 @@
+/*
+ * GnomeLibrary styles module
+ * This file contains all styles for the Gnome Library components
+ * including the main layout, file list, action bar, and breadcrumb navigation
+ */
+
+/* ===== LAYOUT STYLES ===== */
+/* Main container for the entire library interface */
+.gnomeLibraryContainer {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+  overflow: hidden; /* Prevent outer scrollbar */
+}
+
+/* Left sidebar navigation panel */
+.gnomeLibrarySidebar {
+  background-color: #1c1c1c;
+  color: #e0e0e0;
+  width: 200px; /* Fixed width for consistent layout */
+  height: 100%;
+  border-right: 1px solid #3a3a3a;
+  padding-top: 1rem;
+  overflow-y: auto; /* Allow sidebar to scroll independently */
+}
+
+/* Sidebar link styling */
+.gnomeLibrarySidebar a {
+  color: #e0e0e0;
+  text-decoration: none;
+}
+
+/* Add cursor pointer to nav items */
+.gnomeLibrarySidebar li {
+  cursor: pointer;
+}
+
+/* Upload button container in the sidebar */
+.uploadButtonContainer {
+  padding: 16px;
+  margin-bottom: 8px;
+}
+
+/* Main content area */
+.gnomeLibraryContent {
+  flex: 1;
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+  height: 100%;
+  overflow: hidden; /* Prevent double scrollbars */
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  position: relative; /* For proper action bar positioning */
+}
+
+/* Main content wrapper */
+.libraryMainContent {
+  background-color: #2a2a2a;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Prevent overflow at this level */
+}
+
+/* ===== FILE LIST STYLES ===== */
+/* Container for the file list */
+.fileListContainer {
+  width: 100%;
+  margin-top: 1rem;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  overflow: auto; /* Allow scrolling within the file list */
+  flex: 1; /* Take remaining space */
+  display: flex;
+  flex-direction: column;
+  position: relative; /* For proper action bar positioning */
+}
+
+/* Header row for the file list */
+.fileListHeader {
+  display: flex;
+  width: 100%;
+  padding: 0;
+  background-color: #333;
+  border-bottom: 1px solid #444;
+  font-weight: 500;
+  color: #e0e0e0;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  height: 52px; /* Fixed height for headers */
+}
+
+/* File list container */
+.fileList {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* File list row container */
+.fileListRow {
+  display: flex;
+  width: 100%;
+  border-bottom: 1px solid #3a3a3a;
+  transition: background-color 0.2s;
+  height: 52px; /* Fixed height to match header */
+}
+
+.fileListRow:hover {
+  background-color: #3a3a3a;
+}
+
+/* Selected item styling */
+.selectedItem {
+  background-color: #3a3a3a !important;
+}
+
+/* Individual file list item */
+.fileListItem {
+  display: flex;
+  width: 100%;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  flex: 1;
+}
+
+/* File list button container */
+.fileListButton {
+  width: 100%;
+  display: flex;
+  text-align: left;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  background-color: transparent;
+  border: none;
+}
+
+/*
+ * COLUMN SIZING
+ */
+/* Checkbox column */
+.fileCheckboxHeader,
+.checkboxCell {
+  width: 50px;
+  min-width: 50px;
+  flex-shrink: 0;
+  padding-left: 16px;
+  padding-right: 0;
+}
+
+/* First column - Name */
+.fileNameHeader,
+.fileName {
+  flex: 4;
+  min-width: 200px;
+  padding-left: 8px;
+}
+
+/* Second column - Date */
+.fileDateHeader,
+.fileDate {
+  flex: 2;
+  min-width: 160px;
+}
+
+/* Third column - Owner/Creator */
+.fileOwnerHeader,
+.fileOwner {
+  flex: 1;
+  min-width: 100px;
+}
+
+/* Fourth column - Size */
+.fileSizeHeader,
+.fileSize {
+  flex: 1;
+  min-width: 100px;
+}
+
+/*
+ * COLUMN CELL STYLING
+ */
+/* All cells get consistent padding and alignment */
+.fileNameHeader,
+.fileName,
+.fileDateHeader,
+.fileDate,
+.fileSizeHeader,
+.fileSize,
+.fileOwnerHeader,
+.fileOwner,
+.fileCheckboxHeader,
+.checkboxCell {
+  padding: 16px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Override padding for checkbox cell */
+.checkboxCell {
+  padding-right: 0;
+}
+
+/* Right-align size column */
+.fileSizeHeader,
+.fileSize {
+  justify-content: flex-end;
+}
+
+/* Checkbox is left-aligned */
+.fileCheckboxHeader,
+.checkboxCell {
+  justify-content: flex-start;
+}
+
+/*
+ * HEADER CONTENT STRUCTURE
+ */
+/* All column headers have this wrapper for consistent structure */
+.columnHeaderContent {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* Icon placeholder in name header to align with row content */
+.nameHeaderText {
+  margin-left: 28px; /* Icon width (18px) + margin (10px) */
+}
+
+/* Checkbox styling */
+.checkboxWrapper {
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.largeCheckbox {
+  transform: scale(1.2);
+  margin: 0;
+}
+
+.checkboxAlign {
+  display: flex;
+  align-items: center;
+}
+
+/* Folder/File icons */
+.fileName svg {
+  color: #ffc107;
+  margin-right: 10px;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-left: 4px;
+}
+
+/* Blue icon for links */
+.blueFileIcon {
+  color: #1fa7f8;
+}
+
+/* Text truncation for all cells */
+.fileNameText,
+.fileDate,
+.fileSize,
+.fileOwner {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Font weight for file names */
+.fileNameText {
+  font-weight: 500;
+}
+
+/* Sort icon styling */
+.inactiveSortIcon {
+  opacity: 0.5;
+  margin-left: 5px;
+}
+
+/* Clickable header styling */
+.clickableHeader {
+  cursor: pointer;
+}
+
+/* Tag for newly added items */
+.newlyAddedTag {
+  margin-left: 0.5em;
+}
+
+/* ===== SORTING STYLES ===== */
+/* Sort icon styles */
+.sortIcon {
+  margin-left: 5px;
+}
+
+/* Inactive sort icon */
+.inactiveSortIcon {
+  margin-left: 5px;
+  opacity: 0.3;
+}
+
+/* Clickable header styles */
+.clickableHeader {
+  cursor: pointer;
+}
+
+/* ===== EMPTY STATE STYLES ===== */
+/* Empty state container */
+.emptyStateContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  height: 100%;
+  color: #6a6e73;
+}
+
+.emptyStateIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: #6a6e73;
+}
+
+.emptyStateTitle {
+  font-size: 1.5rem;
+  font-weight: 300;
+  margin-bottom: 0.5rem;
+}
+
+.emptyStateText {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* ===== ACTION BAR STYLES ===== */
+/* Action bar container styles */
+.actionBarContainer {
+  position: fixed;
+  bottom: 20px;
+  /* Center relative to the gnomeLibraryContent */
+  left: calc(50% + 100px); /* Adjust for sidebar width (200px/2) */
+  transform: translateX(-50%);
+  width: fit-content;
+  max-width: calc(100% - 240px); /* Account for sidebar and padding */
+  margin: 0 auto;
+  z-index: 1000;
+  padding: 10px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background-color: rgba(20, 20, 20, 0.7);
+  color: #e0e0e0;
+}
+
+/* Light theme version of action bar */
+.actionBarContainerLight {
+  background-color: rgba(255, 255, 255, 0.7);
+  color: #151515;
+}
+
+/* Selection counter styles */
+.selectionCounter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  padding: 0 4px;
+  font-size: 1.05rem;
+}
+
+.selectionCounter span {
+  margin-right: 4px;
+}
+
+/* Clickable selection count */
+.selectionCountClickable {
+  cursor: pointer;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.selectionCountClickable:hover {
+  color: #1fa7f8;
+  text-decoration: underline;
+}
+
+/* Selection menu styles */
+.selectionPopover {
+  backdrop-filter: none !important; /* Ensure popover doesn't inherit action bar's backdrop filter */
+}
+
+.selectionList {
+  /* fixed max height before scroll */
+  max-height: 300px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.selectionItem {
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.selectionItem:last-child {
+  border-bottom: none;
+}
+
+.selectionItemType {
+  /* match library file/folder icon color */
+  color: #ffc107;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.selectionItemName {
+  /* same font size and weight as file list */
+  font-size: 1rem;
+  font-weight: 500;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Clear selection button */
+.clearSelectionButton {
+  margin-left: 8px;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  border-radius: 50%;
+}
+
+.clearSelectionButton:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.actionBarContainerLight .clearSelectionButton:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* ===== RESOURCE COUNT STYLES ===== */
+/* Resource count label styles */
+.resourceCountContainer {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding: 4px 12px;
+  background-color: #1c1c1c;
+  border-top: 1px solid #3a3a3a;
+  border-left: 1px solid #3a3a3a;
+  border-top-left-radius: 4px;
+  margin: 0;
+  z-index: 100;
+  min-width: 150px;
+  text-align: right;
+}
+
+.resourceCount {
+  font-size: 12px;
+  color: #999;
+  display: block;
+  white-space: nowrap;
+}
+
+/* Left align the text when in calculating state */
+.calculating {
+  text-align: left;
+}
+
+/* Fade transition for resource count */
+.fade {
+  transition: opacity 150ms ease-in-out;
+  opacity: 1;
+}
+
+/* ===== LOADING INDICATORS ===== */
+/* Loading container for infinite scroll */
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  gap: 8px;
+  width: 100%;
+  color: #e0e0e0;
+  font-size: 1rem;
+  height: 60px; /* Fixed height to prevent layout shift */
+  position: relative; /* For absolute positioning of children if needed */
+}
+
+/* Scroll indicator */
+.scrollIndicator {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.scrollIndicator:hover {
+  background-color: #3a3a3a;
+}
+
+.scrollArrow {
+  display: inline-flex;
+  margin-right: 8px;
+  animation: bounce 1.2s infinite;
+  color: #1fa7f8;
+}
+
+@keyframes bounce {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+/* ===== BREADCRUMB STYLES ===== */
+/* Central Breadcrumb Container */
+.centralBreadcrumbContainer {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  position: relative;
+  z-index: 10;
+}
+
+/* Breadcrumb Box */
+.breadcrumbBox {
+  display: flex;
+  align-items: center;
+  max-width: 800px;
+  width: 80%;
+  height: 46px;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  background-color: #2a2a2a;
+  box-shadow: 0 0.0625rem 0.125rem 0 rgba(3, 3, 3, 0.2);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Ellipsis button (reveals hidden early segments) */
+.ellipsisButton {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2rem;
+  background: linear-gradient(to right, #2a2a2a, transparent);
+  border: none;
+  color: #e0e0e0;
+  font-size: 1.2rem;
+  cursor: pointer;
+  z-index: 12;
+}
+
+/* Scrolling container for breadcrumb */
+.breadcrumbScrollContainer {
+  flex: 1;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 0 12px;
+  scrollbar-width: none; /* Hide scrollbar in Firefox */
+  -ms-overflow-style: none; /* Hide scrollbar in IE/Edge */
+}
+
+/* Hide scrollbar in WebKit browsers */
+.breadcrumbScrollContainer::-webkit-scrollbar {
+  display: none;
+}
+
+/* Breadcrumb styling */
+.breadcrumb {
+  background: transparent;
+  min-width: min-content;
+  display: inline-flex;
+  flex-wrap: nowrap;
+  height: 100%;
+  align-items: center;
+}
+
+/* Breadcrumb item styling */
+.crumbLink {
+  display: inline-block; /* Ensure ellipsis works */
+  vertical-align: middle;
+  flex-shrink: 0; /* Prevent shrinking inside flex container */
+  max-width: 12rem;
+  overflow: hidden; /* Clip overflow */
+  text-overflow: ellipsis; /* Show "..." when text is too long */
+  white-space: nowrap; /* Prevent wrapping */
+  font-size: 1rem;
+  cursor: pointer;
+  color: #1fa7f8;
+}
+
+/* Home icon wrapper */
+.homeIconWrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  color: #1fa7f8;
+}
+
+/* Actions container for ellipsis menu */
+.actionsContainer {
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  border-left: 1px solid #3a3a3a;
+  background-color: #2a2a2a;
+  z-index: 11;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Ellipsis button hover effect */
+.actionsContainer button:hover {
+  background-color: #3a3a3a;
+}
+
+/* Make ellipsis icon more visible */
+.actionsContainer svg {
+  width: 18px;
+  height: 18px;
+  color: #e0e0e0;
+}
+
+/* Edit container for path input */
+.editContainer {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0 12px;
+}
+
+/* Path input styling */
+.pathInput {
+  flex: 1;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  color: #e0e0e0;
+  padding: 0;
+}
+
+/* Cancel edit button */
+.cancelEditButton {
+  margin-left: 8px;
+  color: #e0e0e0;
+}
+
+.cancelEditButton:hover {
+  background-color: #3a3a3a;
+}
+
+.cancelEditButton svg {
+  width: 16px;
+  height: 16px;
+}

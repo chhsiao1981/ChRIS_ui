@@ -1,7 +1,13 @@
 import config from "config";
 import api, { type ApiResult } from "../api";
 import type { Feed, ID, List } from "../types";
-import type { FeedSearchType, FeedSearchValueType } from "../types/feed";
+import type {
+  FeedAndPluginInstance,
+  FeedSearchType,
+  FeedSearchValueType,
+} from "../types/feed";
+import type { FeedUserPermission } from "../types/userPermission";
+import { getPluginInstanceList } from "./pluginInstance";
 
 export const getFeed = (dataID: ID, isPublic: boolean = false) => {
   if (isPublic) {
@@ -11,6 +17,7 @@ export const getFeed = (dataID: ID, isPublic: boolean = false) => {
   return api<Feed>({
     endpoint: `/${dataID}/`,
     method: "get",
+    isJson: true,
   });
 };
 
@@ -103,6 +110,12 @@ const getPublicFeedList = (
   });
 };
 
+export const deleteFeed = (dataID: ID) =>
+  api<Feed>({
+    endpoint: `/${dataID}/`,
+    method: "delete",
+  });
+
 export const updateFeedName = (dataID: ID, dataName: string) =>
   api<Feed>({
     endpoint: `/${dataID}/`,
@@ -119,6 +132,16 @@ export const updateFeedPublic = (dataID: ID, isPublic = true) =>
     json: {
       public: isPublic,
     },
+  });
+
+export const addFeedUserPermission = (dataID: ID, username: string) =>
+  api<FeedUserPermission>({
+    endpoint: `/${dataID}/userpermissions/`,
+    method: "post",
+    json: {
+      username,
+    },
+    isJson: true,
   });
 
 export const createFeedWithFilepaths = async (
@@ -139,3 +162,36 @@ export const createFeedWithFilepaths = async (
     apiroot: config.API_V7_ROOT,
     isJson: true,
   });
+
+export const createFeedAndPluginInstanceWithFilepaths = async (
+  filepaths: string[],
+  theName: string,
+  tags?: string[],
+  isPublic: boolean = false,
+): Promise<ApiResult<FeedAndPluginInstance>> => {
+  const {
+    status,
+    data: feed,
+    errmsg,
+  } = await createFeedWithFilepaths(filepaths, theName, tags, isPublic);
+  if (errmsg || !feed) {
+    return { status, errmsg };
+  }
+
+  const {
+    status: status2,
+    data: pluginInstanceList,
+    errmsg: errmsg2,
+  } = await getPluginInstanceList(feed.id);
+  if (
+    errmsg ||
+    !pluginInstanceList ||
+    pluginInstanceList.results.length !== 1
+  ) {
+    return { status: status2, errmsg: errmsg2 };
+  }
+
+  const pluginInstance = pluginInstanceList.results[0];
+
+  return { status, data: { feed, pluginInstance }, errmsg };
+};
