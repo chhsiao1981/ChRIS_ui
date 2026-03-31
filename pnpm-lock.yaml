@@ -12,8 +12,8 @@ importers:
         specifier: ^5.5.1
         version: 5.6.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@chhsiao1981/use-thunk':
-        specifier: ^10.1.0
-        version: 10.1.0
+        specifier: ^10.1.2
+        version: 10.1.2
       '@cornerstonejs/core':
         specifier: ^1.86.0
         version: 1.86.1(@babel/preset-env@7.29.0(@babel/core@7.29.0))(autoprefixer@10.4.24(postcss@8.5.6))(webpack@5.105.2)(wslink@2.5.0)
@@ -884,8 +884,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@chhsiao1981/use-thunk@10.1.0':
-    resolution: {integrity: sha512-hui64exKQZowFKvvznhPnAkXJ2NKb2a/MwiHvuBAd6rnctJv/u4KLx1IqrB3ZNFTNuccOFkGgD7kXTVJiCZytg==}
+  '@chhsiao1981/use-thunk@10.1.2':
+    resolution: {integrity: sha512-Vzc2NJ5BUVY4kUEntqfBpI1V321zuxuQ+ENgcxoumkFbcMZsAe860qLLW45A5saNy2EPmmJcTBli7jPKO+rFUA==}
 
   '@cornerstonejs/codec-charls@1.2.3':
     resolution: {integrity: sha512-qKUe6DN0dnGzhhfZLYhH9UZacMcudjxcaLXCrpxJImT/M/PQvZCT2rllu6VGJbWKJWG+dMVV2zmmleZcdJ7/cA==}
@@ -3680,8 +3680,8 @@ packages:
     resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
     hasBin: true
 
-  uuid@11.1.0:
-    resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
+  uuid@13.0.0:
+    resolution: {integrity: sha512-XQegIaBTVUjSHliKqcnFqYypAd4S+WCYt5NIeRs6w/UAry7z8Y9j5ZwRRL4kzq9U3sD6v+85er9FvkEaBpji2w==}
     hasBin: true
 
   uuid@9.0.1:
@@ -4740,10 +4740,10 @@ snapshots:
   '@biomejs/cli-win32-x64@2.4.3':
     optional: true
 
-  '@chhsiao1981/use-thunk@10.1.0':
+  '@chhsiao1981/use-thunk@10.1.2':
     dependencies:
       react: 18.3.1
-      uuid: 11.1.0
+      uuid: 13.0.0
 
   '@cornerstonejs/codec-charls@1.2.3': {}
 
@@ -7715,7 +7715,7 @@ snapshots:
 
   uuid@10.0.0: {}
 
-  uuid@11.1.0: {}
+  uuid@13.0.0: {}
 
   uuid@9.0.1: {}
 
