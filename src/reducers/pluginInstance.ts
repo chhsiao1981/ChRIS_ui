@@ -5,11 +5,12 @@ import {
   setData,
   type Thunk,
 } from "@chhsiao1981/use-thunk";
+import type { TreeNode } from "../api/common";
 import {
   deletePluginInstance as apiDeletePluginInstance,
   getPluginInstances,
 } from "../api/serverApi";
-import type { Feed, ID, PluginInstance } from "../api/types";
+import type { Feed, ID, List, PluginInstance } from "../api/types";
 
 export const myClass = "chris-ui/plugin-instance";
 
@@ -21,15 +22,26 @@ export interface State extends rState {
     error: string;
     loading: boolean;
   };
+  pluginInstanceList: List<PluginInstance>;
+  chunkSize: number;
+  hasNextPage?: boolean;
+  isFetchingNextPage: boolean;
+  isProcessing: boolean;
+  processingProgress: number;
+  rootNode?: TreeNode;
 }
 
 export const defaultState: State = {
-  selectedPlugin: undefined,
   pluginInstances: {
     data: [],
     error: "",
     loading: false,
   },
+  pluginInstanceList: { results: [], count: 0 },
+  chunkSize: 0,
+  isFetchingNextPage: false,
+  isProcessing: false,
+  processingProgress: 0,
 };
 
 export const init = (): Thunk<State> => {

@@ -4,26 +4,29 @@ import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { elipses } from "../../api/common";
 import type { PluginInstance } from "../../api/types";
+import { DrawerActionButton } from "../FeedList/DrawerUtils";
+import usePaginatedTreeQuery from "../FeedList/usePaginatedTreeQuery";
 import FeedOutputBrowser from "../FeedOutputBrowser/FeedOutputBrowser";
 import FeedGraph from "../FeedTree/FeedGraph";
 import ParentComponent from "../FeedTree/ParentComponent";
 import { AnalysisIcon } from "../Icons";
 import NodeDetails from "../NodeDetails/NodeDetails";
 import Wrapper from "../Wrapper";
-import { DrawerActionButton } from "./DrawerUtils";
-import usePaginatedTreeQuery from "./usePaginatedTreeQuery";
-import "./Feeds.css"; // Import your CSS file
+import "../FeedList/Feeds.css"; // Import your CSS file
 import {
   getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
+import { notification } from "antd";
 import { collectionJsonToJson } from "../../api/collectionToJson";
 import {
   PluginInstanceStatus,
   type PluginInstance as PluginInstanceType,
 } from "../../api/types";
+import type { FeedType } from "../../api/types/feed";
+import { DEFAULT_TYPE } from "../../constants";
 import * as DoCart from "../../reducers/cart";
 import * as DoDrawer from "../../reducers/drawer";
 import * as DoExplorer from "../../reducers/explorer";
@@ -31,11 +34,10 @@ import * as DoFeed from "../../reducers/feed";
 import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { Role } from "../../reducers/types";
 import * as DoUser from "../../reducers/user";
-import CustomTitle from "./CustomTitle";
-import { useFetchFeed } from "./useFetchFeed";
-import { useSearchQueryParams } from "./usePaginate";
-import { usePollAllPluginStatuses } from "./usePolledStatuses";
-import { onMaximize, onMinimize } from "./utilties";
+import { useSearchQueryParams } from "../FeedList/usePaginate";
+import { usePollAllPluginStatuses } from "../FeedList/usePolledStatuses";
+import { onMaximize, onMinimize } from "../FeedList/utilties";
+import Title from "./Title";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
@@ -46,69 +48,95 @@ type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 export default () => {
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
-  const [classStateUser, _] = useUser;
-  const user = getState(classStateUser) || DoUser.defaultState;
-  const { role, isLoggedIn, isInit, isStaff } = user;
+  const [classUser, _] = useUser;
+  const user = getState(classUser) || DoUser.defaultState;
+  const { role, isLoggedIn, isInit: isInitUser, isStaff } = user;
 
   const useDrawer = useThunk<DoDrawer.State, TDoDrawer>(DoDrawer);
-  const [classStateDrawer, doDrawer] = useDrawer;
-  const drawerState = getState(classStateDrawer) || DoDrawer.defaultState;
-  const drawerID = getDefaultID(classStateDrawer);
+  const [classDrawer, doDrawer] = useDrawer;
+  const drawerState = getState(classDrawer) || DoDrawer.defaultState;
+  const drawerID = getDefaultID(classDrawer);
 
   const useExplorer = useThunk<DoExplorer.State, TDoExplorer>(DoExplorer);
-  const [classStateExplorer, doExplorer] = useExplorer;
-  const explorerID = getDefaultID(classStateExplorer);
+  const [classExplorer, doExplorer] = useExplorer;
+  const explorerID = getDefaultID(classExplorer);
 
   const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
-  const [classStateFeed, doFeed] = useFeed;
-  const feedID = getDefaultID(classStateFeed);
+  const [classFeed, doFeed] = useFeed;
+  const feedID = getDefaultID(classFeed);
+  const feed = getState(classFeed) || DoFeed.defaultState;
+  const { data: feedData } = feed;
 
   const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
 
   const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
     DoPluginInstance,
   );
-  const [classStatePluginInstance, doPluginInstance] = usePluginInstance;
-  const pluginInstanceID = getDefaultID(classStatePluginInstance);
+  const [classPluginInstance, doPluginInstance] = usePluginInstance;
+  const pluginInstanceID = getDefaultID(classPluginInstance);
 
   const [currentLayout, setCurrentLayout] = useState(false);
   const query = useSearchQueryParams();
-  const theType = query.get("type");
+  const queryType = query.get("type") as FeedType | null;
+  const theType = queryType || DEFAULT_TYPE;
+
   const params = useParams();
+  const { id: paramsFeedID } = params;
+
   const navigate = useNavigate();
   const location = useLocation();
-  const { id } = params;
+  const [notificationAPI, contextHolder] = notification.useNotification();
 
-  const { feed, contextHolder } = useFetchFeed(id, theType, isLoggedIn, isInit);
-  const treeQuery = usePaginatedTreeQuery(feed);
+  const treeQuery = usePaginatedTreeQuery(feedData);
   const statuses = usePollAllPluginStatuses(
     treeQuery.pluginInstances,
     treeQuery.totalCount,
   );
 
   useEffect(() => {
-    if (!isInit) {
+    if (!isInitUser) {
       return;
     }
 
-    if (!theType || (theType === "private" && !isLoggedIn)) {
+    if (theType === "private" && !isLoggedIn) {
       const redirectTo = encodeURIComponent(
         `${location.pathname}${location.search}`,
       );
       navigate(`/login?redirectTo=${redirectTo}`);
     }
-  }, [theType, isLoggedIn, isInit, location, navigate]);
+  }, [theType, isLoggedIn, isInitUser, location, navigate]);
 
   // init
   useEffect(() => {
-    document.title = "My Analyses - CHRIS UI";
+    if (!isInitUser) {
+      return;
+    }
+    if (!paramsFeedID) {
+      return;
+    }
+
+    if (feedData && feedData.id === paramsFeedID) {
+      return;
+    }
+
     doFeed.setShowToolbar(feedID, true);
+    document.title = "My Analyses - CHRIS UI";
+
+    doFeed.getFeedDetail(
+      feedID,
+      paramsFeedID,
+      theType,
+      user.username,
+      usePluginInstance,
+      pluginInstanceID,
+    );
+
     return () => {
       doPluginInstance.resetSelectedPlugin(pluginInstanceID);
       doExplorer.clearSelectedFile(explorerID);
       doFeed.setShowToolbar(feedID, false);
     };
-  }, [isInit]);
+  }, [isInitUser, paramsFeedID, feedData]);
 
   // set drawer state
   useEffect(() => {
@@ -138,11 +166,11 @@ export default () => {
   }, [role, treeQuery.pluginInstances, treeQuery.totalCount]);
 
   useEffect(() => {
-    if (!feed) {
+    if (!feedData) {
       return;
     }
-    doFeed.feedSuccess(feedID, feed);
-  }, [feed]);
+    doFeed.feedSuccess(feedID, feedData);
+  }, [feedData]);
 
   const onNodeClick = (node: any) => {
     doExplorer.clearSelectedFile(explorerID);
@@ -158,15 +186,6 @@ export default () => {
   const changeLayout = () => {
     setCurrentLayout(!currentLayout);
   };
-
-  const TitleComponent = (
-    <CustomTitle color="white">
-      <AnalysisIcon style={{ marginRight: "0.25em" }} />
-      <Tooltip content={feed?.name}>
-        <span>{feed ? elipses(feed?.name, 40) : ""}</span>
-      </Tooltip>
-    </CustomTitle>
-  );
 
   const isUpperShow = drawerState.graph.open || drawerState.node.open;
   const upperStyle: CSSProperties = {};
@@ -192,7 +211,7 @@ export default () => {
   }
 
   return (
-    <Wrapper title={TitleComponent}>
+    <Wrapper title={<Title feed={feedData} />}>
       {contextHolder}
       <PanelGroup autoSaveId="conditional" direction="vertical">
         {/* Top Panels: Graph and Node Details */}
@@ -227,7 +246,7 @@ export default () => {
                       currentLayout={currentLayout}
                       treeQuery={treeQuery}
                       statuses={statuses}
-                      feed={feed}
+                      feed={feedData}
                       isStaff={isStaff}
                     />
                   ) : (
@@ -235,7 +254,7 @@ export default () => {
                       currentLayout={currentLayout}
                       changeLayout={changeLayout}
                       onNodeClick={onNodeClick}
-                      feed={feed}
+                      feed={feedData}
                     />
                   )}
                 </Panel>

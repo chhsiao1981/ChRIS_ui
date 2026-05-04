@@ -11,10 +11,12 @@ import type {
   ComputeResource,
   Feed,
   FileBrowserFolderFile,
+  ID,
   Pipeline,
   Piping,
   PipingDefaultParameter,
   Plugin,
+  PluginInstance,
 } from "./types";
 
 export function elipses(str: string, len: number) {
@@ -22,60 +24,38 @@ export function elipses(str: string, len: number) {
   return `${str.slice(0, len - 3)}...`;
 }
 
-export interface TreeType {
-  id: number;
-  plugin_id: number;
-  pipeline_id: number;
-  previous_id: number | null;
-}
 export interface TreeNode {
-  children: TreeType[];
-  id: number;
-  plugin_id: number;
-  pipeline_id: number;
-  previous_id: number | null;
+  children: TreeNode[];
+  id: ID;
+  plugin_id: ID;
+  pipeline_id: ID;
+  previous_id: ID | null;
   title: string;
   plugin_name: string;
   plugin_version: string;
 }
 
-export const getFeedTree = (items: any[]): TreeNode[] => {
+export const getFeedTree = (pluginInstances: PluginInstance[]): TreeNode[] => {
   const tree: TreeNode[] = [];
-  const mappedArr = new Map<number, TreeNode>();
-  const childrenMap = new Map<number, TreeNode[]>();
+  const mappedArr = new Map<ID, TreeNode>();
+  const childrenMap = new Map<ID, TreeNode[]>();
 
-  items.forEach((item) => {
-    const id: number = item.data.id;
-    const previous_id: number | null =
-      item.data.previous_id !== undefined ? item.data.previous_id : null;
+  pluginInstances.forEach((item) => {
+    const id: ID = item.id;
+    const previous_id: ID | null = item.previous_id || null;
 
     const node: TreeNode = {
       id,
-      plugin_id: item.data.plugin_id,
-      pipeline_id: item.data.pipeline_id,
+      plugin_id: item.plugin_id,
+      pipeline_id: item.pipeline_id,
       previous_id,
-      title: item.data.title,
-      plugin_name: item.data.plugin_name,
-      plugin_version: item.data.plugin_version,
+      title: item.title,
+      plugin_name: item.plugin_name,
+      plugin_version: item.plugin_version,
       children: [],
     };
 
     mappedArr.set(id, node);
-
-    if (previous_id !== null) {
-      const parentNode = mappedArr.get(previous_id);
-      if (parentNode) {
-        parentNode.children.push(node);
-      } else {
-        // If parent hasn't been processed yet, store the child in childrenMap
-        if (!childrenMap.has(previous_id)) {
-          childrenMap.set(previous_id, []);
-        }
-        childrenMap.get(previous_id)!.push(node);
-      }
-    } else {
-      tree.push(node);
-    }
 
     // If there are children waiting for this node, add them
     if (childrenMap.has(id)) {
@@ -83,6 +63,23 @@ export const getFeedTree = (items: any[]): TreeNode[] => {
       node.children.push(...children);
       childrenMap.delete(id);
     }
+
+    if (!previous_id) {
+      tree.push(node);
+      return;
+    }
+
+    const parentNode = mappedArr.get(previous_id);
+    if (parentNode) {
+      parentNode.children.push(node);
+      return;
+    }
+
+    // If parent hasn't been processed yet, store the child in childrenMap
+    if (!childrenMap.has(previous_id)) {
+      childrenMap.set(previous_id, []);
+    }
+    childrenMap.get(previous_id)!.push(node);
   });
 
   return tree;

@@ -25,7 +25,6 @@ import * as DoOperation from "../../reducers/operation";
 import * as DoUser from "../../reducers/user";
 import { InfoSection } from "../Common";
 import Operations from "../NewLibrary/components/Operations";
-import { OperationContext } from "../NewLibrary/context";
 import Wrapper from "../Wrapper";
 import { COLUMN_DEFINITIONS } from "./constants";
 import EmptyStateTable from "./EmptyStateTable";

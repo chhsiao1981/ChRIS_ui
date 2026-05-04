@@ -3,9 +3,15 @@ import {
   type State as rState,
   setData,
   type Thunk,
+  type ThunkModuleToFunc,
+  type UseThunk,
 } from "@chhsiao1981/use-thunk";
 import type { Feed, ID } from "../api/types";
 import type { FeedType } from "../api/types/feed";
+
+import type * as DoPluginInstance from "./pluginInstance";
+
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 export const myClass = "chris-ui/feed";
 
@@ -55,6 +61,9 @@ export const getFeedDetail = (
   myID: string,
   feedID: ID,
   theType: FeedType,
+  username: string,
+  usePluginInstance: UseThunk<DoPluginInstance.State, TDoPluginInstance>,
+  pluginInstanceID: string,
 ): Thunk<State> => {
   return (dispatch, _) => {};
 };
