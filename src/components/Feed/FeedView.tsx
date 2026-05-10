@@ -1,15 +1,12 @@
-import { Tooltip } from "@patternfly/react-core";
 import { type CSSProperties, useEffect, useState } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useLocation, useNavigate, useParams } from "react-router";
-import { elipses } from "../../api/common";
 import type { PluginInstance } from "../../api/types";
 import { DrawerActionButton } from "../FeedList/DrawerUtils";
 import usePaginatedTreeQuery from "../FeedList/usePaginatedTreeQuery";
 import FeedOutputBrowser from "../FeedOutputBrowser/FeedOutputBrowser";
 import FeedGraph from "../FeedTree/FeedGraph";
-import ParentComponent from "../FeedTree/ParentComponent";
-import { AnalysisIcon } from "../Icons";
+import ParentComponent from "../FeedTree/FeedTreeParent";
 import NodeDetails from "../NodeDetails/NodeDetails";
 import Wrapper from "../Wrapper";
 import "../FeedList/Feeds.css"; // Import your CSS file
@@ -54,7 +51,7 @@ export default () => {
 
   const useDrawer = useThunk<DoDrawer.State, TDoDrawer>(DoDrawer);
   const [classDrawer, doDrawer] = useDrawer;
-  const drawerState = getState(classDrawer) || DoDrawer.defaultState;
+  const drawer = getState(classDrawer) || DoDrawer.defaultState;
   const drawerID = getDefaultID(classDrawer);
 
   const useExplorer = useThunk<DoExplorer.State, TDoExplorer>(DoExplorer);
@@ -75,7 +72,7 @@ export default () => {
   const [classPluginInstance, doPluginInstance] = usePluginInstance;
   const pluginInstanceID = getDefaultID(classPluginInstance);
 
-  const [currentLayout, setCurrentLayout] = useState(false);
+  const [isFeedGraph, setIsFeeGraph] = useState(false);
   const query = useSearchQueryParams();
   const queryType = query.get("type") as FeedType | null;
   const theType = queryType || DEFAULT_TYPE;
@@ -184,29 +181,29 @@ export default () => {
   };
 
   const changeLayout = () => {
-    setCurrentLayout(!currentLayout);
+    setIsFeeGraph(!isFeedGraph);
   };
 
-  const isUpperShow = drawerState.graph.open || drawerState.node.open;
+  const isUpperShow = drawer.graph.open || drawer.node.open;
   const upperStyle: CSSProperties = {};
   if (!isUpperShow) {
     upperStyle.display = "none";
   }
 
   const graphStyle: CSSProperties = {};
-  if (!drawerState.graph.open) {
+  if (!drawer.graph.open) {
     graphStyle.display = "none";
   }
 
   const nodeStyle: CSSProperties = {
     overflow: "scroll",
   };
-  if (!drawerState.node.open) {
+  if (!drawer.node.open) {
     nodeStyle.display = "none";
   }
 
   const feedOutputBrowserStyle: CSSProperties = {};
-  if (!drawerState.files.open && !drawerState.preview.open) {
+  if (!drawer.files.open && !drawer.preview.open) {
     feedOutputBrowserStyle.display = "none";
   }
 
@@ -238,12 +235,12 @@ export default () => {
                     content={"graph"}
                     onMaximize={() => onMaximize(drawerID, "graph", doDrawer)}
                     onMinimize={() => onMinimize(drawerID, doDrawer)}
-                    maximized={drawerState.graph.maximized}
+                    maximized={drawer.graph.maximized}
                   />
-                  {!currentLayout ? (
+                  {!isFeedGraph ? (
                     <ParentComponent
-                      changeLayout={changeLayout}
-                      currentLayout={currentLayout}
+                      setIsFeedGraph={changeLayout}
+                      isFeedGraph={isFeedGraph}
                       treeQuery={treeQuery}
                       statuses={statuses}
                       feed={feedData}
@@ -251,7 +248,7 @@ export default () => {
                     />
                   ) : (
                     <FeedGraph
-                      currentLayout={currentLayout}
+                      currentLayout={isFeedGraph}
                       changeLayout={changeLayout}
                       onNodeClick={onNodeClick}
                       feed={feedData}
@@ -274,7 +271,7 @@ export default () => {
                   content={"node"}
                   onMaximize={() => onMaximize(drawerID, "node", doDrawer)}
                   onMinimize={() => onMinimize(drawerID, doDrawer)}
-                  maximized={drawerState.node.maximized}
+                  maximized={drawer.node.maximized}
                 />
                 <div className="node-block">
                   <NodeDetails

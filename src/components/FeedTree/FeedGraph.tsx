@@ -43,7 +43,7 @@ const FeedGraph: React.FC<IFeedProps> = ({
   const [classStatePluginInstance, _doPluginInstance] = usePluginInstance;
   const pluginInstance =
     getState(classStatePluginInstance) || DoPluginInstance.defaultState;
-  const { selectedPlugin } = pluginInstance;
+  const { selectedInstance: selectedPlugin } = pluginInstance;
 
   console.info("FeedGraph: selectedPlugin:", selectedPlugin);
   //const { data: instances, loading } = pluginInstances;

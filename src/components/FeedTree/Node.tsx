@@ -65,8 +65,10 @@ export default (props: Props) => {
 
   const pluginInstance =
     getState(classStatePluginInstance) || DoPluginInstance.defaultState;
-  const { selectedPlugin, pluginInstances: pluginInstancesObj } =
-    pluginInstance;
+  const {
+    selectedInstance: selectedPlugin,
+    pluginInstances: pluginInstancesObj,
+  } = pluginInstance;
   const { data: pluginInstances } = pluginInstancesObj;
 
   const { mutation, contextHolder } = usePipelineMutation(

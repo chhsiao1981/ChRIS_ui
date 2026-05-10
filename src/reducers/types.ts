@@ -3,6 +3,8 @@ import type {
   FileBrowserFolder,
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
+  ID,
+  ID,
 } from "../api/types";
 import type { FileBrowserType } from "../api/types/fileBrowser";
 
@@ -91,3 +93,16 @@ export interface CartSelection {
   name: string;
   rawData?: CartSelectionDataType;
 }
+
+export interface PluginNodeParameter {
+  flag: string;
+  value: string;
+  type: string;
+  placeholder: string;
+}
+
+export interface PluginNodeParameterMap {
+  [key: string]: PluginNodeParameter;
+}
+
+export type TSID = Record<ID, ID[]>;

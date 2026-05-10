@@ -71,7 +71,7 @@ export default (props: Props) => {
   const [classStatePluginInstance, _doPluginInstance] = usePluginInstance;
   const pluginInstance =
     getState(classStatePluginInstance) || DoPluginInstance.defaultState;
-  const { selectedPlugin } = pluginInstance;
+  const { selectedInstance: selectedPlugin } = pluginInstance;
 
   const [nodeState, setNodeState] = useState<INodeState>(getInitialState);
   const navigate = useNavigate();

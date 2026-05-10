@@ -4,42 +4,44 @@ import {
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
-import type React from "react";
+import type { ItemType } from "antd/es/menu/interface";
 import type { ReactNode } from "react";
 import * as DoPlugin from "../../reducers/plugin";
 import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { Dropdown, type MenuProps } from "../Antd";
 import { AddIcon, DeleteIcon, PatternflyArchiveIcon } from "../Icons";
+import type { TreeNodeDatum } from "./data";
 
 type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
 type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 type Props = {
-  onZip: () => void;
+  node: TreeNodeDatum | null;
+  close: () => void;
   children?: ReactNode;
+  isVisible: boolean;
 };
 export default (props: Props) => {
-  const { onZip, children } = props;
+  // XXX onTouchStart not working for now.
+  const { node, close, children, isVisible } = props;
 
-  const [classStatePluginInstance, _1] = useThunk<
+  const [classPluginInstance, _1] = useThunk<
     DoPluginInstance.State,
     TDoPluginInstance
   >(DoPluginInstance);
 
   const pluginInstance =
-    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
-  const { selectedPlugin } = pluginInstance;
+    getState(classPluginInstance) || DoPluginInstance.defaultState;
+  const { selectedInstance } = pluginInstance;
 
-  const [classStatePlugin, doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(
-    DoPlugin,
-  );
-  const pluginID = getDefaultID(classStatePlugin);
+  const [classPlugin, doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(DoPlugin);
+  const pluginID = getDefaultID(classPlugin);
 
   const cancelled =
-    selectedPlugin?.status === "cancelled" ||
-    selectedPlugin?.status === "finishedWithError";
+    selectedInstance?.status === "cancelled" ||
+    selectedInstance?.status === "finishedWithError";
 
-  const items: MenuProps["items"] = [
+  const items: ItemType[] = [
     {
       key: "1",
       label: "Add a Child Node",
@@ -52,18 +54,20 @@ export default (props: Props) => {
       icon: <AddIcon />,
       disabled: cancelled,
     },
+    /*
     {
       key: "3",
       label: "Add a Graph Node",
       disabled: true,
       icon: <AddIcon />,
     },
+    */
     {
       key: "4",
       label: "Delete a Node",
       disabled:
-        selectedPlugin?.plugin_type === "fs" &&
-        selectedPlugin?.plugin_name === "pl-dircopy",
+        selectedInstance?.plugin_type === "fs" &&
+        selectedInstance?.plugin_name === "pl-dircopy",
       icon: <DeleteIcon />,
     },
     {
@@ -73,16 +77,20 @@ export default (props: Props) => {
     },
   ];
 
-  const handleOperations = (e: any) => {
+  const onZip = () => {
+    if (!node) {
+      return;
+    }
+    fetchPipeline(node.item);
+    close();
+  };
+
+  const onOperations = (e: any) => {
     if (e.key === "1") {
       doPlugin.getNodeOperations(pluginID, "childNode");
     }
     if (e.key === "2") {
       doPlugin.getNodeOperations(pluginID, "childPipeline");
-    }
-
-    if (e.key === "3") {
-      doPlugin.getNodeOperations(pluginID, "childGraph");
     }
 
     if (e.key === "4") {
@@ -94,18 +102,19 @@ export default (props: Props) => {
     }
   };
 
-  const onMenuClick: MenuProps["onClick"] = (e) => {
+  const onClick: MenuProps["onClick"] = (e) => {
     e.domEvent.stopPropagation();
 
-    handleOperations(e);
+    onOperations(e);
   };
 
-  const handleTouchEvent = (e: React.TouchEvent<HTMLUListElement>) => {
+  // XXX onTouch not working for now.
+  /*
+  const onTouchEvent = (e: TouchEvent<HTMLUListElement>) => {
     e.stopPropagation();
-    handleOperations(e);
+    onOperations(e);
   };
 
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   const onLongPress: MenuProps["onTouchStart"] = (e) => {
     // Our mobile experience is horribly broken due to the drawers. This feature will be tested once that is in order
     e.preventDefault();
@@ -113,18 +122,18 @@ export default (props: Props) => {
     // You may adjust the duration based on your preference
     setTimeout(() => {
       // Open the dropdown
-      handleTouchEvent(e);
+      onTouchEvent(e);
     }, 500); // 500 milliseconds as an example duration for long press
   };
+  */
 
   return (
     <Dropdown
       menu={{
         items,
-        onClick: !isMobile ? onMenuClick : undefined,
-        onTouchStart: isMobile ? onLongPress : undefined,
+        onClick,
       }}
-      open={true} // Force it to be open
+      open={isVisible} // Force it to be open
     >
       {children}
     </Dropdown>

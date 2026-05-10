@@ -1,17 +1,17 @@
-import useResizeObserver from "@react-hook/resize-observer";
-import React, { type MutableRefObject, type RefObject } from "react";
+// from: https://github.com/jaredLunde/react-hook/tree/master/packages/resize-observer#quick-start
 
-const useSize = (
-  target:
-    | MutableRefObject<HTMLDivElement | SVGSVGElement | null>
-    | RefObject<SVGGElement | HTMLDivElement | SVGSVGElement>,
-) => {
+import useResizeObserver from "@react-hook/resize-observer";
+import { type MutableRefObject, type RefObject, useState } from "react";
+
+type Props =
+  | MutableRefObject<HTMLDivElement | SVGSVGElement>
+  | RefObject<SVGGElement | HTMLDivElement | SVGSVGElement>;
+
+export default (target: Props) => {
   // size is of type DOMRectReadOnly or undefined initially
-  const [size, setSize] = React.useState<DOMRectReadOnly | undefined>();
+  const [theSize, setSize] = useState<DOMRectReadOnly | undefined>();
 
   useResizeObserver(target, (entry) => setSize(entry.contentRect));
 
-  return size;
+  return theSize;
 };
-
-export default useSize;

@@ -18,6 +18,7 @@ import {
   useThunk,
 } from "@chhsiao1981/use-thunk";
 import Cart from "./components/NewLibrary/components/Cart";
+import * as DoAddNode from "./reducers/addNode";
 import * as DoCart from "./reducers/cart";
 import * as DoDataTag from "./reducers/dataTag";
 import * as DoDrawer from "./reducers/drawer";
@@ -47,7 +48,6 @@ type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 type TDoMainRouter = ThunkModuleToFunc<typeof DoMainRouter>;
 type TDoPacs = ThunkModuleToFunc<typeof DoPacs>;
 type TDoSystem = ThunkModuleToFunc<typeof DoSystem>;
-type TDoOperation = ThunkModuleToFunc<typeof DoOperation>;
 
 // @ts-expect-error registerThunk
 registerThunk(DoDrawer);
@@ -77,6 +77,8 @@ registerThunk(DoMainRouter);
 registerThunk(DoSystem);
 // @ts-expect-error registerThunk
 registerThunk(DoOperation);
+// @ts-expect-error registerThunk
+registerThunk(DoAddNode);
 
 // for react-query
 const queryClient = new QueryClient({

@@ -49,7 +49,7 @@ export default (props: Props) => {
   const pluginInstanceID = getDefaultID(classStatePluginInstance);
   const pluginInstance =
     getState(classStatePluginInstance) || DoPluginInstance.defaultState;
-  const { selectedPlugin } = pluginInstance;
+  const { selectedInstance: selectedPlugin } = pluginInstance;
 
   // --- Redux / Query-Client Hooks ---
   const queryClient = useQueryClient();

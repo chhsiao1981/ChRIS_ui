@@ -75,7 +75,7 @@ export default (props: Props) => {
   const [classStatePluginInstance, _doPluginInstance] = usePluginInstance;
   const pluginInstance =
     getState(classStatePluginInstance) || DoPluginInstance.defaultState;
-  const { selectedPlugin } = pluginInstance;
+  const { selectedInstance: selectedPlugin } = pluginInstance;
   const isCurrentID = selectedPlugin?.id === data.id;
 
   let scale: number | undefined;

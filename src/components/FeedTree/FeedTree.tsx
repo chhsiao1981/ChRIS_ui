@@ -12,9 +12,9 @@ import { type Quadtree, quadtree } from "d3-quadtree";
 import { select } from "d3-selection";
 import { type D3ZoomEvent, zoom as d3Zoom, type ZoomBehavior } from "d3-zoom";
 import { throttle } from "lodash";
-import type React from "react";
 import {
-  memo,
+  type CSSProperties,
+  type MouseEvent,
   useCallback,
   useContext,
   useEffect,
@@ -23,7 +23,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { useImmer } from "use-immer";
 import {
   createWorkflow,
   getWorkflowPluginInstances,
@@ -31,189 +30,106 @@ import {
 import { getPipelinesByName } from "../../api/serverApi/pipeline";
 import type { Feed, ID, PluginInstance } from "../../api/types";
 import * as DoPluginInstance from "../../reducers/pluginInstance";
-import AddNodeConnect from "../AddNode/AddNode";
-import { AddNodeProvider } from "../AddNode/context";
-import AddPipeline from "../AddPipeline/AddPipeline";
 import { ThemeContext } from "../DarkTheme/useTheme";
-import DeleteNode from "../DeleteNode";
 import { RotateLeft, RotateRight } from "../Icons";
-import { PipelineProvider } from "../PipelinesCopy/context";
+import {
+  INITIAL_SCALE,
+  NODE_SIZE,
+  SCALE_EXTENT,
+  SEPARATION,
+} from "./constants";
 import DropdownMenu from "./DropdownMenu";
+import { drawLink, drawNode } from "./draw";
+import Modals from "./Modals";
+import type {
+  ContextMenuPosition,
+  Orientation,
+  OverlayScaleType,
+  Transform,
+  TreeNodeDatum,
+} from "./types";
 import useSize from "./useSize";
+import { getHitNode, getNodeScreenCoords, isNodeInViewport } from "./utils";
 
 type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
-export type TSID = {
-  [key: string]: ID[];
-};
+// topological-sort ids.
+// for each id, map to the direct-children ids.
 
-export interface TreeNodeDatum {
-  id: ID;
-  name: string;
-  parentId: ID | undefined;
-  item: PluginInstance;
-  children: TreeNodeDatum[];
-}
-
-export type FeedTreeScaleType = "time" | "cpu" | "memory" | "none";
-export type FeedTreeProps = {
+type Props = {
   data: TreeNodeDatum;
-  tsIds?: TSID;
-  currentLayout: boolean;
-  changeLayout: () => void;
+  isFeedGraph: boolean;
+  setIsFeedGraph: () => void;
   onNodeClick: (node: TreeNodeDatum) => void;
   addNodeLocally: (instance: PluginInstance | PluginInstance[]) => void;
   removeNodeLocally: (ids: number[]) => void;
-  pluginInstances: PluginInstance[];
-  statuses: {
-    [id: ID]: string;
-  };
   feed?: Feed;
   isStaff: boolean;
 };
 
-const NODE_SIZE = { x: 120, y: 80 };
-const SEPARATION = { siblings: 0.75, nonSiblings: 0.75 };
-const DEFAULT_NODE_RADIUS = 12;
-const SCALE_EXTENT = { min: 0.1, max: 1.5 };
-const INITIAL_SCALE = 1;
-
-enum Feature {
-  TOGGLE_LABELS = "toggleLabels",
-  SCALE_ENABLED = "scale_enabled",
-  SCALE_TYPE = "scale_type",
-  ORIENTATION = "orientation",
-  SEARCH_BOX = "searchBox",
-}
-
-interface State {
-  overlayScale: {
-    enabled: boolean;
-    type: FeedTreeScaleType;
-  };
-  switchState: {
-    toggleLabels: boolean;
-    searchBox: boolean;
-    searchFilter: string;
-    orientation: "vertical" | "horizontal";
-  };
-  treeState: {
-    translate: { x: number; y: number };
-  };
-}
-
-function getInitialState(): State {
-  return {
-    overlayScale: {
-      enabled: false,
-      type: "time",
-    },
-    switchState: {
-      toggleLabels: false,
-      searchBox: false,
-      searchFilter: "",
-      orientation: "vertical",
-    },
-    treeState: {
-      translate: { x: 0, y: 0 },
-    },
-  };
-}
-
-type ModalsProps = {
-  addNodeLocally: (inst: PluginInstance | PluginInstance[]) => void;
-  removeNodeLocally: (ids: number[]) => void;
-  feed?: Feed;
-  isStaff: boolean;
-};
-
-const Modals = (props: ModalsProps) => {
-  const { addNodeLocally, removeNodeLocally, feed, isStaff } = props;
-  return (
-    <>
-      <AddNodeProvider>
-        <AddNodeConnect addNodeLocally={addNodeLocally} />
-      </AddNodeProvider>
-      <DeleteNode removeNodeLocally={removeNodeLocally} feed={feed} />
-      <PipelineProvider>
-        <AddPipeline addNodeLocally={addNodeLocally} isStaff={isStaff} />
-      </PipelineProvider>
-    </>
-  );
-};
-
-function isNodeInViewport(
-  node: HierarchyPointNode<TreeNodeDatum>,
-  transform: { x: number; y: number; k: number },
-  width: number,
-  height: number,
-  padding = 100, // Extra padding to render slightly outside viewport
-): boolean {
-  // Screen position calculation
-  const screenX = node.x * transform.k + transform.x;
-  const screenY = node.y * transform.k + transform.y;
-
-  // Check if the node is within the padded viewport
-  return (
-    screenX >= -padding &&
-    screenX <= width + padding &&
-    screenY >= -padding &&
-    screenY <= height + padding
-  );
-}
-
-const MemoizedDropdownMenu = memo(DropdownMenu);
-
-export default (props: FeedTreeProps) => {
+export default (props: Props) => {
   const {
     data,
-    tsIds,
-    currentLayout,
-    changeLayout,
+    isFeedGraph,
+    setIsFeedGraph,
     onNodeClick,
     addNodeLocally,
     removeNodeLocally,
-    statuses,
     feed,
     isStaff,
   } = props;
 
-  const [classStatePluginInstance, doPluginInstance] = useThunk<
+  const [classPluginInstance, doPluginInstance] = useThunk<
     DoPluginInstance.State,
     TDoPluginInstance
   >(DoPluginInstance);
 
-  const pluginInstanceID = getDefaultID(classStatePluginInstance);
+  const pluginInstanceID = getDefaultID(classPluginInstance);
   const pluginInstance =
-    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
-  const { selectedPlugin } = pluginInstance;
+    getState(classPluginInstance) || DoPluginInstance.defaultState;
+  const {
+    rootNode,
+    tsIds,
+    selectedInstance: selectedPlugin,
+    statuses,
+  } = pluginInstance;
 
   const { isDarkTheme } = useContext(ThemeContext);
-  const [state, updateState] = useImmer(getInitialState());
-  const [transform, setTransform] = useState({
+
+  //overlay scale
+  const [isOverlayScaleEnabled, setIsOverlayScaleEnabled] = useState(false);
+  const [overlayScaleType, setOverlayScaleType] =
+    useState<OverlayScaleType>("time");
+
+  // switch
+  const [isToggleLabels, setIsToggleLabels] = useState(false);
+  const [isSearchBox, setIsSearchBox] = useState(false);
+  const [searchFilter, setSearchFilter] = useState("");
+  const [orientation, setOrientation] = useState<Orientation>("vertical");
+
+  const [theTransform, setTransform] = useState<Transform>({
     x: 0,
     y: 0,
     k: INITIAL_SCALE,
   });
-  const qtRef = useRef<Quadtree<HierarchyPointNode<TreeNodeDatum>> | null>(
-    null,
-  );
+  const [theTree, setTheTree] = useState<Quadtree<
+    HierarchyPointNode<TreeNodeDatum>
+  > | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const initialRenderRef = useRef(true);
-  const size = useSize(containerRef);
-  const width = size?.width;
-  const height = size?.height;
-  const frameIdRef = useRef<number | null>(null);
-  const [contextMenuNode, setContextMenuNode] = useState<TreeNodeDatum | null>(
+  const [isInitRender, setIsInitRender] = useState(false);
+  const theSize = useSize(containerRef);
+  const width = theSize?.width;
+  const height = theSize?.height;
+  const [selectedNode, setContextMenuNode] = useState<TreeNodeDatum | null>(
     null,
   );
-  const [contextMenuPosition, setContextMenuPosition] = useState({
-    x: 0,
-    y: 0,
-    visible: false,
-  });
-  const orientation = state.switchState.orientation;
+  const [dropdownPosition, setContextMenuPosition] =
+    useState<ContextMenuPosition>({
+      x: 0,
+      y: 0,
+      visible: false,
+    });
 
   const [api, contextHolder] = notification.useNotification();
 
@@ -237,7 +153,7 @@ export default (props: FeedTreeProps) => {
       data: data3,
       errmsg: errmsg3,
     } = await getPipelinesByName("zip v20240311");
-    const pipelines = data3 || [];
+    const pipelines = data3?.results || [];
     if (!pipelines || pipelines.length === 0) {
       throw new Error("The zip pipeline is not registered. Contact admin.");
     }
@@ -269,7 +185,7 @@ export default (props: FeedTreeProps) => {
     return pipelines;
   };
 
-  const d3 = useMemo(() => {
+  const d3Data = useMemo(() => {
     if (!data)
       return {
         nodes: [] as HierarchyPointNode<TreeNodeDatum>[],
@@ -332,30 +248,37 @@ export default (props: FeedTreeProps) => {
   }, [data, tsIds, orientation]);
 
   useEffect(() => {
-    if (!d3.nodes || d3.nodes.length === 0) return;
-    qtRef.current = quadtree<HierarchyPointNode<TreeNodeDatum>>()
+    if (!d3Data.nodes || d3Data.nodes.length === 0) return;
+    const newTree = quadtree<HierarchyPointNode<TreeNodeDatum>>()
       .x((d) => d.x)
       .y((d) => d.y)
-      .addAll(d3.nodes);
-  }, [d3.nodes]);
+      .addAll(d3Data.nodes);
+    setTheTree(newTree);
+  }, [d3Data.nodes]);
 
   useLayoutEffect(() => {
-    if (
-      initialRenderRef.current &&
-      d3.rootNode != null &&
-      width != null &&
-      height != null
-    ) {
-      const root = d3.rootNode;
-      const centerX = width / 2 - root.x;
-      const centerY = height / 7 - root.y;
-      setTransform({ x: centerX, y: centerY, k: INITIAL_SCALE });
-      initialRenderRef.current = false;
+    if (isInitRender) {
+      return;
     }
-  }, [d3.rootNode, width, height]);
+    if (!d3Data.rootNode) {
+      return;
+    }
+    if (!width) {
+      return;
+    }
+    if (!height) {
+      return;
+    }
+
+    const root = d3Data.rootNode;
+    const centerX = width / 2 - root.x;
+    const centerY = height / 7 - root.y;
+    setTransform({ x: centerX, y: centerY, k: INITIAL_SCALE });
+    setIsInitRender(true);
+  }, [d3Data.rootNode, width, height, isInitRender]);
 
   useEffect(() => {
-    if (!canvasRef.current || !d3.rootNode || !width || !height) return;
+    if (!canvasRef.current || !d3Data.rootNode || !width || !height) return;
     const handleZoom = throttle(
       (event: D3ZoomEvent<HTMLCanvasElement, unknown>) => {
         setTransform({
@@ -376,7 +299,7 @@ export default (props: FeedTreeProps) => {
     return () => {
       selection.on(".zoom", null);
     };
-  }, [d3.rootNode, width, height]);
+  }, [d3Data.rootNode, width, height]);
 
   const paint = useCallback(() => {
     const canvas = canvasRef.current;
@@ -388,32 +311,33 @@ export default (props: FeedTreeProps) => {
     canvas.style.height = `${height}px`;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     ctx.scale(ratio, ratio);
-    ctx.translate(transform.x, transform.y);
-    ctx.scale(transform.k, transform.k);
+    ctx.translate(theTransform.x, theTransform.y);
+    ctx.scale(theTransform.k, theTransform.k);
 
     // Determine visible nodes to avoid drawing offscreen elements
-    const isLargeTree = d3.nodes.length > 200;
+    const isLargeTree = d3Data.nodes.length > 200;
 
     // For small trees, render everything
     // For large trees, only render what's visible
     const visibleNodes = isLargeTree
-      ? d3.nodes.filter((node) =>
-          isNodeInViewport(node, transform, width, height),
+      ? d3Data.nodes.filter((node) =>
+          isNodeInViewport(node, theTransform, width, height),
         )
-      : d3.nodes;
+      : d3Data.nodes;
 
     // For links, either render all or only those connected to visible nodes
     const visibleNodeIds = new Set(visibleNodes.map((n) => n.data.id));
     const visibleLinks = isLargeTree
-      ? d3.links.filter(
+      ? d3Data.links.filter(
           (link) =>
             visibleNodeIds.has(link.source.data.id) ||
             visibleNodeIds.has(link.target.data.id),
         )
-      : d3.links;
+      : d3Data.links;
 
     // Batch similar drawing operations for better performance
     // 1. Draw all links first (fewer state changes)
@@ -428,11 +352,9 @@ export default (props: FeedTreeProps) => {
         ctx,
         node,
         isDarkTheme,
-        toggleLabel: state.switchState.toggleLabels,
-        searchFilter: state.switchState.searchFilter,
-        overlayScale: state.overlayScale.enabled
-          ? state.overlayScale.type
-          : undefined,
+        toggleLabel: isToggleLabels,
+        searchFilter: searchFilter,
+        overlayScale: isOverlayScaleEnabled ? overlayScaleType : undefined,
         selectedId: selectedPlugin?.id,
         finalStatus,
       });
@@ -442,166 +364,82 @@ export default (props: FeedTreeProps) => {
   }, [
     width,
     height,
-    d3.nodes,
-    d3.links,
-    transform,
+    d3Data.nodes,
+    d3Data.links,
+    theTransform,
     isDarkTheme,
-    state.switchState.toggleLabels,
-    state.switchState.searchFilter,
-    state.overlayScale.enabled,
-    state.overlayScale.type,
     statuses,
     selectedPlugin,
   ]);
 
-  useEffect(() => {
-    if (frameIdRef.current != null) {
-      cancelAnimationFrame(frameIdRef.current);
+  const onCanvasClick = (evt: MouseEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current) return;
+    if (!theTree) return;
+
+    const theHit = getHitNode(evt, canvasRef.current, theTree, theTransform);
+    if (!theHit) return;
+
+    onNodeClick(theHit.data);
+  };
+
+  const onCanvasContextMenu = (evt: MouseEvent<HTMLCanvasElement>) => {
+    evt.preventDefault();
+    if (!canvasRef.current || !theTree) return;
+    const hit = getHitNode(evt, canvasRef.current, theTree, theTransform);
+
+    if (!hit) {
+      closeDropdown();
+      return;
     }
-    frameIdRef.current = requestAnimationFrame(paint);
-    return () => {
-      if (frameIdRef.current != null) {
-        cancelAnimationFrame(frameIdRef.current);
-      }
-    };
-  }, [paint]);
+    const { screenX, screenY } = getNodeScreenCoords(
+      hit.x,
+      hit.y,
+      theTransform,
+      containerRef.current!.getBoundingClientRect(),
+    );
+    setContextMenuNode(hit.data);
+    setContextMenuPosition({
+      x: screenX + 20,
+      y: screenY + 10,
+      visible: true,
+    });
+  };
 
-  const handleCanvasClick = useCallback(
-    (evt: React.MouseEvent<HTMLCanvasElement>) => {
-      if (!canvasRef.current) return;
-      const rect = canvasRef.current.getBoundingClientRect();
-      const mouseX = evt.clientX - rect.left;
-      const mouseY = evt.clientY - rect.top;
-      const ratio = window.devicePixelRatio || 1;
-      const zoomedX =
-        (mouseX * ratio - transform.x * ratio) / (transform.k * ratio);
-      const zoomedY =
-        (mouseY * ratio - transform.y * ratio) / (transform.k * ratio);
+  const closeDropdown = () => {
+    setContextMenuPosition({ x: 0, y: 0, visible: false });
+    setContextMenuNode(null);
+  };
 
-      // Find with a radius that scales with zoom level for better touch targets
-      const searchRadius = DEFAULT_NODE_RADIUS / transform.k;
-      const hit = qtRef.current?.find(zoomedX, zoomedY, searchRadius);
-
-      if (hit) {
-        onNodeClick(hit.data);
-      }
-    },
-    [transform, onNodeClick],
-  );
-
-  const getNodeScreenCoords = useCallback(
-    (
-      nodeX: number,
-      nodeY: number,
-      transform: { x: number; y: number; k: number },
-      containerRect: DOMRect,
-    ) => {
-      const canvasX = transform.x + transform.k * nodeX;
-      const canvasY = transform.y + transform.k * nodeY;
-      const screenX = containerRect.left + canvasX;
-      const screenY = containerRect.top + canvasY;
-      return { screenX, screenY };
-    },
-    [],
-  );
-
-  const handleCanvasContextMenu = useCallback(
-    (evt: React.MouseEvent<HTMLCanvasElement>) => {
-      evt.preventDefault();
-      if (!canvasRef.current || !qtRef.current) return;
-      const rect = canvasRef.current.getBoundingClientRect();
-      const mouseX = evt.clientX - rect.left;
-      const mouseY = evt.clientY - rect.top;
-      const ratio = window.devicePixelRatio || 1;
-      const zoomedX =
-        (mouseX * ratio - transform.x * ratio) / (transform.k * ratio);
-      const zoomedY =
-        (mouseY * ratio - transform.y * ratio) / (transform.k * ratio);
-
-      // Find with a radius that scales with zoom level for better touch targets
-      const searchRadius = DEFAULT_NODE_RADIUS / transform.k;
-      const hit = qtRef.current.find(zoomedX, zoomedY, searchRadius);
-
-      if (hit) {
-        const { screenX, screenY } = getNodeScreenCoords(
-          hit.x,
-          hit.y,
-          transform,
-          containerRef.current!.getBoundingClientRect(),
-        );
-        setContextMenuNode(hit.data);
-        setContextMenuPosition({
-          x: screenX + 20,
-          y: screenY + 10,
-          visible: true,
-        });
-      } else {
-        setContextMenuNode(null);
-        setContextMenuPosition({ x: 0, y: 0, visible: false });
-      }
-    },
-    [transform, getNodeScreenCoords],
-  );
-
-  const handleChange = useCallback(
-    (feature: Feature, payload?: any) => {
-      updateState((draft) => {
-        switch (feature) {
-          case Feature.TOGGLE_LABELS:
-            draft.switchState.toggleLabels = !draft.switchState.toggleLabels;
-            break;
-          case Feature.SCALE_ENABLED:
-            draft.overlayScale.enabled = !draft.overlayScale.enabled;
-            break;
-          case Feature.SCALE_TYPE:
-            draft.overlayScale.type = payload;
-            break;
-          case Feature.ORIENTATION:
-            draft.switchState.orientation = payload;
-            break;
-          case Feature.SEARCH_BOX:
-            draft.switchState.searchBox = !draft.switchState.searchBox;
-            break;
-          default:
-            break;
-        }
-      });
-    },
-    [updateState],
-  );
+  // styles
+  const styleOverlayScale: CSSProperties = {};
+  if (!isOverlayScaleEnabled) {
+    styleOverlayScale.display = "none";
+  }
+  const styleSearchBox: CSSProperties = {
+    width: "120px",
+  };
+  if (!isSearchBox) {
+    styleSearchBox.display = "none";
+  }
+  const styleDropdown: CSSProperties = {
+    position: "absolute",
+    top: dropdownPosition.y,
+    left: dropdownPosition.x,
+    zIndex: 999,
+  };
 
   return (
     <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
       {contextHolder}
-      <Modals
-        feed={feed}
-        addNodeLocally={addNodeLocally}
-        removeNodeLocally={removeNodeLocally}
-        isStaff={isStaff}
-      />
-      {contextMenuPosition.visible && contextMenuNode && (
-        // biome-ignore lint/a11y/noStaticElementInteractions: onMouseLeave div.
-        <div
-          style={{
-            position: "absolute",
-            top: contextMenuPosition.y,
-            left: contextMenuPosition.x,
-            zIndex: 999,
-          }}
-          onMouseLeave={() => {
-            setContextMenuPosition({ x: 0, y: 0, visible: false });
-            setContextMenuNode(null);
-          }}
-        >
-          <MemoizedDropdownMenu
-            onZip={() => {
-              pipelineMutation.mutate(contextMenuNode.item);
-              setContextMenuPosition({ x: 0, y: 0, visible: false });
-              setContextMenuNode(null);
-            }}
-          />
-        </div>
-      )}
+
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: onMouseLeave div. */}
+      <div style={styleDropdown} onMouseLeave={closeDropdown}>
+        <DropdownMenu
+          node={selectedNode}
+          close={closeDropdown}
+          isVisible={dropdownPosition.visible}
+        />
+      </div>
       <div
         className="feed-tree__controls"
         style={{ display: "flex", gap: 10, margin: 10 }}
@@ -609,239 +447,70 @@ export default (props: FeedTreeProps) => {
         <div>
           {orientation === "vertical" ? (
             <RotateLeft
-              onClick={() => handleChange(Feature.ORIENTATION, "horizontal")}
+              onClick={() => setOrientation("horizontal")}
               style={{ cursor: "pointer" }}
             />
           ) : (
             <RotateRight
-              onClick={() => handleChange(Feature.ORIENTATION, "vertical")}
+              onClick={() => setOrientation("vertical")}
               style={{ cursor: "pointer" }}
             />
           )}
         </div>
         <Switch
-          checked={state.switchState.toggleLabels}
-          onChange={() => handleChange(Feature.TOGGLE_LABELS)}
+          checked={isToggleLabels}
+          onChange={() => setIsToggleLabels(!isToggleLabels)}
           checkedChildren="Labels On"
           unCheckedChildren="Labels Off"
         />
         <Switch
-          checked={currentLayout}
-          onChange={() => changeLayout()}
+          checked={isFeedGraph}
+          onChange={() => setIsFeedGraph()}
           checkedChildren="3D"
           unCheckedChildren="2D"
         />
         <Switch
-          checked={state.overlayScale.enabled}
-          onChange={() => handleChange(Feature.SCALE_ENABLED)}
+          checked={isOverlayScaleEnabled}
+          onChange={() => setIsOverlayScaleEnabled(!isOverlayScaleEnabled)}
           checkedChildren="Node Scale On"
           unCheckedChildren="Node Scale Off"
         />
-        {state.overlayScale.enabled && (
-          <select
-            value={state.overlayScale.type}
-            onChange={(e) => handleChange(Feature.SCALE_TYPE, e.target.value)}
-          >
-            <option value="time">Time</option>
-            <option value="cpu">CPU</option>
-            <option value="memory">Memory</option>
-          </select>
-        )}
+        <select
+          value={overlayScaleType}
+          onChange={(e) =>
+            setOverlayScaleType(e.target.value as OverlayScaleType)
+          }
+          style={styleOverlayScale}
+        >
+          <option value="time">Time</option>
+          <option value="cpu">CPU</option>
+          <option value="memory">Memory</option>
+        </select>
         <Switch
-          checked={state.switchState.searchBox}
-          onChange={() => handleChange(Feature.SEARCH_BOX)}
+          checked={isSearchBox}
+          onChange={() => setIsSearchBox(!isSearchBox)}
           checkedChildren="Search On"
           unCheckedChildren="Search Off"
         />
-        {state.switchState.searchBox && (
-          <Input
-            placeholder="Search..."
-            value={state.switchState.searchFilter}
-            onChange={(e) =>
-              updateState((draft) => {
-                draft.switchState.searchFilter = e.target.value;
-              })
-            }
-            style={{ width: 120 }}
-          />
-        )}
+        <Input
+          placeholder="Search..."
+          value={searchFilter}
+          onChange={(e) => setSearchFilter(e.target.value)}
+          style={styleSearchBox}
+        />
       </div>
       <canvas
         ref={canvasRef}
         style={{ width: "100%", height: "100%", cursor: "grab" }}
-        onClick={handleCanvasClick}
-        onContextMenu={handleCanvasContextMenu}
+        onClick={onCanvasClick}
+        onContextMenu={onCanvasContextMenu}
+      />
+      <Modals
+        feed={feed}
+        addNodeLocally={addNodeLocally}
+        removeNodeLocally={removeNodeLocally}
+        isStaff={isStaff}
       />
     </div>
   );
 };
-
-function drawLink(
-  ctx: CanvasRenderingContext2D,
-  linkData: HierarchyPointLink<TreeNodeDatum>,
-  isDarkTheme: boolean,
-) {
-  const { source, target } = linkData;
-  const nodeRadius = DEFAULT_NODE_RADIUS;
-  const isTs = target.data.item.plugin_type === "ts";
-  const dx = target.x - source.x;
-  const dy = target.y - source.y;
-  const dist = Math.sqrt(dx * dx + dy * dy);
-  if (dist === 0) return;
-  const nx = dx / dist;
-  const ny = dy / dist;
-  const sourceX = source.x + nodeRadius * nx;
-  const sourceY = source.y + nodeRadius * ny;
-  const childOffset = nodeRadius + 4;
-  const targetX = target.x - childOffset * nx;
-  const targetY = target.y - childOffset * ny;
-  ctx.save();
-  ctx.beginPath();
-  ctx.strokeStyle = isDarkTheme ? "#F2F9F9" : "#6A6E73";
-  ctx.lineWidth = 0.5;
-  if (isTs) {
-    ctx.setLineDash([4, 2]);
-  } else {
-    ctx.setLineDash([]);
-  }
-  ctx.moveTo(sourceX, sourceY);
-  ctx.lineTo(targetX, targetY);
-  ctx.stroke();
-  drawArrowHead(ctx, sourceX, sourceY, targetX, targetY);
-  ctx.restore();
-}
-
-function drawArrowHead(
-  ctx: CanvasRenderingContext2D,
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  arrowSize = 8,
-) {
-  const angle = Math.atan2(y2 - y1, x2 - x1);
-  ctx.beginPath();
-  ctx.moveTo(x2, y2);
-  ctx.lineTo(
-    x2 - arrowSize * Math.cos(angle - Math.PI / 7),
-    y2 - arrowSize * Math.sin(angle - Math.PI / 7),
-  );
-  ctx.lineTo(
-    x2 - arrowSize * Math.cos(angle + Math.PI / 7),
-    y2 - arrowSize * Math.sin(angle + Math.PI / 7),
-  );
-  ctx.closePath();
-  ctx.fillStyle = ctx.strokeStyle as string;
-  ctx.fill();
-}
-
-interface DrawNodeOptions {
-  ctx: CanvasRenderingContext2D;
-  node: HierarchyPointNode<TreeNodeDatum>;
-  isDarkTheme: boolean;
-  toggleLabel: boolean;
-  searchFilter: string;
-  overlayScale?: FeedTreeScaleType;
-  selectedId?: ID;
-  finalStatus: string | undefined;
-}
-
-function drawNode({
-  ctx,
-  node,
-  isDarkTheme,
-  toggleLabel,
-  searchFilter,
-  overlayScale,
-  selectedId,
-  finalStatus,
-}: DrawNodeOptions) {
-  const { x, y } = node;
-  const data = node.data;
-  const itemData = data.item;
-  const statusColor = getStatusColor(finalStatus, data, searchFilter);
-  const isSelected = selectedId === node.data.id;
-  const nodeName = node.data.name || `Node ${node.data.id}`;
-
-  // Calculate scale factor for overlay
-  let scaleFactor = 1;
-  if (overlayScale === "time" && itemData.start_date && itemData.end_date) {
-    const start = new Date(itemData.start_date).getTime();
-    const end = new Date(itemData.end_date).getTime();
-    const diff = Math.max(1, end - start);
-    scaleFactor = Math.log10(diff) / 2;
-    if (scaleFactor < 1) scaleFactor = 1;
-  }
-
-  // Save context state before drawing node
-  ctx.save();
-
-  // Limit text rendering for performance
-  const shouldRenderText = toggleLabel || isSelected;
-
-  // Draw node (circle)
-  ctx.beginPath();
-  ctx.arc(x, y, DEFAULT_NODE_RADIUS, 0, 2 * Math.PI);
-  ctx.fillStyle = statusColor;
-  ctx.fill();
-
-  // Draw time overlay if needed
-  if (scaleFactor > 1) {
-    ctx.beginPath();
-    ctx.arc(x, y, DEFAULT_NODE_RADIUS * scaleFactor, 0, 2 * Math.PI);
-    ctx.strokeStyle = "rgba(255, 0, 0, 0.3)";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-  }
-
-  // Draw selection indicator if selected
-  if (isSelected) {
-    ctx.beginPath();
-    ctx.arc(x, y, DEFAULT_NODE_RADIUS * 1.3, 0, 2 * Math.PI);
-    ctx.strokeStyle = isDarkTheme ? "#fff" : "#000";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-  }
-
-  // Only render text if needed (major performance gain for large trees)
-  if (shouldRenderText) {
-    ctx.font = "12px Arial";
-    const textWidth = ctx.measureText(nodeName).width;
-    ctx.fillStyle = isDarkTheme ? "#fff" : "#000";
-    ctx.fillText(nodeName, x - textWidth / 2, y + DEFAULT_NODE_RADIUS * 2 + 5);
-  }
-
-  // Restore context state after drawing node
-  ctx.restore();
-}
-
-function getStatusColor(
-  status: string | undefined,
-  data: TreeNodeDatum,
-  searchFilter: string,
-): string {
-  if (searchFilter) {
-    const term = searchFilter.toLowerCase();
-    const pluginName = data.item.plugin_name?.toLowerCase() || "";
-    const title = data.item.title?.toLowerCase() || "";
-    if (pluginName.includes(term) || title.includes(term)) {
-      return "red";
-    }
-  }
-  switch (status) {
-    case "started":
-    case "scheduled":
-    case "registeringFiles":
-    case "created":
-      return "#bee1f4";
-    case "waiting":
-      return "#aaa";
-    case "finishedSuccessfully":
-      return "#004080";
-    case "finishedWithError":
-    case "cancelled":
-      return "#c9190b";
-    default:
-      return "#F0AB00";
-  }
-}

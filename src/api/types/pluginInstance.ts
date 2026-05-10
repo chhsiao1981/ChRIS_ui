@@ -40,6 +40,7 @@ export interface PluginInstance {
   gpu_limit: number;
   size: number;
   error_code: string;
+  [param_name: string]: any; // for parameters // XXX naming-injection.
 }
 
 export interface PluginInstanceParameter {

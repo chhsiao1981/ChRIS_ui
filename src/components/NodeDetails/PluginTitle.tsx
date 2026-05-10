@@ -29,7 +29,7 @@ const PluginTitle = () => {
   const pluginInstanceID = getDefaultID(classStatePluginInstance);
   const pluginInstance =
     getState(classStatePluginInstance) || DoPluginInstance.defaultState;
-  const { selectedPlugin } = pluginInstance;
+  const { selectedInstance: selectedPlugin } = pluginInstance;
 
   const [isOpen, setIsOpen] = useState(false);
   const [value, setValue] = useState("");

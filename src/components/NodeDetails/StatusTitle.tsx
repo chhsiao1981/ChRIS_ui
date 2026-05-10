@@ -21,7 +21,7 @@ const StatusTitle = ({ pluginStatus }: { pluginStatus: any }) => {
 
   const pluginInstance =
     getState(classStatePluginInstance) || DoPluginInstance.defaultState;
-  const { selectedPlugin: selected } = pluginInstance;
+  const { selectedInstance: selected } = pluginInstance;
 
   let statusTitle:
     | {

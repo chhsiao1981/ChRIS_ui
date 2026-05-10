@@ -22,11 +22,13 @@ import {
 } from "@chhsiao1981/use-thunk";
 import { createPluginInstance } from "../../api/serverApi";
 import type { PluginInstance } from "../../api/types";
+import * as DoAddNode from "../../reducers/addNode";
 import * as DoPlugin from "../../reducers/plugin";
 import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { AddNodeContext } from "./context";
 import { Types } from "./types";
 
+type TDoAddNode = ThunkModuleToFunc<typeof DoAddNode>;
 type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
 type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
@@ -37,24 +39,27 @@ type Props = {
 export default (props: Props) => {
   const { addNodeLocally } = props;
 
-  const [classStatePluginInstance, _1] = useThunk<
+  const [classPluginInstance, doPluginInstance] = useThunk<
     DoPluginInstance.State,
     TDoPluginInstance
   >(DoPluginInstance);
 
+  const pluginInstanceID = getDefaultID(classPluginInstance);
   const pluginInstance =
-    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
-  const { selectedPlugin, pluginInstances } = pluginInstance;
+    getState(classPluginInstance) || DoPluginInstance.defaultState;
+  const { selectedInstance: selectedPlugin, pluginInstances } = pluginInstance;
 
-  const [classStatePlugin, doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(
-    DoPlugin,
-  );
-  const pluginID = getDefaultID(classStatePlugin);
-  const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
+  const [classPlugin, doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(DoPlugin);
+  const pluginID = getDefaultID(classPlugin);
+  const plugin = getState(classPlugin) || DoPlugin.defaultState;
   const { nodeOperations, parameters: params } = plugin;
   const { childNode } = nodeOperations;
 
-  const { state, dispatch: nodeDispatch } = useContext(AddNodeContext);
+  const [classAddNode, doAddNode] = useThunk<DoAddNode.State, TDoAddNode>(
+    DoAddNode,
+  );
+  const addNodeID = getDefaultID(classAddNode);
+  const addNode = getState(classAddNode) || DoAddNode.defaultState;
 
   const {
     pluginMeta,
@@ -64,21 +69,28 @@ export default (props: Props) => {
     selectedComputeEnv,
     advancedConfig,
     memoryLimit,
-  } = state;
+  } = addNode;
 
   const isDisabled =
     params && Object.keys(requiredInput).length !== params.required.length;
 
   const toggleOpen = () => {
-    nodeDispatch({ type: Types.ResetState, payload: {} });
+    doAddNode.reset(addNodeID);
     doPlugin.getNodeOperations(pluginID, "childNode");
   };
 
-  const errorCallback = (error: any) => {
-    nodeDispatch({ type: Types.SetError, payload: { error } });
+  const onError = (error: Record<string, string>) => {
+    doAddNode.setError(addNodeID, error);
   };
 
-  const handleSave = useCallback(async () => {
+  const onSave = () => {
+    doPluginInstance.createPluginInstance(
+      pluginInstnaceID,
+      selectedPlugin,
+      addNode,
+    );
+  };
+  useCallback(async () => {
     if (!selectedPluginFromMeta || !selectedPlugin || !pluginInstances) return;
 
     const { advancedConfigErrors, sanitizedInput } = sanitizeAdvancedConfig(
@@ -87,7 +99,7 @@ export default (props: Props) => {
     );
 
     if (Object.keys(advancedConfigErrors).length > 0) {
-      errorCallback(advancedConfigErrors);
+      onError(advancedConfigErrors);
       return;
     }
 
@@ -124,7 +136,7 @@ export default (props: Props) => {
     selectedComputeEnv,
     advancedConfig,
     memoryLimit,
-    errorCallback,
+    onError,
     toggleOpen,
     nodeDispatch,
     addNodeLocally,
@@ -147,7 +159,7 @@ export default (props: Props) => {
           />
         }
         onClose={toggleOpen}
-        onSave={handleSave}
+        onSave={onSave}
         height={500}
         width="100%"
       >

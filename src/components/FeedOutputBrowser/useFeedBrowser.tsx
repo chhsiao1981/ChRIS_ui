@@ -44,7 +44,7 @@ export const useFeedBrowser = (
 
   const pluginInstance =
     getState(classStatePluginInstance) || DoPluginInstance.defaultState;
-  const { selectedPlugin: selected } = pluginInstance;
+  const { selectedInstance: selected } = pluginInstance;
 
   const [download, setDownload] = useState(getInitialDownloadState);
   const [currentPath, setCurrentPath] = useState("");

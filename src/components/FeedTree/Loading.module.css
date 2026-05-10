@@ -1,0 +1,38 @@
+.hide {
+  display: none;
+}
+
+.root {
+  position: fixed;
+  bottom: 20px;
+  left: 0;
+  width: 100%;
+  padding: 15px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  text-align: center;
+  font-size: 18px;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.head {
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.fullbar {
+  width: 300px;
+  height: 20px;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  background-color: #00bfff;
+  transition: width 0.3s ease-in-out;
+}
