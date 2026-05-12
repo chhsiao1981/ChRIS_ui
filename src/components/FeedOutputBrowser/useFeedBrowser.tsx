@@ -32,18 +32,18 @@ export const useFeedBrowser = (
   statuses: Record<ID, string>,
   useDrawer: UseThunk<DoDrawer.State, TDoDrawer>,
 ) => {
-  const [classStateDrawer, _] = useDrawer;
-  const drawer = getState(classStateDrawer) || DoDrawer.defaultState;
+  const [classDrawer, _] = useDrawer;
+  const drawer = getState(classDrawer) || DoDrawer.defaultState;
   const { files, preview } = drawer;
 
   const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
     DoPluginInstance,
   );
 
-  const [classStatePluginInstance, _doPluginInstance] = usePluginInstance;
+  const [classPluginInstance, _doPluginInstance] = usePluginInstance;
 
   const pluginInstance =
-    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
+    getState(classPluginInstance) || DoPluginInstance.defaultState;
   const { selectedInstance: selected } = pluginInstance;
 
   const [download, setDownload] = useState(getInitialDownloadState);

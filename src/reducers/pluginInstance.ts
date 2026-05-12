@@ -5,18 +5,21 @@ import {
   setData,
   type Thunk,
 } from "@chhsiao1981/use-thunk";
-import type { TreeNode } from "../api/common";
 import {
   createPluginInstance as apiCreatePluginInstance,
   deletePluginInstance as apiDeletePluginInstance,
   getPluginInstances,
 } from "../api/serverApi";
 import { getPluginParameters } from "../api/serverApi/plugin";
-import type { Feed, ID, List, Plugin, PluginInstance } from "../api/types";
-import type { TSID } from "../components/FeedTree/FeedTree";
+import type { Feed, ID, List, PluginInstance } from "../api/types";
 import type { Err } from "../types";
 import type * as DoAddNode from "./addNode";
-import type { PluginNodeParameter, PluginNodeParameterMap } from "./types";
+import type {
+  PluginNodeParameter,
+  PluginNodeParameterMap,
+  TreeNodeDatum,
+  TSIDMap,
+} from "./types";
 
 export const myClass = "chris-ui/plugin-instance";
 
@@ -24,7 +27,7 @@ export const myClass = "chris-ui/plugin-instance";
 export interface State extends rState {
   selectedInstance?: PluginInstance;
   pluginInstances: {
-    data: PluginInstance[];
+    results: PluginInstance[];
     error: Err;
     loading: boolean;
   };
@@ -35,8 +38,8 @@ export interface State extends rState {
 
   isLoading: boolean;
   processingProgress: number;
-  rootNode?: TreeNode;
-  tsIds?: TSID;
+  rootNode?: TreeNodeDatum;
+  tsIDs: TSIDMap;
 
   statuses: Record<ID, string>;
   errors: Record<string, string>;
@@ -44,7 +47,7 @@ export interface State extends rState {
 
 export const defaultState: State = {
   pluginInstances: {
-    data: [],
+    results: [],
     error: "",
     loading: false,
   },
@@ -55,6 +58,7 @@ export const defaultState: State = {
   processingProgress: 0,
   statuses: {},
   errors: {},
+  tsIDs: {},
 };
 
 export const init = (): Thunk<State> => {
@@ -64,7 +68,7 @@ export const init = (): Thunk<State> => {
 };
 
 // XXX need to replace the name as setSelectedPluginInstance
-export const getSelectedPlugin = (
+export const setSelectedInstance = (
   myID: string,
   pluginInstance: PluginInstance,
 ): Thunk<State> => {
@@ -73,7 +77,7 @@ export const getSelectedPlugin = (
   };
 };
 
-export const resetSelectedPlugin = (myID: string): Thunk<State> => {
+export const resetSelectedInstance = (myID: string): Thunk<State> => {
   return (dispatch, _getClassState) => {
     dispatch(setData<State>(myID, { selectedInstance: undefined }));
   };
@@ -92,13 +96,13 @@ export const setPluginTitle = (
     }
 
     const { pluginInstances } = me;
-    const idx = pluginInstances.data.findIndex(
+    const idx = pluginInstances.results.findIndex(
       (eachInstance) => eachInstance.id === pluginInstance.id,
     );
     if (idx === -1) {
       return;
     }
-    const newPluginInstancesData = pluginInstances.data.map((each) => each);
+    const newPluginInstancesData = pluginInstances.results.map((each) => each);
     newPluginInstancesData[idx] = pluginInstance;
     const newPluginInstances = Object.assign({}, pluginInstances, {
       data: newPluginInstancesData,
@@ -202,7 +206,7 @@ export const addNode = (
     }
 
     const { pluginInstances } = me;
-    const newPluginInstancesData = pluginInstances.data.concat([
+    const newPluginInstancesData = pluginInstances.results.concat([
       pluginInstance,
     ]);
     dispatch(
@@ -227,7 +231,7 @@ export const deletePluginInstance = (
     }
     const { pluginInstances, selectedInstance: selectedPlugin } = me;
     const descendantIds = getAllDescendantIDs(
-      pluginInstances.data,
+      pluginInstances.results,
       pluginInstance.id,
     );
 
@@ -243,7 +247,7 @@ export const deletePluginInstance = (
       dispatch(setData<State>(myID, { pluginInstances: newPluginInstances }));
       return;
     }
-    const newPluginInstancesData = pluginInstances.data.filter(
+    const newPluginInstancesData = pluginInstances.results.filter(
       (instance) => !descendantIds.includes(instance.id),
     );
 
@@ -339,7 +343,7 @@ const getAllDescendantIDsCore = (
 
 export const createPluginInstance = (
   myID: string,
-  selectedPlugin: Plugin,
+  selectedInstance: PluginInstance,
   addNode: DoAddNode.State,
 ): Thunk<State> => {
   return async (dispatch, _) => {
@@ -380,7 +384,7 @@ export const createPluginInstance = (
       data: instance,
       errmsg,
     } = await apiCreatePluginInstance(selectedPluginFromMeta.id, {
-      previous_id: selectedPlugin.id,
+      previous_id: selectedInstance.id,
       ...pluginInstance,
     });
     if (!instance) {

@@ -5,7 +5,7 @@ import {
   WizardHeader,
   WizardStep,
 } from "@patternfly/react-core";
-import { useCallback, useContext } from "react";
+import { useCallback } from "react";
 import { Alert } from "../Antd";
 import {
   getParameterInput,
@@ -21,24 +21,21 @@ import {
   useThunk,
 } from "@chhsiao1981/use-thunk";
 import { createPluginInstance } from "../../api/serverApi";
-import type { PluginInstance } from "../../api/types";
 import * as DoAddNode from "../../reducers/addNode";
 import * as DoPlugin from "../../reducers/plugin";
 import * as DoPluginInstance from "../../reducers/pluginInstance";
-import { AddNodeContext } from "./context";
-import { Types } from "./types";
 
 type TDoAddNode = ThunkModuleToFunc<typeof DoAddNode>;
 type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
 type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 type Props = {
-  addNodeLocally: (instance: PluginInstance | PluginInstance[]) => void;
+  isOpen: boolean;
+  close: () => void;
 };
 
 export default (props: Props) => {
-  const { addNodeLocally } = props;
-
+  const { isOpen, close } = props;
   const [classPluginInstance, doPluginInstance] = useThunk<
     DoPluginInstance.State,
     TDoPluginInstance
@@ -47,13 +44,13 @@ export default (props: Props) => {
   const pluginInstanceID = getDefaultID(classPluginInstance);
   const pluginInstance =
     getState(classPluginInstance) || DoPluginInstance.defaultState;
-  const { selectedInstance: selectedPlugin, pluginInstances } = pluginInstance;
+  const { selectedInstance, pluginInstances } = pluginInstance;
 
-  const [classPlugin, doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(DoPlugin);
-  const pluginID = getDefaultID(classPlugin);
+  const [classPlugin, _doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(
+    DoPlugin,
+  );
   const plugin = getState(classPlugin) || DoPlugin.defaultState;
-  const { nodeOperations, parameters: params } = plugin;
-  const { childNode } = nodeOperations;
+  const { parameters: params } = plugin;
 
   const [classAddNode, doAddNode] = useThunk<DoAddNode.State, TDoAddNode>(
     DoAddNode,
@@ -74,9 +71,9 @@ export default (props: Props) => {
   const isDisabled =
     params && Object.keys(requiredInput).length !== params.required.length;
 
-  const toggleOpen = () => {
+  const onClose = () => {
     doAddNode.reset(addNodeID);
-    doPlugin.getNodeOperations(pluginID, "childNode");
+    close();
   };
 
   const onError = (error: Record<string, string>) => {
@@ -84,14 +81,19 @@ export default (props: Props) => {
   };
 
   const onSave = () => {
+    if (!selectedInstance) {
+      return;
+    }
     doPluginInstance.createPluginInstance(
-      pluginInstnaceID,
-      selectedPlugin,
+      pluginInstanceID,
+      selectedInstance,
       addNode,
     );
   };
+
   useCallback(async () => {
-    if (!selectedPluginFromMeta || !selectedPlugin || !pluginInstances) return;
+    if (!selectedPluginFromMeta || !selectedInstance || !pluginInstances)
+      return;
 
     const { advancedConfigErrors, sanitizedInput } = sanitizeAdvancedConfig(
       advancedConfig,
@@ -109,7 +111,7 @@ export default (props: Props) => {
       selectedPluginFromMeta,
       selectedComputeEnv,
       sanitizedInput,
-      selectedPlugin,
+      selectedInstance,
     );
 
     const {
@@ -117,19 +119,19 @@ export default (props: Props) => {
       data: instance,
       errmsg,
     } = await createPluginInstance(selectedPluginFromMeta.id, {
-      previous_id: selectedPlugin.id,
+      previous_id: selectedInstance.id,
       ...parameterInput,
     });
     if (!instance) {
-      nodeDispatch({ type: Types.SetError, payload: { error: errmsg } });
+      //nodeDispatch({ type: Types.SetError, payload: { error: errmsg } });
       return;
     }
 
-    addNodeLocally(instance);
-    toggleOpen();
+    //addNodeLocally(instance);
+    onClose();
   }, [
     selectedPluginFromMeta,
-    selectedPlugin,
+    selectedInstance,
     pluginInstances,
     dropdownInput,
     requiredInput,
@@ -137,9 +139,7 @@ export default (props: Props) => {
     advancedConfig,
     memoryLimit,
     onError,
-    toggleOpen,
-    nodeDispatch,
-    addNodeLocally,
+    onClose,
   ]);
 
   return (
@@ -148,17 +148,17 @@ export default (props: Props) => {
       showClose
       hasNoBodyWrapper
       variant={ModalVariant.large}
-      isOpen={childNode}
+      isOpen={isOpen}
     >
       <Wizard
         header={
           <WizardHeader
-            onClose={toggleOpen}
+            onClose={onClose}
             title="Add a New Node"
             description="This wizard allows you to add a node to a feed"
           />
         }
-        onClose={toggleOpen}
+        onClose={onClose}
         onSave={onSave}
         height={500}
         width="100%"
@@ -168,8 +168,8 @@ export default (props: Props) => {
           name="Plugin Selection"
           footer={{ isNextDisabled: !pluginMeta }}
         >
-          {selectedPlugin ? (
-            <BasicConfiguration selectedPlugin={selectedPlugin} />
+          {selectedInstance ? (
+            <BasicConfiguration selectedPlugin={selectedInstance} />
           ) : (
             <Alert
               type="error"

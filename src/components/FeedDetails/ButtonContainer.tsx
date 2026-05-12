@@ -6,7 +6,7 @@ import {
 import type { ReactNode } from "react";
 import type * as DoDrawer from "../../reducers/drawer";
 import type { ActionType } from "../../reducers/drawer";
-import { ButtonWithTooltip } from "../FeedList/DrawerUtils";
+import ButtonWithTooltip from "../DrawerUtils/ButtonWithTooltip";
 
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 
@@ -21,15 +21,14 @@ type Props = {
 
 export default (props: Props) => {
   const { actionType, icon, title, isDisabled, useDrawer } = props;
-  const [classStateDrawer, doDrawer] = useDrawer;
-  const drawerID = getDefaultID(classStateDrawer);
+  const [classDrawer, doDrawer] = useDrawer;
+  const drawerID = getDefaultID(classDrawer);
   return (
     <ButtonWithTooltip
+      content={<span>{title}</span>}
       position="bottom"
       className="button-style large-button"
-      content={<span>{title}</span>}
       Icon={icon}
-      variant="primary"
       onClick={() => {
         doDrawer.toggle(drawerID, actionType);
       }}

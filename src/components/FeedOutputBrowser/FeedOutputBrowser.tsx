@@ -1,12 +1,15 @@
-import type { PluginInstance } from "../../api/types";
 import { Alert } from "../Antd";
 import "./FeedOutputBrowser.css";
-import type { ThunkModuleToFunc, UseThunk } from "@chhsiao1981/use-thunk";
-import type * as DoCart from "../../reducers/cart";
-import type * as DoDrawer from "../../reducers/drawer";
-import type * as DoExplorer from "../../reducers/explorer";
-import type * as DoFeed from "../../reducers/feed";
-import type * as DoUser from "../../reducers/user";
+import {
+  type ThunkModuleToFunc,
+  type UseThunk,
+  useThunk,
+} from "@chhsiao1981/use-thunk";
+import * as DoCart from "../../reducers/cart";
+import * as DoDrawer from "../../reducers/drawer";
+import * as DoExplorer from "../../reducers/explorer";
+import * as DoFeed from "../../reducers/feed";
+import * as DoUser from "../../reducers/user";
 import { EmptyStateLoader } from "./EmptyStateLoader";
 import FetchFilesLoader from "./FetchFilesLoader";
 import FileBrowser from "./FileBrowser";
@@ -19,18 +22,17 @@ type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
 
 type Props = {
-  handlePluginSelect: (node: PluginInstance) => void;
-  explore: boolean;
   statuses: { [id: number]: string };
-  useUser: UseThunk<DoUser.State, TDoUser>;
-  useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
-  useExplorer: UseThunk<DoExplorer.State, TDoExplorer>;
-  useFeed: UseThunk<DoFeed.State, TDoFeed>;
-  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 export default (props: Props) => {
-  const { useUser, useDrawer, useExplorer, useFeed, useCart, statuses } = props;
+  const { statuses } = props;
+  const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
+  const useDrawer = useThunk<DoDrawer.State, TDoDrawer>(DoDrawer);
+  const useExplorer = useThunk<DoExplorer.State, TDoExplorer>(DoExplorer);
+  const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
+
   const {
     selected,
     pluginFilesPayload,
@@ -74,7 +76,11 @@ export default (props: Props) => {
         useFeed={useFeed}
         useCart={useCart}
       />
-      {!isHideError && <Alert type="error" description={error?.message} />}
+      <Alert
+        showIcon={!isHideError}
+        type="error"
+        description={error?.message}
+      />
       <EmptyStateLoader title="" isHide={isHideEmptyStateLoader} />
     </div>
   );

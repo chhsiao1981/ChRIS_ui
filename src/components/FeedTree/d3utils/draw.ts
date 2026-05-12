@@ -1,47 +1,30 @@
 import type { HierarchyPointLink, HierarchyPointNode } from "d3-hierarchy";
-import type { ID } from "../../api/types";
-import { DEFAULT_NODE_RADIUS } from "./constants";
-import type { TreeNodeDatum } from "./data";
-import type { OverlayScaleType } from "./types";
+import type { ID } from "../../../api/types";
+import type { TreeNodeDatum } from "../../../reducers/types";
+import { DEFAULT_NODE_RADIUS } from "../constants";
 
 type Props = {
   ctx: CanvasRenderingContext2D;
   node: HierarchyPointNode<TreeNodeDatum>;
   isDarkTheme: boolean;
   toggleLabel: boolean;
-  searchFilter: string;
-  overlayScale?: OverlayScaleType;
-  selectedId?: ID;
-  finalStatus: string | undefined;
+  search: string;
+  selectedID?: ID;
+  status: string | undefined;
 };
 
 export const drawNode = (props: Props) => {
-  const {
-    ctx,
-    node,
-    isDarkTheme,
-    toggleLabel,
-    searchFilter,
-    overlayScale,
-    selectedId,
-    finalStatus,
-  } = props;
+  const { ctx, node, isDarkTheme, toggleLabel, search, selectedID, status } =
+    props;
+
   const { x, y } = node;
   const data = node.data;
-  const itemData = data.item;
-  const statusColor = getStatusColor(finalStatus, data, searchFilter);
-  const isSelected = selectedId === node.data.id;
+  const statusColor = getStatusColor(status, data, search);
+  const isSelected = selectedID === node.data.id;
   const nodeName = node.data.name || `Node ${node.data.id}`;
 
   // Calculate scale factor for overlay
-  let scaleFactor = 1;
-  if (overlayScale === "time" && itemData?.start_date && itemData?.end_date) {
-    const start = new Date(itemData.start_date).getTime();
-    const end = new Date(itemData.end_date).getTime();
-    const diff = Math.max(1, end - start);
-    scaleFactor = Math.log10(diff) / 2;
-    if (scaleFactor < 1) scaleFactor = 1;
-  }
+  const scaleFactor = 1;
 
   // Save context state before drawing node
   ctx.save();
@@ -104,6 +87,7 @@ export const drawLink = (
   const childOffset = nodeRadius + 4;
   const targetX = target.x - childOffset * nx;
   const targetY = target.y - childOffset * ny;
+
   ctx.save();
   ctx.beginPath();
   ctx.strokeStyle = isDarkTheme ? "#F2F9F9" : "#6A6E73";
@@ -155,7 +139,22 @@ export const getStatusColor = (
     const pluginName = data.item?.plugin_name?.toLowerCase() || "";
     const title = data.item?.title?.toLowerCase() || "";
     if (pluginName.includes(term) || title.includes(term)) {
-      return "red";
+      switch (status) {
+        case "started":
+        case "scheduled":
+        case "registeringFiles":
+        case "created":
+          return "#daedf7";
+        case "waiting":
+          return "#cacaca";
+        case "finishedSuccessfully":
+          return "#00eaff";
+        case "finishedWithError":
+        case "cancelled":
+          return "#ff1100";
+        default:
+          return "#ffd900";
+      }
     }
   }
 
@@ -164,15 +163,15 @@ export const getStatusColor = (
     case "scheduled":
     case "registeringFiles":
     case "created":
-      return "#bee1f4";
+      return "#a6cee3";
     case "waiting":
-      return "#aaa";
+      return "#a0a0a0";
     case "finishedSuccessfully":
       return "#004080";
     case "finishedWithError":
     case "cancelled":
-      return "#c9190b";
+      return "#c30e01";
     default:
-      return "#F0AB00";
+      return "#eca900";
   }
 };

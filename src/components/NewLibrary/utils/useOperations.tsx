@@ -160,7 +160,6 @@ export const useFolderOperations = (
       isFolder,
       uploadPath as string,
       //when this function is called in the store, the page resets
-      createFeed,
       name,
     );
 

@@ -5,8 +5,65 @@ import type {
 import { getFeed, getFeeds } from "../../api/serverApi";
 import type { Feed, ID } from "../../api/types";
 import type * as DoDrawer from "../../reducers/drawer";
+import type { ActionType } from "../../reducers/drawer";
 
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
+
+export const onMaximize = (
+  drawerID: string,
+  actionType: ActionType,
+  doDrawer: DispatchFuncMap<DoDrawer.State, TDoDrawer>,
+) => {
+  doDrawer.maximize(drawerID, actionType);
+};
+
+export const onMinimize = (
+  drawerID: string,
+  doDrawer: DispatchFuncMap<DoDrawer.State, TDoDrawer>,
+) => {
+  doDrawer.minimize(drawerID);
+};
+
+export const onOpen = (
+  drawerID: string,
+  actionType: ActionType,
+  doDrawer: DispatchFuncMap<DoDrawer.State, TDoDrawer>,
+) => {
+  doDrawer.setDrawerState(drawerID, actionType, true, false, false);
+};
+
+export const onToggle = (
+  drawerID: string,
+  actionType: ActionType,
+  doDrawer: DispatchFuncMap<DoDrawer.State, TDoDrawer>,
+) => {
+  doDrawer.toggle(drawerID, actionType);
+};
+
+export const fetchFeeds = async (filterState: any) => {
+  const offset = filterState.perPage * (filterState.page - 1);
+
+  const { status, data, errmsg } = await getFeeds(
+    filterState.searchType,
+    filterState.search,
+    offset,
+    filterState.perPage,
+  );
+  if (!data) {
+    return {
+      feeds: [],
+    };
+  }
+  const feeds = data;
+  return {
+    feeds,
+    totalFeedCount: 0,
+  };
+};
+
+export const fetchPublicFeeds = async (filterState: any) => {
+  return await fetchFeeds(filterState);
+};
 
 export const fetchAuthenticatedFeed = async (id: ID) => {
   if (!id) return;

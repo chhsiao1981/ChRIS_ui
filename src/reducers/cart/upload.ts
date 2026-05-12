@@ -5,12 +5,15 @@ import {
   setData,
   type Thunk,
   type ThunkModuleToFunc,
+  type UseThunk,
 } from "@chhsiao1981/use-thunk";
+
 import axios, { type AxiosProgressEvent } from "axios";
 import config from "config";
 import { chunk } from "lodash";
 import { createFeedWithFilepaths } from "../../api/serverApi";
 import type { FileBrowserType } from "../../api/types/fileBrowser";
+import { FILENAME_RANDOM_LENGTH } from "../../constants";
 import type * as DoFeedList from "../../reducers/feedList";
 import { randomStr } from "../../utils/randomStr";
 import type {
@@ -34,18 +37,28 @@ export const startUpload = (
   files: File[],
   isFolder: boolean,
   username?: string,
-  name?: string,
+  feedName?: string,
   feedListID?: string,
-  doFeedList?: DispatchFuncMap<DoFeedList.State, TDoFeedList>,
+  useFeedList?: UseThunk<DoFeedList.State, TDoFeedList>,
 ): Thunk<State> => {
-  const uniqueName = name ? `${name}_${randomStr()}` : randomStr();
+  const uniqueName = feedName
+    ? `${feedName}_${randomStr(FILENAME_RANDOM_LENGTH)}`
+    : randomStr(FILENAME_RANDOM_LENGTH);
 
   const currentPath = `home/${username}/uploads/${uniqueName}`;
 
   return (dispatch, _) => {
     dispatch(setData(myID, { openCart: true }));
     dispatch(
-      upload(myID, files, isFolder, currentPath, name, feedListID, doFeedList),
+      upload(
+        myID,
+        files,
+        isFolder,
+        currentPath,
+        feedName,
+        feedListID,
+        useFeedList,
+      ),
     );
   };
 };
@@ -110,7 +123,7 @@ const upload = (
   nameForFeed?: string,
 
   feedListID?: string,
-  doFeedList?: DispatchFuncMap<DoFeedList.State, TDoFeedList>,
+  useFeedList?: UseThunk<DoFeedList.State, TDoFeedList>,
 ): Thunk<State> => {
   return async (dispatch, _getClass) => {
     if (isFolder) {
@@ -121,7 +134,7 @@ const upload = (
           currentPath,
           nameForFeed,
           feedListID,
-          doFeedList,
+          useFeedList,
         ),
       );
     } else {
@@ -132,7 +145,7 @@ const upload = (
           currentPath,
           nameForFeed,
           feedListID,
-          doFeedList,
+          useFeedList,
         ),
       );
     }
@@ -149,7 +162,7 @@ const uploadFolder = (
   nameForFeed?: string,
 
   feedListID?: string,
-  doFeedList?: DispatchFuncMap<DoFeedList.State, TDoFeedList>,
+  useFeedList?: UseThunk<DoFeedList.State, TDoFeedList>,
 ): Thunk<State> => {
   return async (dispatch, getClass) => {
     const batchSize = 50;
@@ -214,7 +227,7 @@ const uploadFolder = (
     );
 
     // createFeed only when all are successfully done.
-    if (!nameForFeed || !feedListID || !doFeedList) {
+    if (!nameForFeed || !feedListID || !useFeedList) {
       return;
     }
 
@@ -224,7 +237,7 @@ const uploadFolder = (
       ["uploaded"],
       false,
       feedListID,
-      doFeedList,
+      useFeedList,
     );
     if (errmsg) {
       console.error(
@@ -242,8 +255,9 @@ const createFeed = async (
   isPublic: boolean = false,
 
   feedListID: string,
-  doFeedList: DispatchFuncMap<DoFeedList.State, TDoFeedList>,
+  useFeedList: UseThunk<DoFeedList.State, TDoFeedList>,
 ): Promise<string | undefined> => {
+  const [_classFeedList, doFeedList] = useFeedList;
   const {
     status,
     data: feed,
@@ -441,7 +455,7 @@ const uploadFiles = (
   nameForFeed?: string,
 
   feedListID?: string,
-  doFeedList?: DispatchFuncMap<DoFeedList.State, TDoFeedList>,
+  useFeedList?: UseThunk<DoFeedList.State, TDoFeedList>,
 ): Thunk<State> => {
   return async (dispatch, getClass) => {
     const batchSize = 50;
@@ -470,7 +484,7 @@ const uploadFiles = (
     }
 
     // createFeed only when all are successfully done.
-    if (!nameForFeed || !feedListID || !doFeedList) {
+    if (!nameForFeed || !feedListID || !useFeedList) {
       return;
     }
 
@@ -480,7 +494,7 @@ const uploadFiles = (
       ["uploaded"],
       false,
       feedListID,
-      doFeedList,
+      useFeedList,
     );
     if (errmsg) {
       console.error(

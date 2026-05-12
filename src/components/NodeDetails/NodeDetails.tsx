@@ -22,7 +22,7 @@ import "./NodeDetails.css";
 import {
   getState,
   type ThunkModuleToFunc,
-  type UseThunk,
+  useThunk,
 } from "@chhsiao1981/use-thunk";
 import * as DoDrawer from "../../reducers/drawer";
 import * as DoFeed from "../../reducers/feed";
@@ -40,7 +40,7 @@ type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 interface INodeState {
   plugin?: Plugin;
-  instanceParameters?: PluginInstance[];
+  instanceParameters?: PluginInstanceParameter[];
   pluginParameters?: PluginParameter[];
 }
 
@@ -52,26 +52,26 @@ function getInitialState() {
   };
 }
 
-type Props = {
-  useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
-  useFeed: UseThunk<DoFeed.State, TDoFeed>;
-  usePluginInstance: UseThunk<DoPluginInstance.State, TDoPluginInstance>;
-};
+type Props = {};
 
-export default (props: Props) => {
-  const { useDrawer, useFeed, usePluginInstance } = props;
-  const [classStateDrawer, _] = useDrawer;
-  const drawer = getState(classStateDrawer) || DoDrawer.defaultState;
+export default (_props: Props) => {
+  const useDrawer = useThunk<DoDrawer.State, TDoDrawer>(DoDrawer);
+  const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
+  const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
+    DoPluginInstance,
+  );
+  const [classDrawer, _] = useDrawer;
+  const drawer = getState(classDrawer) || DoDrawer.defaultState;
   const { node } = drawer;
 
-  const [classStateFeed, _2] = useFeed;
-  const feedState = getState(classStateFeed) || DoFeed.defaultState;
+  const [classFeed, _2] = useFeed;
+  const feedState = getState(classFeed) || DoFeed.defaultState;
   const { data: feed } = feedState;
 
-  const [classStatePluginInstance, _doPluginInstance] = usePluginInstance;
+  const [classPluginInstance, _doPluginInstance] = usePluginInstance;
   const pluginInstance =
-    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
-  const { selectedInstance: selectedPlugin } = pluginInstance;
+    getState(classPluginInstance) || DoPluginInstance.defaultState;
+  const { selectedInstance } = pluginInstance;
 
   const [nodeState, setNodeState] = useState<INodeState>(getInitialState);
   const navigate = useNavigate();
@@ -81,12 +81,12 @@ export default (props: Props) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const instanceParameters = await selectedPlugin?.getParameters({
+      const instanceParameters = await selectedInstance?.getParameters({
         limit: 100,
         offset: 0,
       });
 
-      const plugin = await selectedPlugin?.getPlugin();
+      const plugin = await selectedInstance?.getPlugin();
       const pluginParameters = await plugin?.getPluginParameters({
         limit: 100,
         offset: 0,
@@ -102,9 +102,9 @@ export default (props: Props) => {
     };
 
     fetchData();
-  }, [selectedPlugin]);
+  }, [selectedInstance]);
 
-  const { data } = usePluginInstanceResourceQuery(selectedPlugin);
+  const { data } = usePluginInstanceResourceQuery(selectedInstance);
 
   const command = getCommand;
 
@@ -116,11 +116,11 @@ export default (props: Props) => {
   const runTime = React.useCallback(getRuntimeString, []);
 
   const cancelled =
-    selectedPlugin?.status === "cancelled" ||
-    selectedPlugin?.status === "finishedWithError";
+    selectedInstance?.status === "cancelled" ||
+    selectedInstance?.status === "finishedWithError";
 
-  const error_code = selectedPlugin?.error_code;
-  const compute_env = selectedPlugin?.compute_resource_name;
+  const error_code = selectedInstance?.error_code;
+  const compute_env = selectedInstance?.compute_resource_name;
 
   const renderGridItem = (title: string, value: React.ReactNode) => {
     return (
@@ -135,13 +135,13 @@ export default (props: Props) => {
     );
   };
 
-  if (!selectedPlugin) {
+  if (!selectedInstance) {
     return <SpinContainer title="Loading Node Details" />;
   }
   const Time = (
     <>
       <CalendarAltIcon style={{ marginRight: "0.5em" }} />
-      {selectedPlugin.start_date}
+      {selectedInstance.start_date}
     </>
   );
   return (
@@ -184,20 +184,20 @@ export default (props: Props) => {
               <Grid className="node-details__grid">
                 {renderGridItem("Feed Name", feed?.name)}
                 {renderGridItem("Feed Author", feed?.owner_username)}
-                {selectedPlugin.previous_id &&
+                {selectedInstance.previous_id &&
                   renderGridItem(
                     "Parent Node ID",
-                    <span>{selectedPlugin.previous_id}</span>,
+                    <span>{selectedInstance.previous_id}</span>,
                   )}
                 {renderGridItem(
                   "Selected Node ID",
-                  <span>{selectedPlugin.id}</span>,
+                  <span>{selectedInstance.id}</span>,
                 )}
                 {renderGridItem(
                   "Plugin",
                   <span style={{ fontFamily: "monospace" }}>
-                    {selectedPlugin.plugin_name}, ver{" "}
-                    {selectedPlugin.plugin_version}
+                    {selectedInstance.plugin_name}, ver{" "}
+                    {selectedInstance.plugin_version}
                   </span>,
                 )}
                 {renderGridItem("Created", Time)}
@@ -209,7 +209,7 @@ export default (props: Props) => {
                   <Fragment>
                     {renderGridItem(
                       "Total Runtime",
-                      <span>{runTime(selectedPlugin)}</span>,
+                      <span>{runTime(selectedInstance)}</span>,
                     )}
                   </Fragment>
                 )}
@@ -245,12 +245,12 @@ export default (props: Props) => {
             {
               // Jennings: hastily adding an extra button here.
               // IMO the Node Details pane should be cleaned up.
-              isPlVisualDataset(selectedPlugin) && (
+              isPlVisualDataset(selectedInstance) && (
                 <Grid hasGutter={true}>
                   <RenderButtonGridItem>
                     <Button
                       icon={<PreviewIcon />}
-                      onClick={() => navigate(`/niivue/${selectedPlugin.id}`)}
+                      onClick={() => navigate(`/niivue/${selectedInstance.id}`)}
                     >
                       View Volumes{" "}
                       {/* I didn't make this shortcut work, since none of them currently work in caae85dd1cb337c11179724eedf3b81ac6373aaa */}

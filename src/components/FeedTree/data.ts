@@ -1,3 +1,4 @@
+import { getFeedTree } from "../../api/common";
 import { getPluginInstanceParameters } from "../../api/serverApi/pluginInstance";
 import type {
   ID,
@@ -5,27 +6,16 @@ import type {
   PipingDefaultParameter,
   PluginInstance,
 } from "../../api/types";
-
-export interface Datum {
-  id?: ID;
-  name?: string;
-  parentId?: ID;
-  item?: PluginInstance;
-  children: Datum[];
-}
+import type { TreeNodeDatum } from "../../reducers/types";
 
 export interface Point {
   x: number;
   y: number;
 }
 
-export interface TreeNodeDatum extends Datum {
-  children: TreeNodeDatum[];
-}
-
 export interface Separation {
-  siblings: number;
-  nonSiblings: number;
+  siblings: ID;
+  nonSiblings: ID;
 }
 
 export const getFeedTree = (items: PluginInstance[]) => {
@@ -36,7 +26,7 @@ export const getFeedTree = (items: PluginInstance[]) => {
 
   items.forEach((item) => {
     const id = item.id;
-    const previous_id: number | null =
+    const previous_id: ID | null =
       item.previous_id !== undefined ? item.previous_id : null;
     const node: TreeNodeDatum = {
       id: id,
@@ -103,27 +93,31 @@ export const getTsNodesWithPipings = async (
   items: Piping[],
   pluginParameters?: PipingDefaultParameter[],
 ) => {
-  const parentIds: {
-    [key: string]: number[];
-  } = {};
-
-  for (let i = 0; i < items.length; i++) {
-    const instance = items[i];
-
-    if (instance.plugin_name === "pl-topologicalcopy") {
-      //@ts-expect-error
-      pluginParameters.data
-        .filter((param: any) => {
-          return param.plugin_piping_id === instance.id;
-        })
-        .forEach((param: any) => {
-          if (param.param_name === "plugininstances") {
-            parentIds[param.plugin_piping_id] = param.value
-              .split(",")
-              .map(Number);
-          }
-        });
-    }
+  const parentIDs: Record<ID, ID[]> = {};
+  if (!pluginParameters) {
+    return parentIDs;
   }
-  return parentIds;
+
+  // biome-ignore lint/suspicious/useIterableCallbackReturn: iterate through items for parentIDs
+  items.map((instance) => {
+    if (instance.plugin_name !== "pl-topologicalcopy") {
+      return;
+    }
+
+    pluginParameters.filter((param) => {
+      return (
+        param.plugin_piping_id === instance.id &&
+        param.param_name === "plugininstances"
+      );
+    });
+
+    if (!pluginParameters.length) {
+      return;
+    }
+
+    const param = pluginParameters[0];
+    parentIDs[param.plugin_piping_id] = param.value.split(",").map(Number);
+  });
+
+  return parentIDs;
 };

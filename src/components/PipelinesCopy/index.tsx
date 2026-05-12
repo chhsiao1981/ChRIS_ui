@@ -29,12 +29,9 @@ type LoadingResourceError = {
   [key: string]: string;
 };
 
-type Props = {
-  isStaff: boolean;
-};
+type Props = {};
 
 export default (props: Props) => {
-  const { isStaff } = props;
   const queryClient = useQueryClient();
   const { state, dispatch } = useContext(PipelineContext);
   const { isDarkTheme } = useContext(ThemeContext);

@@ -185,16 +185,16 @@ const fetchCore = async <T>(
       const status = res.status;
       return res
         .json()
-        .then((collectionJsonData) => {
+        .then((jsonData) => {
           if (res.status >= 400) {
-            const msg = collectionJsonData.error;
+            const msg = jsonData.error;
             return { status, errmsg: msg };
           }
 
           const data: T = isJson
-            ? collectionJsonData
+            ? jsonData
             : collectionJsonToJson(
-                collectionJsonData,
+                jsonData,
                 isLink,
                 isList,
                 `fetchCore: endpoint: ${endpoint}`,

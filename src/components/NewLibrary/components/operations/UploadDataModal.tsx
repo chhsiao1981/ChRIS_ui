@@ -36,8 +36,8 @@ type Props = {
 
   useUser: UseThunk<DoUser.State, TDoUser>;
 
-  feedListID: string;
-  useFeedList: UseThunk<DoFeedList.State, TDoFeedList>;
+  feedListID?: string;
+  useFeedList?: UseThunk<DoFeedList.State, TDoFeedList>;
 
   isLoading?: boolean;
   error?: string;
@@ -56,6 +56,7 @@ export default (props: Props) => {
     feedListID,
     useFeedList,
   } = props;
+
   const isError = !!error;
 
   const [classOperation, doOperation] = useOperation;
@@ -74,46 +75,44 @@ export default (props: Props) => {
   const user = getState(classUser) || DoUser.defaultState;
   const { username } = user;
 
-  const [_classFeedList, doFeedList] = useFeedList;
-
   const isOpen =
     modalState.type === "createFeedWithFile" &&
     modalState.ID === operationID &&
     modalState.isOpen;
   const isFolder = theType === "folder";
 
-  const [value, setValue] = useState(defaultFeedName);
+  const [feedName, setFeedName] = useState(defaultFeedName);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!inputRef.current) {
       return;
     }
-    setValue(defaultFeedName);
+    setFeedName(defaultFeedName);
     inputRef.current.focus();
   }, [defaultFeedName, inputRef.current]);
 
   console.info(
     "UploadDataModal: defaultFeedName:",
     defaultFeedName,
-    "value:",
-    value,
+    "feedName:",
+    feedName,
   );
 
   const onClose = () => {
-    setValue("");
+    setFeedName("");
     doOperation.closeModal(operationID);
   };
 
-  const onSubmit = (value: string) => {
+  const onSubmit = (feedName: string) => {
     doCart.startUpload(
       cartID,
       files,
       isFolder,
       username,
-      value,
+      feedName,
       feedListID,
-      doFeedList,
+      useFeedList,
     );
     doOperation.closeModal(operationID);
   };
@@ -124,7 +123,7 @@ export default (props: Props) => {
 
   const onChange = (_e: any, newValue: string) => {
     console.info("UploadDataModal: onChange: newValue:", newValue);
-    setValue(newValue);
+    setFeedName(newValue);
   };
 
   return (
@@ -141,13 +140,13 @@ export default (props: Props) => {
             <TextInput
               name="input"
               ref={inputRef}
-              value={value}
+              value={feedName}
               onFocus={onFocus}
               onChange={onChange}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
-                  onSubmit(value);
+                  onSubmit(feedName);
                 }
               }}
               aria-label={label}
@@ -196,9 +195,9 @@ export default (props: Props) => {
           </div>
           <ActionGroup>
             <Button
-              onClick={() => onSubmit(value)}
+              onClick={() => onSubmit(feedName)}
               isLoading={isLoading}
-              isDisabled={!value}
+              isDisabled={!feedName}
             >
               {buttonLabel}
             </Button>

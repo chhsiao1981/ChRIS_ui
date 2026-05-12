@@ -1,6 +1,6 @@
 import type { HierarchyPointNode } from "d3-hierarchy";
 import type { Quadtree } from "d3-quadtree";
-import type { MouseEvent, SetStateAction, SetStateAction, SetStateAction } from "react";
+import type { MouseEvent, SetStateAction } from "react";
 import { DEFAULT_NODE_RADIUS } from "./constants";
 import type { Transform, TreeNodeDatum } from "./types";
 
@@ -58,6 +58,5 @@ export const onCanvasContextMenu = (
   theCanvas: HTMLCanvasElement,
   theTree: Quadtree<HierarchyPointNode<TreeNodeDatum>>,
   transform: Transform,
-  setContextMenuNode = (value: SetStateAction<TreeNodeDatum | null>) => void
-  setContextMenuPosition = (value: )
+  setContextMenuNode: (value: SetStateAction<TreeNodeDatum | null>) => void,
 ) => {};

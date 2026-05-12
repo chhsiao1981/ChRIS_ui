@@ -1,0 +1,7 @@
+.control {
+  padding-left: 1rem;
+  padding-top: 0.5rem;
+  display: flex;
+  gap: 10px;
+  margin: 10px;
+}

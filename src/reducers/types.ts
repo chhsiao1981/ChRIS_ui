@@ -4,7 +4,7 @@ import type {
   FileBrowserFolderFile,
   FileBrowserFolderLinkFile,
   ID,
-  ID,
+  PluginInstance,
 } from "../api/types";
 import type { FileBrowserType } from "../api/types/fileBrowser";
 
@@ -101,8 +101,15 @@ export interface PluginNodeParameter {
   placeholder: string;
 }
 
-export interface PluginNodeParameterMap {
-  [key: string]: PluginNodeParameter;
-}
+export type PluginNodeParameterMap = Record<string, PluginNodeParameter>;
 
-export type TSID = Record<ID, ID[]>;
+// TSID: topological sort id => parent-ids mapping
+export type TSIDMap = Record<ID, ID[]>;
+
+export type TreeNodeDatum = {
+  id: ID;
+  name: string;
+  parentId?: ID;
+  item: PluginInstance;
+  children: TreeNodeDatum[];
+};

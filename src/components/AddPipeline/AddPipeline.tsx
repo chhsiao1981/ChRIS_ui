@@ -1,5 +1,4 @@
 import {
-  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
@@ -12,53 +11,43 @@ import {
   createWorkflow,
   getWorkflowPluginInstances,
 } from "../../api/serverApi";
-import type { PluginInstance } from "../../api/types";
-import * as DoPlugin from "../../reducers/plugin";
 import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { Alert, Form, Tag } from "../Antd";
 import { SpinContainer } from "../Common";
 import Pipelines from "../PipelinesCopy";
 import { PipelineContext, Types } from "../PipelinesCopy/context";
 
-type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
 type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 type Props = {
-  addNodeLocally: (instance: PluginInstance | PluginInstance[]) => void;
-  isStaff: boolean;
+  isOpen: boolean;
+  close: () => void;
 };
 export default (props: Props) => {
-  const { addNodeLocally, isStaff } = props;
+  const { isOpen, close } = props;
 
   const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
     DoPluginInstance,
   );
 
-  const [classStatePluginInstance, _doPluginInstance] = usePluginInstance;
+  const [classPluginInstance, _doPluginInstance] = usePluginInstance;
   const pluginInstance =
-    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
+    getState(classPluginInstance) || DoPluginInstance.defaultState;
   const { selectedInstance: selectedPlugin, pluginInstances } = pluginInstance;
-
-  const usePlugin = useThunk<DoPlugin.State, TDoPlugin>(DoPlugin);
-  const [classStatePlugin, doPlugin] = usePlugin;
-  const pluginID = getDefaultID(classStatePlugin);
-  const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
-  const { nodeOperations } = plugin;
-  const { childPipeline } = nodeOperations;
 
   const { state, dispatch } = useContext(PipelineContext);
   const { pipelineToAdd, selectedPipeline, computeInfo, titleInfo } = state;
 
-  const alreadyAvailableInstances = pluginInstances.data;
+  const alreadyAvailableInstances = pluginInstances.results;
 
-  const handleToggle = () => {
-    if (childPipeline) {
+  const onClose = () => {
+    if (isOpen) {
       dispatch({
         type: Types.ResetState,
       });
       mutation.reset();
     }
-    doPlugin.getNodeOperations(pluginID, "childPipeline");
+    close();
   };
 
   const addPipeline = async () => {
@@ -103,7 +92,7 @@ export default (props: Props) => {
         } = await getWorkflowPluginInstances(workflow.id, 0, 100);
         const instances = data || [];
         if (instances && alreadyAvailableInstances) {
-          addNodeLocally(instances.reverse());
+          // addNodeLocally(instances.reverse());
         }
       } catch (e: any) {
         if (e instanceof Error) throw new Error(e.message);
@@ -118,10 +107,10 @@ export default (props: Props) => {
   React.useEffect(() => {
     if (mutation.isSuccess) {
       setTimeout(() => {
-        handleToggle();
+        onClose();
       }, 1000);
     }
-  }, [mutation.isSuccess, handleToggle]);
+  }, [mutation.isSuccess, onClose]);
 
   React.useEffect(() => {
     const el = document.querySelector("#indicators");
@@ -141,8 +130,8 @@ export default (props: Props) => {
     <Modal
       variant={ModalVariant.large}
       aria-label="My Pipeline Modal"
-      isOpen={childPipeline}
-      onClose={handleToggle}
+      isOpen={isOpen}
+      onClose={onClose}
       description="Add a Pipeline to the plugin instance"
       actions={[
         <Button
@@ -153,7 +142,7 @@ export default (props: Props) => {
         >
           Confirm
         </Button>,
-        <Button key="cancel" variant="link" onClick={handleToggle}>
+        <Button key="cancel" variant="link" onClick={onClose}>
           Cancel
         </Button>,
         <Fragment key="status">
@@ -182,7 +171,7 @@ export default (props: Props) => {
         </Fragment>,
       ]}
     >
-      <Pipelines isStaff={isStaff} />
+      <Pipelines />
       {mutation.isError || mutation.isSuccess || mutation.isPending ? (
         <div id="indicators">
           {mutation.isError && (

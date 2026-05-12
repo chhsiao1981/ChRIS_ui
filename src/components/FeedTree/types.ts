@@ -1,8 +1,5 @@
-import type { ID, PluginInstance } from "../../api/types";
-
-export type OverlayScaleType = "time" | "cpu" | "memory";
-
-export type Orientation = "vertical" | "horizontal";
+import type { HierarchyPointLink, HierarchyPointNode } from "d3-hierarchy";
+import type { TreeNodeDatum } from "../../reducers/types";
 
 export type Transform = {
   x: number;
@@ -10,16 +7,19 @@ export type Transform = {
   k: number;
 };
 
-export interface TreeNodeDatum {
-  id: ID;
-  name: string;
-  parentId: ID | undefined;
-  item: PluginInstance;
-  children: TreeNodeDatum[];
-}
-
-export type ContextMenuPosition = {
+export type DropdownPosition = {
   x: number;
   y: number;
-  visible: boolean;
+};
+
+export type DropdownOperation =
+  | "addNode"
+  | "addPipeline"
+  | "deleteNode"
+  | "zip";
+
+export type D3Data = {
+  rootNode: HierarchyPointNode<TreeNodeDatum>;
+  nodes: HierarchyPointNode<TreeNodeDatum>[];
+  links: HierarchyPointLink<TreeNodeDatum>[];
 };

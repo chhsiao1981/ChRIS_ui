@@ -2,7 +2,7 @@ import {
   getDefaultID,
   getState,
   type ThunkModuleToFunc,
-  type UseThunk,
+  useThunk,
 } from "@chhsiao1981/use-thunk";
 import {
   Breadcrumb,
@@ -15,22 +15,18 @@ import {
 import { Table, Tbody, Th, Thead, Tr } from "@patternfly/react-table";
 import { type CSSProperties, useEffect, useMemo, useRef } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import type {
-  FileBrowserFolder,
-  FileBrowserFolderFile,
-  FileBrowserFolderLinkFile,
-  PluginInstance,
-} from "../../api/types";
+import type { PluginInstance } from "../../api/types";
 import { useDownload } from "../../hooks/useDownload";
-import type * as DoCart from "../../reducers/cart";
+import * as DoCart from "../../reducers/cart";
 import * as DoDrawer from "../../reducers/drawer";
 import * as DoExplorer from "../../reducers/explorer";
 import * as DoFeed from "../../reducers/feed";
+import * as DoOperation from "../../reducers/operation";
 import * as DoUser from "../../reducers/user";
 import { notification } from "../Antd";
 import { ClipboardCopyContainer } from "../Common";
-import { DrawerActionButton } from "../FeedList/DrawerUtils";
-import { onMaximize, onMinimize } from "../FeedList/utilties";
+import DrawerActionButton from "../DrawerUtils/DrawerActionButton";
+import { onMaximize, onMinimize } from "../FeedUtils";
 import {
   getFileName,
   getLinkFileName,
@@ -53,6 +49,7 @@ type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoExplorer = ThunkModuleToFunc<typeof DoExplorer>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
 type TDoCart = ThunkModuleToFunc<typeof DoCart>;
+type TDoOperation = ThunkModuleToFunc<typeof DoOperation>;
 
 const previewAnimation = [{ opacity: "0.0" }, { opacity: "1.0" }];
 
@@ -77,12 +74,6 @@ type Props = {
   fetchMore?: boolean;
   observerTarget?: React.MutableRefObject<any>;
   isHide?: boolean;
-
-  useDrawer: UseThunk<DoDrawer.State, TDoDrawer>;
-  useUser: UseThunk<DoUser.State, TDoUser>;
-  useExplorer: UseThunk<DoExplorer.State, TDoExplorer>;
-  useFeed: UseThunk<DoFeed.State, TDoFeed>;
-  useCart: UseThunk<DoCart.State, TDoCart>;
 };
 
 export default (props: Props) => {
@@ -96,32 +87,36 @@ export default (props: Props) => {
     handlePagination,
     isLoading,
     isHide,
-
-    useDrawer,
-    useUser,
-    useExplorer,
-    useFeed,
-    useCart,
   } = props;
 
-  const [classStateUser, _] = useUser;
-  const user = getState(classStateUser) || DoUser.defaultState;
+  const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
+  const useDrawer = useThunk<DoDrawer.State, TDoDrawer>(DoDrawer);
+  const useExplorer = useThunk<DoExplorer.State, TDoExplorer>(DoExplorer);
+  const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
+  const useCart = useThunk<DoCart.State, TDoCart>(DoCart);
+  const useOperation = useThunk<DoOperation.State, TDoOperation>(DoOperation);
+
+  const [classUser, _] = useUser;
+  const user = getState(classUser) || DoUser.defaultState;
   const { username, isStaff } = user;
 
-  const [classStateDrawer, doDrawer] = useDrawer;
-  const drawer = getState(classStateDrawer) || DoDrawer.defaultState;
-  const drawerID = getDefaultID(classStateDrawer);
+  const [classDrawer, doDrawer] = useDrawer;
+  const drawer = getState(classDrawer) || DoDrawer.defaultState;
+  const drawerID = getDefaultID(classDrawer);
 
-  const [classStateExplorer, doExplorer] = useExplorer;
-  const explorerID = getDefaultID(classStateExplorer);
-  const explorer = getState(classStateExplorer) || DoExplorer.defaultState;
+  const [classExplorer, doExplorer] = useExplorer;
+  const explorerID = getDefaultID(classExplorer);
+  const explorer = getState(classExplorer) || DoExplorer.defaultState;
   const { selectedFile } = explorer;
 
-  const [classStateFeed, _2] = useFeed;
-  const feedState = getState(classStateFeed) || DoFeed.defaultState;
-  const { data: feed } = feedState;
+  const [classFeed, _2] = useFeed;
+  const feed = getState(classFeed) || DoFeed.defaultState;
+  const { data: feedData } = feed;
 
-  const handleDownloadMutation = useDownload(feed);
+  const [classOperation, _doOperation] = useOperation;
+  const operationID = getDefaultID(classOperation);
+
+  const handleDownloadMutation = useDownload(feedData);
   const [api, contextHolder] = notification.useNotification();
   const { isSuccess, isError, error: downloadError } = handleDownloadMutation;
   const pluginFilesPayload = pluginFilesPayloadProps || {};
@@ -129,7 +124,7 @@ export default (props: Props) => {
   const { subFoldersMap, linkFilesMap, filesMap, folderList } =
     pluginFilesPayload;
   const breadcrumb = useMemo(() => additionalKey.split("/"), [additionalKey]);
-  const currentPath = `home/${username}/feeds/feed_${feed?.id}/${selected?.plugin_name}_${selected?.id}/data`;
+  const currentPath = `home/${username}/feeds/feed_${feedData?.id}/${selected?.plugin_name}_${selected?.id}/data`;
   const noFiles = useMemo(
     () =>
       filesMap?.length === 0 &&
@@ -234,14 +229,13 @@ export default (props: Props) => {
               style={{ display: "flex", flexDirection: "column" }}
             >
               <DrawerActionButton
-                content="Files"
                 onMaximize={() => {
                   onMaximize(drawerID, "files", doDrawer);
                 }}
                 onMinimize={() => {
                   onMinimize(drawerID, doDrawer);
                 }}
-                maximized={drawer.files.maximized}
+                isMaximized={drawer.files.maximized}
               />
 
               <>
@@ -253,6 +247,8 @@ export default (props: Props) => {
                   }}
                 >
                   <Operations
+                    username={username}
+                    isStaff={isStaff}
                     classNames={{
                       toolbar: "remove-toolbar-padding",
                     }}
@@ -262,11 +258,6 @@ export default (props: Props) => {
                       },
                     }}
                     useCart={useCart}
-                    origin={origin}
-                    computedPath={additionalKey}
-                    folderList={folderList}
-                    username={username}
-                    isStaff={isStaff}
                     operationID={operationID}
                     useOperation={useOperation}
                     useUser={useUser}
@@ -367,110 +358,109 @@ export default (props: Props) => {
                           <SkeletonRows />
                         ) : (
                           <>
-                            {filesMap?.map(
-                              (resource: FileBrowserFolderFile, index) => (
-                                <FileRow
-                                  key={resource.data.fname}
-                                  rowIndex={index}
-                                  resource={resource}
-                                  name={getFileName(resource)}
-                                  date={resource.data.creation_date}
-                                  owner={resource.data.owner_username}
-                                  size={resource.data.fsize}
-                                  computedPath={additionalKey}
-                                  handleFolderClick={() => {}}
-                                  handleFileClick={() => {
-                                    toggleAnimation();
-                                    doExplorer.setSelectedFile(
-                                      explorerID,
-                                      resource,
-                                    );
-                                    !drawer.preview.open &&
-                                      doDrawer.setFilePreviewPanel(drawerID);
-                                  }}
-                                  origin={origin}
-                                  username={username}
-                                />
-                              ),
-                            )}
-                            {linkFilesMap?.map(
-                              (resource: FileBrowserFolderLinkFile, index) => (
-                                <LinkRow
-                                  key={resource.data.path}
-                                  rowIndex={index}
-                                  resource={resource}
-                                  name={getLinkFileName(resource)}
-                                  date={resource.data.creation_date}
-                                  owner={resource.data.owner_username}
-                                  size={resource.data.fsize}
-                                  computedPath={additionalKey}
-                                  handleFolderClick={() => {}}
-                                  handleFileClick={async () => {
-                                    try {
-                                      const linkedResource =
-                                        await resource.getLinkedResource();
+                            {filesMap?.map((theFile, index) => (
+                              <FileRow
+                                key={theFile.fname}
+                                rowIndex={index}
+                                resource={theFile}
+                                name={getFileName(theFile)}
+                                date={theFile.creation_date}
+                                owner={theFile.owner_username}
+                                size={theFile.fsize}
+                                computedPath={additionalKey}
+                                handleFolderClick={() => {}}
+                                handleFileClick={() => {
+                                  toggleAnimation();
+                                  doExplorer.setSelectedFile(
+                                    explorerID,
+                                    theFile,
+                                  );
+                                  !drawer.preview.open &&
+                                    doDrawer.setFilePreviewPanel(drawerID);
+                                }}
+                                origin={origin}
+                                username={username}
+                                useCart={useCart}
+                              />
+                            ))}
+                            {linkFilesMap?.map((linkFile, index) => (
+                              <LinkRow
+                                key={linkFile.path}
+                                rowIndex={index}
+                                resource={linkFile}
+                                name={getLinkFileName(linkFile)}
+                                date={linkFile.creation_date}
+                                owner={linkFile.owner_username}
+                                size={linkFile.fsize}
+                                computedPath={additionalKey}
+                                handleFolderClick={() => {}}
+                                handleFileClick={async () => {
+                                  /*
+                                  try {
+                                    const linkedResource =
+                                      await linkFile.getLinkedResource();
 
-                                      if (linkedResource) {
-                                        // Check if it's a folder (has path property)
-                                        if (
-                                          "path" in linkedResource.data &&
-                                          linkedResource instanceof
-                                            FileBrowserFolder
-                                        ) {
-                                          handleFileClick(
-                                            linkedResource.data.path,
-                                          );
-                                        }
-                                        // Check if it's a file (has fname property)
-                                        else if (
-                                          "fname" in linkedResource.data &&
-                                          linkedResource instanceof
-                                            FileBrowserFolderFile
-                                        ) {
-                                          toggleAnimation();
-                                          doExplorer.setSelectedFile(
-                                            explorerID,
-                                            linkedResource as FileBrowserFolderFile,
-                                          );
-                                          !drawer.preview.open &&
-                                            doDrawer.setFilePreviewPanel(
-                                              drawerID,
-                                            );
-                                        }
+                                    if (linkedResource) {
+                                      // Check if it's a folder (has path property)
+                                      if (
+                                        "path" in linkedResource.data &&
+                                        linkedResource instanceof
+                                          FileBrowserFolder
+                                      ) {
+                                        handleFileClick(
+                                          linkedResource.data.path,
+                                        );
                                       }
-                                    } catch (error) {
-                                      // TODO: Handle error
-                                      console.error(
-                                        "Error handling link file:",
-                                        error,
-                                      );
+                                      // Check if it's a file (has fname property)
+                                      else if (
+                                        "fname" in linkedResource &&
+                                        linkedResource instanceof
+                                          FileBrowserFolderFile
+                                      ) {
+                                        toggleAnimation();
+                                        doExplorer.setSelectedFile(
+                                          explorerID,
+                                          linkedResource as FileBrowserFolderFile,
+                                        );
+                                        !drawer.preview.open &&
+                                          doDrawer.setFilePreviewPanel(
+                                            drawerID,
+                                          );
+                                      }
                                     }
-                                  }}
-                                  origin={origin}
-                                  username={username}
-                                />
-                              ),
-                            )}
-                            {subFoldersMap?.map(
-                              (resource: FileBrowserFolder, index) => (
-                                <FolderRow
-                                  key={resource.data.path}
-                                  rowIndex={index}
-                                  resource={resource}
-                                  name={getFolderName(resource, additionalKey)}
-                                  date={resource.data.creation_date}
-                                  owner=" "
-                                  size={0}
-                                  computedPath={additionalKey}
-                                  handleFolderClick={() =>
-                                    handleFileClick(resource.data.path)
+                                  } catch (error) {
+                                    // TODO: Handle error
+                                    console.error(
+                                      "Error handling link file:",
+                                      error,
+                                    );
                                   }
-                                  handleFileClick={() => {}}
-                                  origin={origin}
-                                  username={username}
-                                />
-                              ),
-                            )}
+                                  */
+                                }}
+                                origin={origin}
+                                username={username}
+                                useCart={useCart}
+                              />
+                            ))}
+                            {subFoldersMap?.map((resource, index) => (
+                              <FolderRow
+                                key={resource.path}
+                                rowIndex={index}
+                                resource={resource}
+                                name={getFolderName(resource, additionalKey)}
+                                date={resource.creation_date}
+                                owner=" "
+                                size={0}
+                                computedPath={additionalKey}
+                                handleFolderClick={() =>
+                                  handleFileClick(resource.path)
+                                }
+                                handleFileClick={() => {}}
+                                origin={origin}
+                                username={username}
+                                useCart={useCart}
+                              />
+                            ))}
                           </>
                         )}
                       </Tbody>
@@ -514,14 +504,13 @@ export default (props: Props) => {
           style={previewStyle}
         >
           <DrawerActionButton
-            content="Preview"
             onMaximize={() => {
               onMaximize(drawerID, "preview", doDrawer);
             }}
             onMinimize={() => {
               onMinimize(drawerID, doDrawer);
             }}
-            maximized={drawer.preview.maximized}
+            isMaximized={drawer.preview.maximized}
           />
 
           <FileDetailView

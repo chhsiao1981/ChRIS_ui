@@ -472,7 +472,7 @@ export default function usePaginatedTreeQuery(
         setRootNode(updatedRoot);
         setLocalItems((prev) => [...prev, ...addedItems]);
         const lastAdded = addedItems[addedItems.length - 1];
-        doPluginInstance.getSelectedPlugin(pluginInstanceID, lastAdded);
+        doPluginInstance.setSelectedInstance(pluginInstanceID, lastAdded);
         await queryClient.invalidateQueries({
           queryKey: ["feedPluginInstances", feed?.id, "countOnly"],
         });
@@ -491,7 +491,7 @@ export default function usePaginatedTreeQuery(
       const newRoot = removeNodesIterative(rootNode, toRemove);
 
       if (lastRemovedParent) {
-        doPluginInstance.getSelectedPlugin(
+        doPluginInstance.setSelectedInstance(
           pluginInstanceID,
           lastRemovedParent.item,
         );

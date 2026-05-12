@@ -5,25 +5,30 @@ import {
   useThunk,
 } from "@chhsiao1981/use-thunk";
 import type { ItemType } from "antd/es/menu/interface";
-import type { ReactNode } from "react";
+import { type CSSProperties, type ReactNode, useState } from "react";
 import * as DoPlugin from "../../reducers/plugin";
 import * as DoPluginInstance from "../../reducers/pluginInstance";
+import AddNode from "../AddNode/AddNode";
+import AddPipeline from "../AddPipeline/AddPipeline";
 import { Dropdown, type MenuProps } from "../Antd";
+import DeleteNode from "../DeleteNode";
 import { AddIcon, DeleteIcon, PatternflyArchiveIcon } from "../Icons";
-import type { TreeNodeDatum } from "./data";
+import styles from "./DropdownMenu.module.css";
+import type { DropdownOperation, DropdownPosition } from "./types";
 
 type TDoPlugin = ThunkModuleToFunc<typeof DoPlugin>;
 type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 type Props = {
-  node: TreeNodeDatum | null;
   close: () => void;
   children?: ReactNode;
   isVisible: boolean;
+  position: DropdownPosition;
 };
+
 export default (props: Props) => {
   // XXX onTouchStart not working for now.
-  const { node, close, children, isVisible } = props;
+  const { close, children, isVisible, position } = props;
 
   const [classPluginInstance, _1] = useThunk<
     DoPluginInstance.State,
@@ -43,27 +48,19 @@ export default (props: Props) => {
 
   const items: ItemType[] = [
     {
-      key: "1",
+      key: "addNode",
       label: "Add a Child Node",
       icon: <AddIcon />,
       disabled: cancelled,
     },
     {
-      key: "2",
+      key: "addPipeline",
       label: "Add a Pipeline",
       icon: <AddIcon />,
       disabled: cancelled,
     },
-    /*
     {
-      key: "3",
-      label: "Add a Graph Node",
-      disabled: true,
-      icon: <AddIcon />,
-    },
-    */
-    {
-      key: "4",
+      key: "deleteNode",
       label: "Delete a Node",
       disabled:
         selectedInstance?.plugin_type === "fs" &&
@@ -71,41 +68,29 @@ export default (props: Props) => {
       icon: <DeleteIcon />,
     },
     {
-      key: "5",
+      key: "zip",
       label: "Zip",
       icon: <PatternflyArchiveIcon />,
     },
   ];
 
+  const [operation, setOperation] = useState<DropdownOperation | null>(null);
+
   const onZip = () => {
-    if (!node) {
-      return;
-    }
-    fetchPipeline(node.item);
+    // XXX TO DISCUSS: whether we create a node below the node, or we create an independent data-feed?
+    // fetchPipeline(node.item);
     close();
-  };
-
-  const onOperations = (e: any) => {
-    if (e.key === "1") {
-      doPlugin.getNodeOperations(pluginID, "childNode");
-    }
-    if (e.key === "2") {
-      doPlugin.getNodeOperations(pluginID, "childPipeline");
-    }
-
-    if (e.key === "4") {
-      doPlugin.getNodeOperations(pluginID, "deleteNode");
-    }
-
-    if (e.key === "5") {
-      onZip();
-    }
   };
 
   const onClick: MenuProps["onClick"] = (e) => {
     e.domEvent.stopPropagation();
-
-    onOperations(e);
+    switch (e.key) {
+      case "zip":
+        onZip();
+        break;
+      default:
+        setOperation((e.key as DropdownOperation) || null);
+    }
   };
 
   // XXX onTouch not working for now.
@@ -127,15 +112,36 @@ export default (props: Props) => {
   };
   */
 
+  const closeModal = () => {
+    setOperation(null);
+  };
+
+  const onMouseLeave = () => {
+    closeModal();
+    close();
+  };
+
+  const menu: MenuProps = { items, onClick };
+  const rootClassName = isVisible ? styles.root : styles.hide;
+  const rootStyle: CSSProperties = {
+    top: position.y,
+    left: position.x,
+  };
   return (
-    <Dropdown
-      menu={{
-        items,
-        onClick,
-      }}
-      open={isVisible} // Force it to be open
-    >
-      {children}
-    </Dropdown>
+    <>
+      {/** biome-ignore lint/a11y/noStaticElementInteractions: onMouseLeave dropdown */}
+      <div
+        className={rootClassName}
+        style={rootStyle}
+        onMouseLeave={onMouseLeave}
+      >
+        <Dropdown menu={menu} open={isVisible}>
+          {children}
+        </Dropdown>
+      </div>
+      <AddNode isOpen={operation === "addNode"} close={closeModal} />
+      <DeleteNode isOpen={operation === "deleteNode"} close={closeModal} />
+      <AddPipeline isOpen={operation === "addPipeline"} close={closeModal} />
+    </>
   );
 };

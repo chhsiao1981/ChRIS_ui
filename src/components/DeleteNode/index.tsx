@@ -21,35 +21,33 @@ type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 
 // -------------------- 2) Props & Interfaces --------------------
 type Props = {
+  isOpen: boolean;
+  close: () => void;
   feed?: Feed;
-  removeNodeLocally?: (ids: number[]) => void;
 };
 
 // -------------------- 3) Component: DeleteNode --------------------
 export default (props: Props) => {
-  const { feed, removeNodeLocally } = props;
+  const { isOpen, close, feed } = props;
 
   const useUser = useThunk<DoUser.State, TDoUser>(DoUser);
-  const [classStateUser, _doUser] = useUser;
-  const user = getState(classStateUser) || DoUser.defaultState;
+  const [classUser, _doUser] = useUser;
+  const user = getState(classUser) || DoUser.defaultState;
   const { token } = user;
 
   const usePlugin = useThunk<DoPlugin.State, TDoPlugin>(DoPlugin);
-  const [classStatePlugin, doPlugin] = usePlugin;
-  const pluginID = getDefaultID(classStatePlugin);
-  const plugin = getState(classStatePlugin) || DoPlugin.defaultState;
-  const { nodeOperations } = plugin;
-  const { deleteNode: isModalOpen } = nodeOperations;
+  const [classPlugin, doPlugin] = usePlugin;
+  const pluginID = getDefaultID(classPlugin);
 
-  const [classStatePluginInstance, doPluginInstance] = useThunk<
+  const [classPluginInstance, doPluginInstance] = useThunk<
     DoPluginInstance.State,
     TDoPluginInstance
   >(DoPluginInstance);
 
-  const pluginInstanceID = getDefaultID(classStatePluginInstance);
+  const pluginInstanceID = getDefaultID(classPluginInstance);
   const pluginInstance =
-    getState(classStatePluginInstance) || DoPluginInstance.defaultState;
-  const { selectedInstance: selectedPlugin } = pluginInstance;
+    getState(classPluginInstance) || DoPluginInstance.defaultState;
+  const { selectedInstance } = pluginInstance;
 
   // --- Redux / Query-Client Hooks ---
   const queryClient = useQueryClient();
@@ -64,33 +62,35 @@ export default (props: Props) => {
   const [parentToSelect, setParentToSelect] = useState<any | null>(null);
 
   const handleDelete = async () => {
-    if (!selectedPlugin) return;
+    if (!selectedInstance) return;
 
     setLoading(true);
     setError(null);
 
     try {
       // 1) Cancel if plugin not in terminal state
-      const { previous_id: parentId, status } = selectedPlugin;
+      const { previous_id: parentId, status } = selectedInstance;
       if (
         !["finishedSuccessfully", "cancelled", "finishedWithError"].includes(
           status,
         )
       ) {
-        await selectedPlugin.put({ status: "cancelled" });
+        await selectedInstance.put({ status: "cancelled" });
       }
 
       // 2) Gather descendant IDs
-      const resp = await selectedPlugin.getDescendantPluginInstances({
+      const resp = await selectedInstance.getDescendantPluginInstances({
         limit: 10000,
       });
       const allDescendants = resp.getItems() || [];
-      const allIdsToRemove = allDescendants.map((pi) => pi.data.id);
+      // const allIdsToRemove = allDescendants.map((pi) => pi.data.id);
 
       // 3) Remove from local tree
+      /*
       if (removeNodeLocally) {
         removeNodeLocally(allIdsToRemove);
       }
+      */
 
       // 4) If there's a parent, fetch it but *do not* select it yet.
       if (parentId) {
@@ -105,7 +105,7 @@ export default (props: Props) => {
       }
 
       // 5) Delete plugin instance via axios
-      const pluginId = selectedPlugin.id;
+      const pluginId = selectedInstance.id;
       const deleteUrl = `${import.meta.env.VITE_CHRIS_UI_URL}plugins/instances/${pluginId}/`;
 
       await axios.delete(deleteUrl, {
@@ -142,12 +142,12 @@ export default (props: Props) => {
 
     // 1) If we have a valid parent, select it *now* that the modal is closed
     if (parentToSelect) {
-      doPluginInstance.getSelectedPlugin(pluginInstanceID, parentToSelect);
+      doPluginInstance.setSelectedInstance(pluginInstanceID, parentToSelect);
       setParentToSelect(null); // reset
     }
 
     // 2) Close the modal
-    doPlugin.getNodeOperations(pluginID, "deleteNode");
+    doPlugin.setNodeOperation(pluginID, "deleteNode");
   };
 
   // -------------------- 5) Render --------------------
@@ -156,11 +156,11 @@ export default (props: Props) => {
       variant={ModalVariant.small}
       title="Delete Selected Node"
       description={
-        selectedPlugin
-          ? `You are about to delete "${selectedPlugin.title || selectedPlugin.plugin_name}" and its descendants. This action cannot be undone.`
+        selectedInstance
+          ? `You are about to delete "${selectedInstance.title || selectedInstance.plugin_name}" and its descendants. This action cannot be undone.`
           : "No node selected."
       }
-      isOpen={isModalOpen}
+      isOpen={isOpen}
       onClose={handleModalClose}
       actions={[
         <Fragment key="button-actions">

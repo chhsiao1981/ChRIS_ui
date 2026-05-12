@@ -59,8 +59,8 @@ type Props = {
 
   useUser: UseThunk<DoUser.State, TDoUser>;
 
-  feedListID: string;
-  useFeedList: UseThunk<DoFeedList.State, TDoFeedList>;
+  feedListID?: string;
+  useFeedList?: UseThunk<DoFeedList.State, TDoFeedList>;
 };
 
 // Operations
@@ -103,14 +103,7 @@ export default (props: Props) => {
     <Fragment>
       {notifyComponent}
       <ToolbarItem>
-        <UploadData
-          operationID={operationID}
-          useOperation={useOperation}
-          useCart={useCart}
-          useUser={useUser}
-          feedListID={feedListID}
-          useFeedList={useFeedList}
-        />
+        <UploadData operationID={operationID} useOperation={useOperation} />
         {userRelatedError && (
           <AntdAlert
             style={{ marginLeft: "1rem" }}

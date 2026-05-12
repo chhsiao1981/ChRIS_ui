@@ -69,7 +69,7 @@ export default (props: Props) => {
     selectedInstance: selectedPlugin,
     pluginInstances: pluginInstancesObj,
   } = pluginInstance;
-  const { data: pluginInstances } = pluginInstancesObj;
+  const { results: pluginInstances } = pluginInstancesObj;
 
   const { mutation, contextHolder } = usePipelineMutation(
     selectedPlugin,

@@ -90,7 +90,7 @@ export const fetchParamsAndComputeEnv = (
   };
 };
 
-export const getNodeOperations = (
+export const setNodeOperation = (
   myID: string,
   operation: keyof NodeOperation,
 ): Thunk<State> => {

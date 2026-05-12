@@ -2,7 +2,7 @@ import { Flex, FlexItem } from "@patternfly/react-core";
 import { useEffect, useState } from "react";
 import { fetchNote } from "../../api/common";
 import { Badge } from "../Antd";
-import { ButtonWithTooltip } from "../FeedList/DrawerUtils";
+import ButtonWithTooltip from "../DrawerUtils/ButtonWithTooltip";
 import {
   AnalysisIcon,
   BrainIcon,
@@ -28,9 +28,9 @@ type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
 
 export default () => {
   const useDrawer = useThunk<DoDrawer.State, TDoDrawer>(DoDrawer);
-  const [classStateDrawer, doDrawer] = useDrawer;
-  const drawerState = getState(classStateDrawer) || DoDrawer.defaultState;
-  const drawerID = getDefaultID(classStateDrawer);
+  const [classDrawer, doDrawer] = useDrawer;
+  const drawer = getState(classDrawer) || DoDrawer.defaultState;
+  const drawerID = getDefaultID(classDrawer);
 
   const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
   const [classStateFeed, _] = useFeed;
@@ -38,10 +38,10 @@ export default () => {
 
   const { data: currentFeed } = feedState;
 
-  const node = drawerState.node.currentlyActive === "node";
-  const note = drawerState.node.currentlyActive === "note";
-  const terminal = drawerState.node.currentlyActive === "terminal";
-  const preview = drawerState.preview.currentlyActive === "preview";
+  const node = drawer.node.currentlyActive === "node";
+  const note = drawer.node.currentlyActive === "note";
+  const terminal = drawer.node.currentlyActive === "terminal";
+  const preview = drawer.preview.currentlyActive === "preview";
 
   const [showNoteBadge, setShowNoteBadge] = useState(false);
 
@@ -66,7 +66,7 @@ export default () => {
           actionType="graph"
           icon={<AnalysisIcon />}
           title="Feed Tree Panel"
-          isDisabled={drawerState.graph.open}
+          isDisabled={drawer.graph.open}
           useDrawer={useDrawer}
         />
       </FlexItem>
@@ -84,7 +84,7 @@ export default () => {
               <TerminalIcon />
             )
           }
-          isDisabled={drawerState.node.open}
+          isDisabled={drawer.node.open}
           useDrawer={useDrawer}
         />
       </FlexItem>
@@ -94,7 +94,7 @@ export default () => {
           actionType="files"
           title="Files Table Panel"
           icon={<FeedBrowserIcon />}
-          isDisabled={drawerState.files.open}
+          isDisabled={drawer.files.open}
           useDrawer={useDrawer}
         />
       </FlexItem>
@@ -104,16 +104,16 @@ export default () => {
           actionType="preview"
           title="Preview Panel"
           icon={preview ? <PreviewIcon /> : <BrainIcon />}
-          isDisabled={drawerState.preview.open}
+          isDisabled={drawer.preview.open}
           useDrawer={useDrawer}
         />
       </FlexItem>
 
       <FlexItem>
         <ButtonWithTooltip
-          className="button-style large-button"
-          position="bottom"
           content={!node && terminal ? "Configuration Panel" : "Terminal"}
+          position="bottom"
+          className="button-style large-button"
           onClick={() => {
             if (terminal) {
               doDrawer.setDrawerCurrentlyActive(drawerID, "node", "node");

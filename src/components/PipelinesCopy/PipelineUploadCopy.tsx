@@ -24,11 +24,10 @@ const COOKIE_NAME = "storeCreds";
 
 type Props = {
   fetchPipelinesAgain: () => void;
-  isStaff: boolean;
 };
 
 export default (props: Props) => {
-  const { fetchPipelinesAgain, isStaff } = props;
+  const { fetchPipelinesAgain } = props;
   const [cookies] = useCookies([COOKIE_NAME]);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -76,11 +75,13 @@ export default (props: Props) => {
     const crList = (crResp.getItems() as ComputeResource[]) || [];
     if (!crList.length) throw new Error("No compute resources available.");
 
-    let authHeader: string | null = null;
+    const authHeader: string | null = null;
+    /*
     if (isStaff) authHeader = `Token ${token}`;
     else if (cookies[COOKIE_NAME]) authHeader = `Basic ${cookies[COOKIE_NAME]}`;
     if (!authHeader)
       throw new Error("Please configure admin credentials in the Store first.");
+    */
 
     await handleInstallPlugin(authHeader, pluginMeta, crList);
   }

@@ -9,9 +9,10 @@ import {
 import { useEffect, useState } from "react";
 import type { Feed } from "../../api/types";
 import * as DoPluginInstance from "../../reducers/pluginInstance";
-import type { TreeNodeDatum } from "../../reducers/types";
 import { SpinContainer } from "../Common";
-import FeedTree from "./FeedTree";
+import FeedTree from "../FeedTree/FeedTree";
+import Control from "./Control";
+import type { Orientation, OverlayScaleType } from "./types";
 
 type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
@@ -23,7 +24,13 @@ type Props = {
 export default (props: Props) => {
   const { feed, isStaff } = props;
 
-  const [isFeedGraph, setIsFeedGraph] = useState(false);
+  const [orientation, setOrientation] = useState<Orientation>("vertical");
+  const [isToggleLabel, setIsToggleLabel] = useState(false);
+  const [is3D, setIs3D] = useState(false);
+  const [isScaleEnabled, setIsScaleEnabled] = useState(false);
+  const [scaleType, setScaleType] = useState<OverlayScaleType>("time");
+  const [isSearch, setIsSearch] = useState(true);
+  const [search, setSearch] = useState("");
 
   const [classPluginInstance, doPluginInstance] = useThunk<
     DoPluginInstance.State,
@@ -58,10 +65,6 @@ export default (props: Props) => {
     pluginInstanceID,
   ]);
 
-  const onNodeClick = (node: TreeNodeDatum) => {
-    doPluginInstance.setSelectedInstance(pluginInstanceID, node.item);
-  };
-
   // Show loading spinner only when we have no nodes at all
   return (
     <>
@@ -71,13 +74,24 @@ export default (props: Props) => {
       />
       {/* Full-screen progress overlay */}
       {/* <Loading /> XXX never happened */}
-      <FeedTree
-        onNodeClick={onNodeClick}
-        setIsFeedGraph={setIsFeedGraph}
-        isHide={isFeedGraph}
-        feed={feed}
-        isStaff={isStaff}
+      <Control
+        orientation={orientation}
+        setOrientation={setOrientation}
+        isToggleLabel={isToggleLabel}
+        setIsToggleLabel={setIsToggleLabel}
+        is3D={is3D}
+        setIs3D={setIs3D}
+        isScaleEnabled={isScaleEnabled}
+        setIsScaleEnabled={setIsScaleEnabled}
+        scaleType={scaleType}
+        setScaleType={setScaleType}
+        isSearch={isSearch}
+        setIsSearch={setIsSearch}
+        search={search}
+        setSearch={setSearch}
       />
+
+      <FeedTree isHide={is3D} feed={feed} isStaff={isStaff} />
     </>
   );
 };

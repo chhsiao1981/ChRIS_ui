@@ -54,7 +54,7 @@ export default (
           const firstInstance = instances[instances.length - 1];
           const completeList = [...pluginInstances, ...instances];
 
-          doPluginInstance.getSelectedPlugin(pluginInstanceID, firstInstance);
+          doPluginInstance.setSelectedInstance(pluginInstanceID, firstInstance);
 
           const pluginInstanceObj = {
             selected: firstInstance,
