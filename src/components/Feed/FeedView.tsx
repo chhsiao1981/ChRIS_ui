@@ -1,7 +1,6 @@
 import { type CSSProperties, useEffect } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useLocation, useNavigate, useParams } from "react-router";
-// import FeedOutputBrowser from "../FeedOutputBrowser/FeedOutputBrowser";
 import Wrapper from "../Wrapper";
 import "../FeedList/Feeds.css"; // Import your CSS file
 import {
@@ -23,7 +22,6 @@ import { useSearchQueryParams } from "../FeedList/usePaginate";
 import FeedOutputBrowser from "../FeedOutputBrowser/FeedOutputBrowser";
 import GraphPanel from "./GraphPanel";
 import NodePanel from "./NodePanel";
-// import NodePanel from "./NodePanel";
 import Title from "./Title";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
@@ -83,14 +81,6 @@ export default () => {
 
   // init
   useEffect(() => {
-    console.info(
-      "FeedView: isInitUser:",
-      isInitUser,
-      "paramsFeedID:",
-      paramsFeedID,
-      "feedData:",
-      feedData?.id || "",
-    );
     if (!isInitUser) {
       return;
     }
@@ -105,7 +95,6 @@ export default () => {
     doFeed.setShowToolbar(feedID, true);
     document.title = `ChRIS-ui: data-${paramsFeedID}`;
 
-    console.info("FeedView.useEffect: to getFeedDetail");
     doFeed.getFeedDetail(
       feedID,
       paramsFeedID,
@@ -163,6 +152,8 @@ export default () => {
           <PanelGroup autoSaveId="conditional" direction="horizontal">
             {/* Left Panel: Graph */}
             <GraphPanel feed={feedData} isStaff={isStaff} />
+
+            <PanelResizeHandle className="ResizeHandle" />
 
             {/* Right Panel: Node Details */}
             <NodePanel />

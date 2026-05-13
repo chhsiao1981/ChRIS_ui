@@ -34,22 +34,19 @@ export default (props: Props) => {
   }
 
   return (
-    <>
-      <Panel
-        className="custom-panel"
-        order={1}
-        defaultSize={53}
-        minSize={20}
-        style={graphStyle}
-      >
-        <DrawerActionButton
-          onMaximize={() => onMaximize(drawerID, "graph", doDrawer)}
-          onMinimize={() => onMinimize(drawerID, doDrawer)}
-          isMaximized={drawer.graph.maximized}
-        />
-        <Graph feed={feed} isStaff={isStaff} />
-      </Panel>
-      <PanelResizeHandle className="ResizeHandle" />
-    </>
+    <Panel
+      className="custom-panel"
+      order={1}
+      defaultSize={53}
+      minSize={20}
+      style={graphStyle}
+    >
+      <DrawerActionButton
+        onMaximize={() => onMaximize(drawerID, "graph", doDrawer)}
+        onMinimize={() => onMinimize(drawerID, doDrawer)}
+        isMaximized={drawer.graph.maximized}
+      />
+      <Graph feed={feed} isStaff={isStaff} />
+    </Panel>
   );
 };
