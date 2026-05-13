@@ -67,7 +67,7 @@ export default (props: Props) => {
     getState(classStatePluginInstance) || DoPluginInstance.defaultState;
   const {
     selectedInstance: selectedPlugin,
-    pluginInstances: pluginInstancesObj,
+    pluginInstanceList: pluginInstancesObj,
   } = pluginInstance;
   const { results: pluginInstances } = pluginInstancesObj;
 

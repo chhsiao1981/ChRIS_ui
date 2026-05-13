@@ -123,7 +123,7 @@ export default (props: Props) => {
         <FlexItem>{title}</FlexItem>
         {/* Center */}
         <FlexItem flex={{ default: "flex_1" }}>
-          {props.showToolbar && !isSmallerScreen && <FeedDetails />}
+          {/* props.showToolbar && !isSmallerScreen && <FeedDetails /> */}
         </FlexItem>
 
         {/* Right section */}

@@ -1,4 +1,3 @@
-import { getFeedTree } from "../../api/common";
 import { getPluginInstanceParameters } from "../../api/serverApi/pluginInstance";
 import type {
   ID,

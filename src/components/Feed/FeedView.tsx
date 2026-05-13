@@ -1,8 +1,7 @@
 import { type CSSProperties, useEffect } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useLocation, useNavigate, useParams } from "react-router";
-import usePaginatedTreeQuery from "../FeedList/usePaginatedTreeQuery";
-import FeedOutputBrowser from "../FeedOutputBrowser/FeedOutputBrowser";
+// import FeedOutputBrowser from "../FeedOutputBrowser/FeedOutputBrowser";
 import Wrapper from "../Wrapper";
 import "../FeedList/Feeds.css"; // Import your CSS file
 import {
@@ -12,11 +11,7 @@ import {
   useThunk,
 } from "@chhsiao1981/use-thunk";
 import { notification } from "antd";
-import { collectionJsonToJson } from "../../api/collectionToJson";
-import {
-  PluginInstanceStatus,
-  type PluginInstance as PluginInstanceType,
-} from "../../api/types";
+import { PluginInstanceStatus } from "../../api/types";
 import type { FeedType } from "../../api/types/feed";
 import { DEFAULT_TYPE } from "../../constants";
 import * as DoDrawer from "../../reducers/drawer";
@@ -26,9 +21,10 @@ import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { Role } from "../../reducers/types";
 import * as DoUser from "../../reducers/user";
 import { useSearchQueryParams } from "../FeedList/usePaginate";
-import { usePollAllPluginStatuses } from "../FeedList/usePolledStatuses";
+import FeedOutputBrowser from "../FeedOutputBrowser/FeedOutputBrowser";
 import GraphPanel from "./GraphPanel";
 import NodePanel from "./NodePanel";
+// import NodePanel from "./NodePanel";
 import Title from "./Title";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
@@ -63,23 +59,20 @@ export default () => {
   );
   const [classPluginInstance, doPluginInstance] = usePluginInstance;
   const pluginInstanceID = getDefaultID(classPluginInstance);
+  const pluginInstance =
+    getState(classPluginInstance) || DoPluginInstance.defaultState;
+  const { statuses, pluginInstanceList } = pluginInstance;
 
   const query = useSearchQueryParams();
   const queryType = query.get("type") as FeedType | null;
   const theType = queryType || DEFAULT_TYPE;
 
   const params = useParams();
-  const { id: paramsFeedID } = params;
+  const { dataID: paramsFeedID } = params;
 
   const navigate = useNavigate();
   const location = useLocation();
   const [notificationAPI, contextHolder] = notification.useNotification();
-
-  const treeQuery = usePaginatedTreeQuery(feedData);
-  const statuses = usePollAllPluginStatuses(
-    treeQuery.pluginInstances,
-    treeQuery.totalCount,
-  );
 
   useEffect(() => {
     if (!isInitUser) {
@@ -96,6 +89,14 @@ export default () => {
 
   // init
   useEffect(() => {
+    console.info(
+      "FeedView: isInitUser:",
+      isInitUser,
+      "paramsFeedID:",
+      paramsFeedID,
+      "feedData:",
+      feedData?.id || "",
+    );
     if (!isInitUser) {
       return;
     }
@@ -103,55 +104,43 @@ export default () => {
       return;
     }
 
-    if (feedData && feedData.id === paramsFeedID) {
+    if (feedData && `${feedData.id}` === `${paramsFeedID}`) {
       return;
     }
 
     doFeed.setShowToolbar(feedID, true);
-    document.title = "My Analyses - CHRIS UI";
+    document.title = `ChRIS-ui: data-${paramsFeedID}`;
 
+    console.info("FeedView.useEffect: to getFeedDetail");
     doFeed.getFeedDetail(
       feedID,
       paramsFeedID,
       theType,
-      user.username,
       usePluginInstance,
       pluginInstanceID,
     );
-
-    return () => {
-      doPluginInstance.resetSelectedInstance(pluginInstanceID);
-      doExplorer.clearSelectedFile(explorerID);
-      doFeed.setShowToolbar(feedID, false);
-    };
   }, [isInitUser, paramsFeedID, feedData]);
 
   // set drawer state
   useEffect(() => {
-    if (!treeQuery.totalCount) {
+    if (!pluginInstanceList.count) {
       return;
     }
-    if (treeQuery.totalCount !== treeQuery.pluginInstances.length) {
+    if (pluginInstanceList.count !== pluginInstanceList.results.length) {
       return;
     }
-
-    const lastPluginInstance: PluginInstanceType = collectionJsonToJson(
-      treeQuery.pluginInstances[treeQuery.pluginInstances.length - 1],
-      false,
-      false,
-      "FeedView.useEffect",
-    );
+    if (!pluginInstanceList.results.length) {
+      return;
+    }
+    const lastPluginInstance =
+      pluginInstanceList.results[pluginInstanceList.results.length - 1];
 
     const isSuccess =
       lastPluginInstance.status === PluginInstanceStatus.SUCCESS;
 
     const theRole = role || Role.DefaultRole;
     doDrawer.resetDrawerState(drawerID, theRole, isSuccess);
-    return () => {
-      const theRole = role || Role.DefaultRole;
-      doDrawer.resetDrawerState(drawerID, theRole, isSuccess);
-    };
-  }, [role, treeQuery.pluginInstances, treeQuery.totalCount]);
+  }, [role, pluginInstanceList.results, pluginInstanceList.count]);
 
   const isUpperShow = drawer.graph.open || drawer.node.open;
   const upperStyle: CSSProperties = {};

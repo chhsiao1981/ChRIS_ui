@@ -6,9 +6,9 @@ import {
   type ThunkModuleToFunc,
   type UseThunk,
 } from "@chhsiao1981/use-thunk";
+import { getFeed } from "../api/serverApi";
 import type { Feed, ID } from "../api/types";
 import type { FeedType } from "../api/types/feed";
-
 import type * as DoPluginInstance from "./pluginInstance";
 
 type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
@@ -61,9 +61,30 @@ export const getFeedDetail = (
   myID: string,
   feedID: ID,
   theType: FeedType,
-  username: string,
   usePluginInstance: UseThunk<DoPluginInstance.State, TDoPluginInstance>,
   pluginInstanceID: string,
 ): Thunk<State> => {
-  return (dispatch, _) => {};
+  return async (dispatch, _) => {
+    const { status, data, errmsg } = await getFeed(
+      feedID,
+      theType === "public",
+    );
+    if (errmsg) {
+      dispatch(setData<State>(myID, { error: errmsg }));
+      return;
+    }
+    if (!data) {
+      dispatch(setData<State>(myID, { error: "unable to get data" }));
+      return;
+    }
+
+    dispatch(setData<State>(myID, { data }));
+
+    console.info(
+      "feed.getFeedDetail: to pluginInstance.fetchPluginInstances: feedID:",
+      feedID,
+    );
+    const [_classPluginInstance, doPluginInstance] = usePluginInstance;
+    doPluginInstance.fetchPluginInstances(pluginInstanceID, data);
+  };
 };

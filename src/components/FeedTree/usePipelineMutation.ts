@@ -61,7 +61,7 @@ export default (
             pluginInstances: completeList,
           };
 
-          doPluginInstance.setPluginInstancesAndSelectedPlugin(
+          doPluginInstance.setPluginInstanceListAndSelectedInstance(
             pluginInstanceID,
             pluginInstanceObj.selected,
             pluginInstanceObj.pluginInstances,

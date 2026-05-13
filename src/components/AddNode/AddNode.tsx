@@ -44,7 +44,8 @@ export default (props: Props) => {
   const pluginInstanceID = getDefaultID(classPluginInstance);
   const pluginInstance =
     getState(classPluginInstance) || DoPluginInstance.defaultState;
-  const { selectedInstance, pluginInstances } = pluginInstance;
+  const { selectedInstance, pluginInstanceList: pluginInstances } =
+    pluginInstance;
 
   const [classPlugin, _doPlugin] = useThunk<DoPlugin.State, TDoPlugin>(
     DoPlugin,

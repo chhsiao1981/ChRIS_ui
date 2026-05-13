@@ -33,7 +33,10 @@ export default (props: Props) => {
   const [classPluginInstance, _doPluginInstance] = usePluginInstance;
   const pluginInstance =
     getState(classPluginInstance) || DoPluginInstance.defaultState;
-  const { selectedInstance: selectedPlugin, pluginInstances } = pluginInstance;
+  const {
+    selectedInstance: selectedPlugin,
+    pluginInstanceList: pluginInstances,
+  } = pluginInstance;
 
   const { state, dispatch } = useContext(PipelineContext);
   const { pipelineToAdd, selectedPipeline, computeInfo, titleInfo } = state;

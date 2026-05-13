@@ -8,9 +8,9 @@ import {
 import {
   createPluginInstance as apiCreatePluginInstance,
   deletePluginInstance as apiDeletePluginInstance,
-  getPluginInstances,
 } from "../api/serverApi";
 import { getPluginParameters } from "../api/serverApi/plugin";
+import { getPluginInstanceList } from "../api/serverApi/pluginInstance";
 import type { Feed, ID, List, PluginInstance } from "../api/types";
 import type { Err } from "../types";
 import type * as DoAddNode from "./addNode";
@@ -26,11 +26,6 @@ export const myClass = "chris-ui/plugin-instance";
 // XXX TODO: flatten pluginInstances
 export interface State extends rState {
   selectedInstance?: PluginInstance;
-  pluginInstances: {
-    results: PluginInstance[];
-    error: Err;
-    loading: boolean;
-  };
   pluginInstanceList: List<PluginInstance>;
   chunkSize: number;
   hasNextPage?: boolean;
@@ -42,15 +37,10 @@ export interface State extends rState {
   tsIDs: TSIDMap;
 
   statuses: Record<ID, string>;
-  errors: Record<string, string>;
+  errors: Record<string, Err>;
 }
 
 export const defaultState: State = {
-  pluginInstances: {
-    results: [],
-    error: "",
-    loading: false,
-  },
   pluginInstanceList: { results: [], count: 0 },
   chunkSize: 0,
   isFetchingNextPage: false,
@@ -70,10 +60,27 @@ export const init = (): Thunk<State> => {
 // XXX need to replace the name as setSelectedPluginInstance
 export const setSelectedInstance = (
   myID: string,
-  pluginInstance: PluginInstance,
+  selectedInstance: PluginInstance,
 ): Thunk<State> => {
   return (dispatch, _getClassState) => {
-    dispatch(setData<State>(myID, { selectedInstance: pluginInstance }));
+    dispatch(setData<State>(myID, { selectedInstance }));
+  };
+};
+
+export const setError = (
+  myID: string,
+  prompt: string,
+  error: Err,
+): Thunk<State> => {
+  return (dispatch, getClass) => {
+    const theClass = getClass();
+    const me = getState(theClass, myID);
+    if (!me) {
+      return;
+    }
+    const { errors } = me;
+    const newErrors = Object.assign({}, errors, { [prompt]: error });
+    dispatch(setData(myID, { errors: newErrors }));
   };
 };
 
@@ -83,11 +90,11 @@ export const resetSelectedInstance = (myID: string): Thunk<State> => {
   };
 };
 
-export const setPluginTitle = (
+export const updatePluginInstance = (
   myID: string,
   pluginInstance: PluginInstance,
 ): Thunk<State> => {
-  // XXX need to replace the name as setPluginInstance
+  // update the pluginInstance with same pluginInstanceID
   return (dispatch, getClassState) => {
     const classState = getClassState();
     const me = getState(classState, myID);
@@ -95,54 +102,51 @@ export const setPluginTitle = (
       return;
     }
 
-    const { pluginInstances } = me;
-    const idx = pluginInstances.results.findIndex(
+    const { pluginInstanceList } = me;
+    const idx = pluginInstanceList.results.findIndex(
       (eachInstance) => eachInstance.id === pluginInstance.id,
     );
     if (idx === -1) {
       return;
     }
-    const newPluginInstancesData = pluginInstances.results.map((each) => each);
+
+    const newPluginInstancesData = pluginInstanceList.results.map(
+      (each) => each,
+    );
     newPluginInstancesData[idx] = pluginInstance;
-    const newPluginInstances = Object.assign({}, pluginInstances, {
-      data: newPluginInstancesData,
-    });
+    const newPluginInstanceList: List<PluginInstance> = Object.assign(
+      {},
+      pluginInstanceList,
+      {
+        results: newPluginInstancesData,
+      },
+    );
 
     dispatch(
       setData<State>(myID, {
-        pluginInstances: newPluginInstances,
-        selectedInstance: pluginInstance,
+        pluginInstanceList: newPluginInstanceList,
       }),
     );
   };
 };
 
-export const setPluginInstancesAndSelectedPlugin = (
+export const setPluginInstanceListAndSelectedInstance = (
   myID: string,
-  selectedPluginInstance?: PluginInstance,
-  pluginInstances?: PluginInstance[],
+  selectedInstance?: PluginInstance,
+  pluginInstanceList?: List<PluginInstance>,
 ): Thunk<State> => {
-  return (dispatch, getClassState) => {
-    const classState = getClassState();
-    const me = getState(classState, myID);
-    if (!me) {
-      return;
-    }
-    const { pluginInstances: origPluginInstances } = me;
-    const newPluginInstances = Object.assign({}, origPluginInstances, {
-      data: pluginInstances,
-    });
+  return (dispatch, _getClass) => {
     dispatch(
       setData<State>(myID, {
-        selectedInstance: selectedPluginInstance,
-        pluginInstances: newPluginInstances,
+        selectedInstance,
+        pluginInstanceList,
       }),
     );
   };
 };
 
-export const resetPluginInstances = (myID: string): Thunk<State> => {
-  return (dispatch, _getClassState) => {
+export const reset = (myID: string): Thunk<State> => {
+  return (dispatch, _getClass) => {
     dispatch(setData<State>(myID, defaultState));
   };
 };
@@ -153,42 +157,52 @@ export const fetchPluginInstances = (
   offset: number = 0,
   limit: number = 15,
 ): Thunk<State> => {
-  return async (dispatch, getClassState) => {
-    const classState = getClassState();
-    const me = getState(classState, myID);
+  return async (dispatch, getClass) => {
+    const theClass = getClass();
+    const me = getState(theClass, myID);
     if (!me) {
       return;
     }
+    const { pluginInstanceList } = me;
 
-    const { pluginInstances } = me;
-
-    const { status, data, errmsg } = await getPluginInstances(
-      feed.id,
-      offset,
-      limit,
-    );
+    const {
+      status,
+      data: newPluginInstanceList,
+      errmsg,
+    } = await getPluginInstanceList(feed.id, offset, limit);
 
     if (errmsg) {
-      const newPluginInstances = Object.assign({}, pluginInstances, {
-        error: errmsg,
-      });
-      dispatch(setData<State>(myID, newPluginInstances));
+      dispatch(setError(myID, "fetchPluginInstances", errmsg));
       return;
     }
-    const newPluginInstancesData = data || [];
+    if (!newPluginInstanceList) {
+      dispatch(
+        setError(
+          myID,
+          "fetchPluginInstances",
+          "unable to getPluginInstanceList",
+        ),
+      );
+      return;
+    }
+    const newResults = newPluginInstanceList.results;
 
-    if (!newPluginInstancesData.length) {
-      return;
-    }
+    const selectedPluginInstance = !newResults.length
+      ? undefined
+      : newResults[newResults.length - 1];
+
+    const concatResults = pluginInstanceList.results.concat(
+      newPluginInstanceList.results,
+    );
+    newPluginInstanceList.results = concatResults;
+
     // default by selecting the last pluginInstance.
-    const selectedPluginInstance =
-      newPluginInstancesData[newPluginInstancesData.length - 1];
 
     dispatch(
-      setPluginInstancesAndSelectedPlugin(
+      setPluginInstanceListAndSelectedInstance(
         myID,
         selectedPluginInstance,
-        newPluginInstancesData,
+        newPluginInstanceList,
       ),
     );
   };
@@ -205,15 +219,18 @@ export const addNode = (
       return;
     }
 
-    const { pluginInstances } = me;
-    const newPluginInstancesData = pluginInstances.results.concat([
-      pluginInstance,
-    ]);
+    const { pluginInstanceList: pluginInstances } = me;
+    const newResults = pluginInstances.results.concat([pluginInstance]);
+    const newPluginInstanceList: List<PluginInstance> = Object.assign(
+      {},
+      pluginInstances,
+      { results: newResults },
+    );
     dispatch(
-      setPluginInstancesAndSelectedPlugin(
+      setPluginInstanceListAndSelectedInstance(
         myID,
         pluginInstance,
-        newPluginInstancesData,
+        newPluginInstanceList,
       ),
     );
   };
@@ -229,9 +246,9 @@ export const deletePluginInstance = (
     if (!me) {
       return;
     }
-    const { pluginInstances, selectedInstance: selectedPlugin } = me;
+    const { pluginInstanceList, selectedInstance } = me;
     const descendantIds = getAllDescendantIDs(
-      pluginInstances.results,
+      pluginInstanceList.results,
       pluginInstance.id,
     );
 
@@ -240,69 +257,76 @@ export const deletePluginInstance = (
       status: _data,
       errmsg,
     } = await apiDeletePluginInstance(pluginInstance.id);
+
     if (errmsg) {
-      const newPluginInstances = Object.assign({}, pluginInstances, {
-        error: errmsg,
-      });
-      dispatch(setData<State>(myID, { pluginInstances: newPluginInstances }));
+      dispatch(setError(myID, "deletePluginInstance", errmsg));
       return;
     }
-    const newPluginInstancesData = pluginInstances.results.filter(
+    const newResults = pluginInstanceList.results.filter(
       (instance) => !descendantIds.includes(instance.id),
     );
+    const newCount =
+      newResults.length === pluginInstanceList.results.length
+        ? pluginInstanceList.count
+        : pluginInstanceList.count - 1;
+    const newInstanceList: List<PluginInstance> = Object.assign(
+      {},
+      pluginInstanceList,
+      { results: newResults, count: newCount },
+    );
 
-    if (selectedPlugin?.id !== pluginInstance.id) {
+    if (selectedInstance?.id !== pluginInstance.id) {
       dispatch(
-        setPluginInstancesAndSelectedPlugin(
+        setPluginInstanceListAndSelectedInstance(
           myID,
-          selectedPlugin,
-          newPluginInstancesData,
+          selectedInstance,
+          newInstanceList,
         ),
       );
       return;
     }
 
     if (!pluginInstance.previous_id) {
-      if (!newPluginInstancesData.length) {
+      if (!newResults.length) {
         dispatch(
-          setPluginInstancesAndSelectedPlugin(
+          setPluginInstanceListAndSelectedInstance(
             myID,
             undefined,
-            newPluginInstancesData,
+            newInstanceList,
           ),
         );
         return;
       }
 
-      const newSelected = newPluginInstancesData[0];
+      const newSelectedInstance = newResults[0];
       dispatch(
-        setPluginInstancesAndSelectedPlugin(
+        setPluginInstanceListAndSelectedInstance(
           myID,
-          newSelected,
-          newPluginInstancesData,
+          newSelectedInstance,
+          newInstanceList,
         ),
       );
       return;
     }
 
-    const newSelectedList = newPluginInstancesData.filter(
+    const newSelectedInstances = newResults.filter(
       (each) => each.id === pluginInstance.previous_id,
     );
-    if (newSelectedList.length !== 1) {
+    if (!newSelectedInstances.length) {
       dispatch(
-        setPluginInstancesAndSelectedPlugin(
+        setPluginInstanceListAndSelectedInstance(
           myID,
           undefined,
-          newPluginInstancesData,
+          newInstanceList,
         ),
       );
     }
 
     dispatch(
-      setPluginInstancesAndSelectedPlugin(
+      setPluginInstanceListAndSelectedInstance(
         myID,
-        newSelectedList[0],
-        newPluginInstancesData,
+        newSelectedInstances[0],
+        newInstanceList,
       ),
     );
   };

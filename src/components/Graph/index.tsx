@@ -1,5 +1,3 @@
-// usePaginatedTreeQuery.ts
-
 import {
   getDefaultID,
   getState,
@@ -57,13 +55,7 @@ export default (props: Props) => {
     }
 
     doPluginInstance.setSelectedInstance(pluginInstanceID, lastPluginInstance);
-  }, [
-    rootNode,
-    selectedInstance,
-    lastPluginInstance,
-    doPluginInstance.setSelectedInstance,
-    pluginInstanceID,
-  ]);
+  }, [rootNode, selectedInstance, lastPluginInstance, pluginInstanceID]);
 
   // Show loading spinner only when we have no nodes at all
   return (
@@ -91,7 +83,14 @@ export default (props: Props) => {
         setSearch={setSearch}
       />
 
-      <FeedTree isHide={is3D} feed={feed} isStaff={isStaff} />
+      <FeedTree
+        isHide={is3D}
+        isToggleLabel={isToggleLabel}
+        search={search}
+        orientation={orientation}
+        feed={feed}
+        isStaff={isStaff}
+      />
     </>
   );
 };

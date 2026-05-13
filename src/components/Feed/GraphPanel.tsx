@@ -1,18 +1,17 @@
 import {
-  type DispatchFuncMap,
   getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
-import { type CSSProperties, useState } from "react";
+import type { CSSProperties } from "react";
 import { Panel, PanelResizeHandle } from "react-resizable-panels";
 import type { Feed } from "../../api/types";
 import * as DoDrawer from "../../reducers/drawer";
 import DrawerActionButton from "../DrawerUtils/DrawerActionButton";
-import FeedTreeParent from "../FeedTree/FeedTreeParent";
 
 import { onMaximize, onMinimize } from "../FeedUtils";
+import Graph from "../Graph";
 
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 
@@ -28,8 +27,6 @@ export default (props: Props) => {
   const drawer = getState(classDrawer) || DoDrawer.defaultState;
   const drawerID = getDefaultID(classDrawer);
   const { graph } = drawer;
-
-  const [isFeedGraph, setIsFeedGraph] = useState(false);
 
   const graphStyle: CSSProperties = {};
   if (!graph.open) {
@@ -50,7 +47,7 @@ export default (props: Props) => {
           onMinimize={() => onMinimize(drawerID, doDrawer)}
           isMaximized={drawer.graph.maximized}
         />
-        <FeedTreeParent feed={feed} isStaff={isStaff} />
+        <Graph feed={feed} isStaff={isStaff} />
       </Panel>
       <PanelResizeHandle className="ResizeHandle" />
     </>

@@ -40,7 +40,7 @@ const PluginTitle = () => {
     });
 
     if (!pluginItem) throw new Error("Failed to set title...");
-    doPluginInstance.setPluginTitle(pluginInstanceID, pluginItem);
+    doPluginInstance.updatePluginInstance(pluginInstanceID, pluginItem);
   };
 
   const mutation = useMutation({
