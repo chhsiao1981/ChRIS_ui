@@ -38,8 +38,12 @@ export default (props: Props) => {
   const pluginInstanceID = getDefaultID(classPluginInstance);
   const pluginInstance =
     getState(classPluginInstance) || DoPluginInstance.defaultState;
-  const { selectedInstance, processingProgress, pluginInstanceList, rootNode } =
-    pluginInstance;
+  const {
+    selectedInstance,
+    processingProgress,
+    instanceList: pluginInstanceList,
+    rootNode,
+  } = pluginInstance;
 
   const pluginInstances = pluginInstanceList.results;
 
@@ -61,8 +65,8 @@ export default (props: Props) => {
   return (
     <>
       <SpinContainer
-        title={`Constructing your feed tree (${processingProgress}% complete)`}
-        isHide={!rootNode}
+        title={`(${processingProgress}% completed)`}
+        isHide={!!rootNode}
       />
       {/* Full-screen progress overlay */}
       {/* <Loading /> XXX never happened */}

@@ -85,6 +85,6 @@ export const getFeedDetail = (
       feedID,
     );
     const [_classPluginInstance, doPluginInstance] = usePluginInstance;
-    doPluginInstance.fetchPluginInstances(pluginInstanceID, data);
+    doPluginInstance.fetchAllInstanceList(pluginInstanceID, data);
   };
 };

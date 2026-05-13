@@ -1,6 +1,8 @@
 import type { Datetime } from "./datetime";
 import type { ID } from "./id";
 
+export type PluginType = "fs" | "ds" | "ts";
+
 // legacy: plugin
 export type Plugin = {
   id: ID;
@@ -11,7 +13,7 @@ export type Plugin = {
   dock_image: string;
   public_repo: string;
   icon: string;
-  type: string;
+  type: PluginType;
   stars: number;
   authors: string;
   title: string;

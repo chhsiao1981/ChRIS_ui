@@ -1,5 +1,6 @@
 import type { Datetime } from "./datetime";
 import type { ID } from "./id";
+import type { PluginType } from "./plugin";
 
 export enum PluginInstanceStatus {
   SUCCESS = "finishedSuccessfully",
@@ -17,12 +18,12 @@ export enum PluginInstanceStatus {
 export interface PluginInstance {
   id: ID;
   title: string;
-  previous_id: ID;
+  previous_id: ID | null;
   compute_resource_name: string;
   plugin_id: ID;
   plugin_name: string;
   plugin_version: string;
-  plugin_type: string;
+  plugin_type: PluginType;
   feed_id: ID;
   start_date: Datetime; // yyyy-mm-ddTHH:MM:SS.ffffffTZ
   end_date: Datetime; // yyyy-mm-ddTHH:MM:SS.ffffffTZ

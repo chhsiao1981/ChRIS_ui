@@ -15,7 +15,6 @@ import { PluginInstanceStatus } from "../../api/types";
 import type { FeedType } from "../../api/types/feed";
 import { DEFAULT_TYPE } from "../../constants";
 import * as DoDrawer from "../../reducers/drawer";
-import * as DoExplorer from "../../reducers/explorer";
 import * as DoFeed from "../../reducers/feed";
 import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { Role } from "../../reducers/types";
@@ -29,7 +28,6 @@ import Title from "./Title";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
-type TDoExplorer = ThunkModuleToFunc<typeof DoExplorer>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
 type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
@@ -44,10 +42,6 @@ export default () => {
   const drawer = getState(classDrawer) || DoDrawer.defaultState;
   const drawerID = getDefaultID(classDrawer);
 
-  const useExplorer = useThunk<DoExplorer.State, TDoExplorer>(DoExplorer);
-  const [classExplorer, doExplorer] = useExplorer;
-  const explorerID = getDefaultID(classExplorer);
-
   const useFeed = useThunk<DoFeed.State, TDoFeed>(DoFeed);
   const [classFeed, doFeed] = useFeed;
   const feedID = getDefaultID(classFeed);
@@ -61,7 +55,7 @@ export default () => {
   const pluginInstanceID = getDefaultID(classPluginInstance);
   const pluginInstance =
     getState(classPluginInstance) || DoPluginInstance.defaultState;
-  const { statuses, pluginInstanceList } = pluginInstance;
+  const { statuses, instanceList: pluginInstanceList } = pluginInstance;
 
   const query = useSearchQueryParams();
   const queryType = query.get("type") as FeedType | null;

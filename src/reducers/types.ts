@@ -109,7 +109,7 @@ export type TSIDMap = Record<ID, ID[]>;
 export type TreeNodeDatum = {
   id: ID;
   name: string;
-  parentId?: ID;
+  parentId?: ID | null;
   item: PluginInstance;
   children: TreeNodeDatum[];
 };

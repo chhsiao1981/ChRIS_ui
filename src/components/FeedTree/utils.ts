@@ -1,8 +1,9 @@
 import type { HierarchyPointNode } from "d3-hierarchy";
 import type { Quadtree } from "d3-quadtree";
 import type { MouseEvent, SetStateAction } from "react";
+import type { TreeNodeDatum } from "../../reducers/types";
 import { DEFAULT_NODE_RADIUS } from "./constants";
-import type { Transform, TreeNodeDatum } from "./types";
+import type { Transform } from "./types";
 
 export const isNodeInViewport = (
   node: HierarchyPointNode<TreeNodeDatum>,

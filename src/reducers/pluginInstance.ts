@@ -10,8 +10,17 @@ import {
   deletePluginInstance as apiDeletePluginInstance,
 } from "../api/serverApi";
 import { getPluginParameters } from "../api/serverApi/plugin";
-import { getPluginInstanceList } from "../api/serverApi/pluginInstance";
-import type { Feed, ID, List, PluginInstance } from "../api/types";
+import {
+  getPluginInstanceList,
+  getPluginInstanceParameters,
+} from "../api/serverApi/pluginInstance";
+import type {
+  Feed,
+  ID,
+  List,
+  PluginInstance,
+  PluginInstanceStatus,
+} from "../api/types";
 import type { Err } from "../types";
 import type * as DoAddNode from "./addNode";
 import type {
@@ -26,14 +35,16 @@ export const myClass = "chris-ui/plugin-instance";
 // XXX TODO: flatten pluginInstances
 export interface State extends rState {
   selectedInstance?: PluginInstance;
-  pluginInstanceList: List<PluginInstance>;
+  instanceList: List<PluginInstance>;
+  treeNodeMap: Record<ID, TreeNodeDatum>;
+  rootNode?: TreeNodeDatum;
+
   chunkSize: number;
   hasNextPage?: boolean;
   isFetchingNextPage: boolean;
 
   isLoading: boolean;
   processingProgress: number;
-  rootNode?: TreeNodeDatum;
   tsIDs: TSIDMap;
 
   statuses: Record<ID, string>;
@@ -41,7 +52,7 @@ export interface State extends rState {
 }
 
 export const defaultState: State = {
-  pluginInstanceList: { results: [], count: 0 },
+  instanceList: { results: [], count: 0 },
   chunkSize: 0,
   isFetchingNextPage: false,
   isLoading: false,
@@ -49,6 +60,7 @@ export const defaultState: State = {
   statuses: {},
   errors: {},
   tsIDs: {},
+  treeNodeMap: {},
 };
 
 export const init = (): Thunk<State> => {
@@ -84,62 +96,139 @@ export const setError = (
   };
 };
 
+export const setErrors = (
+  myID: string,
+  errors: Record<string, Err>,
+): Thunk<State> => {
+  return (dispatch, getClass) => {
+    const theClass = getClass();
+    const me = getState(theClass, myID);
+    if (!me) {
+      return;
+    }
+    const { errors: origErrors } = me;
+    const newErrors = Object.assign({}, origErrors, errors);
+    dispatch(setData(myID, { errors: newErrors }));
+  };
+};
+
 export const resetSelectedInstance = (myID: string): Thunk<State> => {
   return (dispatch, _getClassState) => {
     dispatch(setData<State>(myID, { selectedInstance: undefined }));
   };
 };
 
-export const updatePluginInstance = (
+export const updateInstance = (
   myID: string,
-  pluginInstance: PluginInstance,
+  instance: PluginInstance,
 ): Thunk<State> => {
-  // update the pluginInstance with same pluginInstanceID
+  // update the instance with same ID
   return (dispatch, getClassState) => {
     const classState = getClassState();
     const me = getState(classState, myID);
     if (!me) {
       return;
     }
+    const { instanceList, treeNodeMap } = me;
 
-    const { pluginInstanceList } = me;
-    const idx = pluginInstanceList.results.findIndex(
-      (eachInstance) => eachInstance.id === pluginInstance.id,
+    // 1. check existence
+    const idx = instanceList.results.findIndex(
+      (eachInstance) => eachInstance.id === instance.id,
     );
     if (idx === -1) {
+      // XXX silent death if not found.
       return;
     }
 
-    const newPluginInstancesData = pluginInstanceList.results.map(
-      (each) => each,
-    );
-    newPluginInstancesData[idx] = pluginInstance;
-    const newPluginInstanceList: List<PluginInstance> = Object.assign(
+    // 2. newInstanceList.
+    const newResults = instanceList.results.map((each) => each);
+    newResults[idx] = instance;
+    const newInstanceList: List<PluginInstance> = Object.assign(
       {},
-      pluginInstanceList,
+      instanceList,
       {
-        results: newPluginInstancesData,
+        results: newResults,
       },
     );
 
-    dispatch(
-      setData<State>(myID, {
-        pluginInstanceList: newPluginInstanceList,
-      }),
+    // 3. newNode
+    const newNode = instanceToTreeNode(instance);
+    const { id: theID, previous_id: parentID } = instance;
+    const origNode = treeNodeMap[theID];
+    newNode.children = origNode.children;
+
+    // 4. newParentNode
+    const newParentNode = updateInstanceUpdateParentNode(
+      newNode,
+      theID,
+      parentID,
+      treeNodeMap,
     );
+
+    // 5. setup toUpdateNode
+    const toUpdateNode = { [theID]: newNode };
+    if (newParentNode && parentID) {
+      toUpdateNode[parentID] = newParentNode;
+    }
+
+    // 6. newTreeNodeMap
+    const newTreeNodeMap: Record<ID, TreeNodeDatum> = Object.assign(
+      {},
+      treeNodeMap,
+      toUpdateNode,
+    );
+
+    // 4. setup to-update
+    const toUpdate: Partial<State> = {
+      instanceList: newInstanceList,
+      treeNodeMap: newTreeNodeMap,
+    };
+    if (!parentID) {
+      toUpdate.rootNode = newNode;
+    }
+
+    dispatch(setData<State>(myID, toUpdate));
   };
 };
 
-export const setPluginInstanceListAndSelectedInstance = (
+const updateInstanceUpdateParentNode = (
+  node: TreeNodeDatum,
+  theID: ID,
+  parentID: ID | null,
+  treeNodeMap: Record<ID, TreeNodeDatum>,
+): TreeNodeDatum | undefined => {
+  if (!parentID) {
+    return;
+  }
+
+  const parentNode = treeNodeMap[parentID];
+  if (!parentNode) {
+    return;
+  }
+  const { children } = parentNode;
+  const newChildren = children.map((each) => each);
+  const idx = newChildren.findIndex((eachNode) => eachNode.id === theID);
+  if (idx === -1) {
+    return;
+  }
+
+  newChildren[idx] = node;
+
+  return Object.assign({}, parentNode, {
+    children: newChildren,
+  });
+};
+
+export const setInstanceListAndSelectedInstance = (
   myID: string,
   selectedInstance?: PluginInstance,
-  pluginInstanceList?: List<PluginInstance>,
+  instanceList?: List<PluginInstance>,
 ): Thunk<State> => {
   return (dispatch, _getClass) => {
     dispatch(
       setData<State>(myID, {
         selectedInstance,
-        pluginInstanceList,
+        instanceList: instanceList,
       }),
     );
   };
@@ -151,66 +240,179 @@ export const reset = (myID: string): Thunk<State> => {
   };
 };
 
-export const fetchPluginInstances = (
+export const fetchAllInstanceList = (
   myID: string,
   feed: Feed,
-  offset: number = 0,
-  limit: number = 15,
 ): Thunk<State> => {
-  return async (dispatch, getClass) => {
-    const theClass = getClass();
-    const me = getState(theClass, myID);
-    if (!me) {
-      return;
-    }
-    const { pluginInstanceList } = me;
+  return async (dispatch, _getClass) => {
+    const allResults: PluginInstance[] = [];
+    let count = 0;
+    let offset: number | null | undefined = 0;
+    const limit = 15;
+    dispatch(setData<State>(myID, { isLoading: true }));
+    while (true) {
+      const {
+        status,
+        data: eachInstanceList,
+        errmsg,
+      } = await getPluginInstanceList(feed.id, offset as number, limit);
+      if (errmsg) {
+        dispatch(setData<State>(myID, { isLoading: false }));
+        dispatch(setError(myID, "fetchAllInstanceList", errmsg));
+        return;
+      }
+      if (!eachInstanceList) {
+        dispatch(setData<State>(myID, { isLoading: false }));
+        dispatch(setError(myID, "fetchAllInstanceList", "no instanceList"));
+        return;
+      }
+      allResults.push(...eachInstanceList.results);
+      count = eachInstanceList.count;
 
-    const {
-      status,
-      data: newPluginInstanceList,
-      errmsg,
-    } = await getPluginInstanceList(feed.id, offset, limit);
+      offset = eachInstanceList.next;
+      if (!offset) {
+        break;
+      }
 
-    if (errmsg) {
-      dispatch(setError(myID, "fetchPluginInstances", errmsg));
-      return;
-    }
-    if (!newPluginInstanceList) {
+      const progress = (allResults.length * 100) / count;
       dispatch(
-        setError(
-          myID,
-          "fetchPluginInstances",
-          "unable to getPluginInstanceList",
-        ),
+        setData<State>(myID, {
+          processingProgress: progress,
+        }),
+      );
+    }
+
+    const instanceList: List<PluginInstance> = {
+      results: allResults,
+      count,
+    };
+
+    const statuses: Record<ID, PluginInstanceStatus> = allResults.reduce(
+      (r, eachResult) => {
+        // @ts-expect-error id is a number or string
+        r[eachResult.id] = eachResult.status;
+        return r;
+      },
+      {},
+    );
+
+    const [tsIDs, errmsg] = await getTSIDMapByInstances(allResults);
+    if (errmsg) {
+      dispatch(
+        setError(myID, "fetchAllInstanceList: unable to get tsIDs", errmsg),
       );
       return;
     }
-    const newResults = newPluginInstanceList.results;
 
-    const selectedPluginInstance = !newResults.length
-      ? undefined
-      : newResults[newResults.length - 1];
-
-    const concatResults = pluginInstanceList.results.concat(
-      newPluginInstanceList.results,
-    );
-    newPluginInstanceList.results = concatResults;
-
-    // default by selecting the last pluginInstance.
+    const [rootNode, treeNodeMap] = compileTreeNode(allResults);
 
     dispatch(
-      setPluginInstanceListAndSelectedInstance(
-        myID,
-        selectedPluginInstance,
-        newPluginInstanceList,
-      ),
+      setData<State>(myID, {
+        isLoading: false,
+        processingProgress: 100,
+        instanceList,
+        statuses,
+        tsIDs,
+        rootNode,
+        treeNodeMap,
+      }),
     );
+  };
+};
+
+const getTSIDMapByInstances = async (
+  instances: PluginInstance[],
+): Promise<[TSIDMap, Err]> => {
+  const tsIDMap: TSIDMap = {};
+  for (const eachInstance of instances) {
+    if (eachInstance.plugin_type !== "ts") {
+      continue;
+    }
+
+    const { status, data, errmsg } = await getPluginInstanceParameters(
+      eachInstance.id,
+      0,
+      15,
+    );
+    if (errmsg) {
+      return [tsIDMap, errmsg];
+    }
+    const parameters = data || [];
+    const filteredParameters = parameters.filter(
+      (param) => param.param_name === "plugininstances",
+    );
+    if (!filteredParameters.length) {
+      continue;
+    }
+
+    tsIDMap[eachInstance.id] = filteredParameters[0].value
+      .split(",")
+      .map(Number);
+  }
+
+  return [tsIDMap, ""];
+};
+
+const compileTreeNode = (
+  instances: PluginInstance[],
+): [TreeNodeDatum | undefined, Record<ID, TreeNodeDatum>] => {
+  let rootNode: TreeNodeDatum | undefined;
+  const childrenMap: Record<ID, ID[]> = {};
+  const treeNodeMap: Record<ID, TreeNodeDatum> = {};
+
+  for (const eachInstance of instances) {
+    const { id: theID, previous_id: parentID } = eachInstance;
+
+    // 1. compile tree-node
+    const node = instanceToTreeNode(eachInstance);
+    treeNodeMap[theID] = node;
+
+    // 2. check already-visited children
+    if (childrenMap[theID]) {
+      const children = childrenMap[theID];
+      for (const eachChildID of children) {
+        const childNode = treeNodeMap[eachChildID];
+        if (!childNode) continue;
+
+        node.children.push(childNode);
+      }
+    }
+
+    // 3. check parent
+    // 3.1. root node
+    if (!parentID) {
+      rootNode = node;
+      continue;
+    }
+    // 3.2. already visited parentNode
+    const parentNode = treeNodeMap[parentID];
+    if (parentNode) {
+      parentNode.children.push(node);
+      continue;
+    }
+    // 3.3. put to childrenMap
+    if (!childrenMap[parentID]) {
+      childrenMap[parentID] = [];
+    }
+    childrenMap[parentID].push(theID);
+  }
+
+  return [rootNode, treeNodeMap];
+};
+
+const instanceToTreeNode = (instance: PluginInstance): TreeNodeDatum => {
+  return {
+    id: instance.id,
+    name: instance.plugin_name,
+    parentId: instance.previous_id,
+    item: instance,
+    children: [],
   };
 };
 
 export const addNode = (
   myID: string,
-  pluginInstance: PluginInstance,
+  instance: PluginInstance,
 ): Thunk<State> => {
   return (dispatch, getClassState) => {
     const classState = getClassState();
@@ -219,26 +421,22 @@ export const addNode = (
       return;
     }
 
-    const { pluginInstanceList: pluginInstances } = me;
-    const newResults = pluginInstances.results.concat([pluginInstance]);
-    const newPluginInstanceList: List<PluginInstance> = Object.assign(
+    const { instanceList } = me;
+    const newResults = instanceList.results.concat([instance]);
+    const newInstanceList: List<PluginInstance> = Object.assign(
       {},
-      pluginInstances,
+      instanceList,
       { results: newResults },
     );
     dispatch(
-      setPluginInstanceListAndSelectedInstance(
-        myID,
-        pluginInstance,
-        newPluginInstanceList,
-      ),
+      setInstanceListAndSelectedInstance(myID, instance, newInstanceList),
     );
   };
 };
 
 export const deletePluginInstance = (
   myID: string,
-  pluginInstance: PluginInstance,
+  instance: PluginInstance,
 ): Thunk<State> => {
   return async (dispatch, getClassState) => {
     const classState = getClassState();
@@ -246,38 +444,38 @@ export const deletePluginInstance = (
     if (!me) {
       return;
     }
-    const { pluginInstanceList, selectedInstance } = me;
+    const { instanceList, selectedInstance } = me;
     const descendantIds = getAllDescendantIDs(
-      pluginInstanceList.results,
-      pluginInstance.id,
+      instanceList.results,
+      instance.id,
     );
 
     const {
       status: _status,
       status: _data,
       errmsg,
-    } = await apiDeletePluginInstance(pluginInstance.id);
+    } = await apiDeletePluginInstance(instance.id);
 
     if (errmsg) {
-      dispatch(setError(myID, "deletePluginInstance", errmsg));
+      dispatch(setError(myID, "deleteInstance", errmsg));
       return;
     }
-    const newResults = pluginInstanceList.results.filter(
+    const newResults = instanceList.results.filter(
       (instance) => !descendantIds.includes(instance.id),
     );
     const newCount =
-      newResults.length === pluginInstanceList.results.length
-        ? pluginInstanceList.count
-        : pluginInstanceList.count - 1;
+      newResults.length === instanceList.results.length
+        ? instanceList.count
+        : instanceList.count - 1;
     const newInstanceList: List<PluginInstance> = Object.assign(
       {},
-      pluginInstanceList,
+      instanceList,
       { results: newResults, count: newCount },
     );
 
-    if (selectedInstance?.id !== pluginInstance.id) {
+    if (selectedInstance?.id !== instance.id) {
       dispatch(
-        setPluginInstanceListAndSelectedInstance(
+        setInstanceListAndSelectedInstance(
           myID,
           selectedInstance,
           newInstanceList,
@@ -286,21 +484,17 @@ export const deletePluginInstance = (
       return;
     }
 
-    if (!pluginInstance.previous_id) {
+    if (!instance.previous_id) {
       if (!newResults.length) {
         dispatch(
-          setPluginInstanceListAndSelectedInstance(
-            myID,
-            undefined,
-            newInstanceList,
-          ),
+          setInstanceListAndSelectedInstance(myID, undefined, newInstanceList),
         );
         return;
       }
 
       const newSelectedInstance = newResults[0];
       dispatch(
-        setPluginInstanceListAndSelectedInstance(
+        setInstanceListAndSelectedInstance(
           myID,
           newSelectedInstance,
           newInstanceList,
@@ -310,20 +504,16 @@ export const deletePluginInstance = (
     }
 
     const newSelectedInstances = newResults.filter(
-      (each) => each.id === pluginInstance.previous_id,
+      (each) => each.id === instance.previous_id,
     );
     if (!newSelectedInstances.length) {
       dispatch(
-        setPluginInstanceListAndSelectedInstance(
-          myID,
-          undefined,
-          newInstanceList,
-        ),
+        setInstanceListAndSelectedInstance(myID, undefined, newInstanceList),
       );
     }
 
     dispatch(
-      setPluginInstanceListAndSelectedInstance(
+      setInstanceListAndSelectedInstance(
         myID,
         newSelectedInstances[0],
         newInstanceList,
@@ -365,7 +555,7 @@ const getAllDescendantIDsCore = (
   }
 };
 
-export const createPluginInstance = (
+export const createInstance = (
   myID: string,
   selectedInstance: PluginInstance,
   addNode: DoAddNode.State,
@@ -380,22 +570,25 @@ export const createPluginInstance = (
       memoryLimit,
     } = addNode;
 
-    const [sanitizedAdvancedConfig, advancedConfigErrors] = sanitizeExtraConfig(
+    const [sanitizedExtraConfig, extraConfigErrors] = sanitizeExtraConfig(
       advancedConfig,
       memoryLimit,
     );
-    if (Object.keys(advancedConfigErrors).length > 0) {
-      dispatch(setData<State>(myID, { errors: advancedConfigErrors }));
+    if (Object.keys(extraConfigErrors).length > 0) {
+      dispatch(setErrors(myID, extraConfigErrors));
       return;
     }
 
-    const [pluginInstance, pluginInstanceError] = await getPluginInstance(
-      addNode,
-      sanitizedAdvancedConfig,
-    );
-    if (pluginInstanceError) {
-      const errors = { parameterInput: pluginInstanceError };
-      dispatch(setData<State>(myID, { errors }));
+    const [instanceParameter, instanceParameterError] =
+      await compileInstanceConfig(addNode, sanitizedExtraConfig);
+    if (instanceParameterError) {
+      dispatch(
+        setError(
+          myID,
+          "createInstance: compileInstanceParameter",
+          instanceParameterError,
+        ),
+      );
       return;
     }
 
@@ -409,7 +602,7 @@ export const createPluginInstance = (
       errmsg,
     } = await apiCreatePluginInstance(selectedPluginFromMeta.id, {
       previous_id: selectedInstance.id,
-      ...pluginInstance,
+      ...instanceParameter,
     });
     if (!instance) {
       dispatch(
@@ -429,7 +622,7 @@ const sanitizeExtraConfig = (
   return [{}, {}];
 };
 
-const getPluginInstance = async (
+const compileInstanceConfig = async (
   addNode: DoAddNode.State,
   extraConfig: Record<string, string>,
 ): Promise<[Partial<PluginInstance> | undefined, Err | undefined]> => {
@@ -438,12 +631,12 @@ const getPluginInstance = async (
     return [undefined, err];
   }
 
-  const fullPluginInstance: Partial<PluginInstance> = {
+  const fullParameters: Partial<PluginInstance> = {
     ...pluginParameters,
     compute_resource_name: addNode.selectedComputeEnv,
     ...extraConfig,
   };
-  return [fullPluginInstance, undefined];
+  return [fullParameters, undefined];
 };
 
 const compilePluginParameters = async (
@@ -522,43 +715,4 @@ const toParameterByFlag = (input: PluginNodeParameterMap) => {
     },
     {},
   );
-};
-
-const appendPluginInstances = () => {
-  /*
-      if (!rootNode) return;
-      const newItems = Array.isArray(arg) ? arg : [arg];
-      const addedItems: PluginInstance[] = [];
-      let updatedRoot = rootNode;
-
-      for (const newItem of newItems) {
-        const parentId = newItem.previous_id ?? undefined;
-        if (!parentId) continue;
-
-        const newChild: TreeNodeDatum = {
-          id: newItem.id,
-          name: newItem.title || newItem.plugin_name || `Node ${newItem.id}`,
-          parentId,
-          item: newItem,
-          children: [],
-        };
-
-        const nextRoot = insertChildImmutable(updatedRoot, parentId, newChild);
-        if (nextRoot !== updatedRoot) {
-          updatedRoot = nextRoot;
-          addedItems.push(newItem);
-        }
-      }
-
-      if (addedItems.length > 0) {
-        setRootNode(updatedRoot);
-        setLocalItems((prev) => [...prev, ...addedItems]);
-        const lastAdded = addedItems[addedItems.length - 1];
-        doPluginInstance.getSelectedPlugin(pluginInstanceID, lastAdded);
-        await queryClient.invalidateQueries({
-          queryKey: ["feedPluginInstances", feed?.id, "countOnly"],
-        });
-      }
-    },
-    */
 };

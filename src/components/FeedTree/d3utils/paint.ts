@@ -19,6 +19,15 @@ export const paint = (
     return;
   }
 
+  console.info(
+    "paint: start: width:",
+    width,
+    "height:",
+    height,
+    "statuses:",
+    Object.keys(statuses).length,
+  );
+
   const ratio = window.devicePixelRatio || 1;
   canvas.width = width * ratio;
   canvas.height = height * ratio;

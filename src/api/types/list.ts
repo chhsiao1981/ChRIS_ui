@@ -1,10 +1,8 @@
-import type { ID } from "./id";
-
 export interface List<T> {
   results: T[];
-  next?: ID | null;
+  next?: number | null;
   count: number;
-  previous?: ID | null;
+  previous?: number | null;
 }
 
 export type ListQuery<T> = Partial<T & { limit: number; offset: number }>;
