@@ -9,7 +9,7 @@ import { Panel } from "react-resizable-panels";
 import * as DoDrawer from "../../reducers/drawer";
 import DrawerActionButton from "../DrawerUtils/DrawerActionButton";
 import { onMaximize, onMinimize } from "../FeedUtils";
-import NodeDetails from "../NodeDetails/NodeDetails";
+import NodeDetails from "../NodeDetail/NodeDetail";
 
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 
