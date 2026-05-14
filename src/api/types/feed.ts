@@ -29,14 +29,6 @@ export interface Feed {
   folder?: FileBrowserFolder; // XXX for cache.
 }
 
-export type NodeOperation = {
-  terminal: boolean;
-  childNode: boolean;
-  childPipeline: boolean;
-  childGraph: boolean;
-  deleteNode: boolean;
-};
-
 export type FeedAndPluginInstance = {
   feed: Feed;
   pluginInstance: PluginInstance;

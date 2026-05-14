@@ -147,7 +147,7 @@ export default (props: Props) => {
     }
 
     // 2) Close the modal
-    doPlugin.setNodeOperation(pluginID, "deleteNode");
+    close();
   };
 
   // -------------------- 5) Render --------------------

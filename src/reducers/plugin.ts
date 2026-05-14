@@ -1,6 +1,5 @@
 import {
   init as _init,
-  getState,
   type State as rState,
   setData,
   type Thunk,
@@ -10,7 +9,6 @@ import {
   getPluginParameters,
 } from "../api/serverApi/plugin";
 import type { ComputeResource, Plugin, PluginParameter } from "../api/types";
-import type { NodeOperation } from "../api/types/feed";
 
 export const myClass = "chris-ui/plugin";
 
@@ -21,7 +19,6 @@ export interface State extends rState {
   };
   computeEnv: ComputeResource[];
   resourceError: string;
-  nodeOperations: NodeOperation;
 }
 
 export const defaultState: State = {
@@ -31,13 +28,6 @@ export const defaultState: State = {
   },
   computeEnv: [],
   resourceError: "",
-  nodeOperations: {
-    terminal: false,
-    childNode: false,
-    childPipeline: false,
-    childGraph: false,
-    deleteNode: false,
-  },
 };
 
 export const init = (): Thunk<State> => {
@@ -87,24 +77,5 @@ export const fetchParamsAndComputeEnv = (
     const parameters = { required, dropdown };
 
     dispatch(setData<State>(myID, { parameters, computeEnv: computeEnvs }));
-  };
-};
-
-export const setNodeOperation = (
-  myID: string,
-  operation: keyof NodeOperation,
-): Thunk<State> => {
-  return (dispatch, getClassState) => {
-    const classState = getClassState();
-    const me = getState(classState, myID);
-    if (!me) {
-      return;
-    }
-    const { nodeOperations } = me;
-    const newValue = !nodeOperations[operation];
-    const newNnodeOperations = Object.assign({}, nodeOperations, {
-      [operation]: newValue,
-    });
-    dispatch(setData<State>(myID, { nodeOperations: newNnodeOperations }));
   };
 };
