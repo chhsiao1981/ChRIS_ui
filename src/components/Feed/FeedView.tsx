@@ -21,7 +21,7 @@ import * as DoUser from "../../reducers/user";
 import { useSearchQueryParams } from "../FeedList/usePaginate";
 import FeedOutputBrowser from "../FeedOutputBrowser/FeedOutputBrowser";
 import GraphPanel from "./GraphPanel";
-import NodePanel from "./NodePanel";
+import InstancePanel from "./InstancePanel";
 import Title from "./Title";
 
 type TDoUser = ThunkModuleToFunc<typeof DoUser>;
@@ -155,8 +155,8 @@ export default () => {
 
             <PanelResizeHandle className="ResizeHandle" />
 
-            {/* Right Panel: Node Details */}
-            <NodePanel />
+            {/* Right Panel: instance detail */}
+            <InstancePanel />
           </PanelGroup>
         </Panel>
 

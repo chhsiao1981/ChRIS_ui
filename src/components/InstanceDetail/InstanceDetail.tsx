@@ -18,7 +18,7 @@ import { SpinContainer } from "../Common";
 import { isPlVisualDataset } from "../DatasetRedirect/isPlVisualDataset";
 import FeedNote from "../FeedDetails/FeedNote";
 import { CalendarAltIcon, PreviewIcon } from "../Icons";
-import "./NodeDetail.css";
+import "./InstanceDetail.css";
 import {
   getState,
   type ThunkModuleToFunc,

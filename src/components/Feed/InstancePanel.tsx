@@ -9,7 +9,7 @@ import { Panel } from "react-resizable-panels";
 import * as DoDrawer from "../../reducers/drawer";
 import DrawerActionButton from "../DrawerUtils/DrawerActionButton";
 import { onMaximize, onMinimize } from "../FeedUtils";
-import NodeDetails from "../NodeDetail/NodeDetail";
+import InstanceDetail from "../InstanceDetail/InstanceDetail";
 
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 
@@ -43,7 +43,7 @@ export default () => {
         isMaximized={drawer.node.maximized}
       />
       <div className="node-block">
-        <NodeDetails />
+        <InstanceDetail />
       </div>
     </Panel>
   );
