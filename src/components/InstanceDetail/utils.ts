@@ -2,7 +2,13 @@ import { CheckIcon } from "@patternfly/react-icons";
 import ClockIcon from "@patternfly/react-icons/dist/esm/icons/clock-icon";
 import InProgress from "@patternfly/react-icons/dist/esm/icons/in-progress-icon";
 import TimesCircleIcon from "@patternfly/react-icons/dist/esm/icons/times-circle-icon";
-import type { PluginInstance } from "../../api/types";
+import { customQuote, needsQuoting } from "../../api/common";
+import type {
+  Plugin,
+  PluginInstance,
+  PluginInstanceParameter,
+  PluginParameter,
+} from "../../api/types";
 
 /** Constants that help unify “finished” and “error” states. */
 export const ERROR_STATUSES = ["finishedWithError", "cancelled"] as const;
@@ -17,7 +23,7 @@ type FinishedStatus = (typeof FINISHED_STATUSES)[number]; // "finishedWithError"
 /**
  * Hard-coded map of error codes to simplified messages (unchanged).
  */
-export function getErrorCodeMessage(errorCode: string) {
+export const getErrorCodeMessage = (errorCode: string) => {
   const errorCodeMap: Record<string, string> = {
     CODE01: "Error submitting job to pfcon url",
     CODE02: "Error getting job status at pfcon",
@@ -39,40 +45,40 @@ export function getErrorCodeMessage(errorCode: string) {
   return errorMessage
     ? `ChRIS Internal Error: ${errorMessage}`
     : "ChRIS Internal Error";
-}
+};
 
 /**
  * Gets a “start state” for an in-progress plugin.
  */
-function getStartState(pluginStatus: string): string {
+const getStartState = (pluginStatus: string): string => {
   return pluginStatus === "scheduled" || pluginStatus === "started"
     ? pluginStatus
     : "started";
-}
+};
 
 /**
  * Gets the “end state” if it's one of the FINISHED_STATUSES; otherwise “Waiting To Finish”.
  */
-function getEndState(pluginStatus: string): string {
+const getEndState = (pluginStatus: string): string => {
   return FINISHED_STATUSES.includes(pluginStatus as FinishedStatus)
     ? pluginStatus
     : "Waiting To Finish";
-}
+};
 
 /**
  * Helper to see if we are 'waiting' or not.
  */
-function getWaitingStatus(
-  pluginDetails: PluginInstance,
+const getWaitingStatus = (
+  instance: PluginInstance,
   currentLabel: number,
   previousStatus: string,
-): boolean {
+): boolean => {
   // If it's an 'fs' plugin, wait after index 0.
   // Otherwise only wait if the previous plugin ended successfully.
-  return pluginDetails.plugin_type === "fs"
+  return instance.plugin_type === "fs"
     ? currentLabel > 0
     : currentLabel > 0 && previousStatus === "finishedSuccessfully";
-}
+};
 
 /** Define what each portion of the `labels` might look like. */
 interface StatusObject {
@@ -99,7 +105,7 @@ interface StrictPluginStatusLabels {
 export type PluginStatusLabels = Partial<StrictPluginStatusLabels>;
 
 /** Simple function to show an overall textual description (optional). */
-export function displayDescription(label: PluginStatusLabels) {
+export const displayDescription = (label: PluginStatusLabels) => {
   if (label.error) {
     return "Error in compute";
   }
@@ -107,35 +113,35 @@ export function displayDescription(label: PluginStatusLabels) {
     return label.title || "";
   }
   return "";
-}
+};
 
 /**
  * Helper to decide which icon to render for a step,
  * based on error/finish/process booleans.
  */
-function getStepIcon(args: {
+const getStepIcon = (args: {
   error: boolean;
   finish: boolean;
   process: boolean;
-}): React.ComponentType<any> {
+}) => {
   const { error, finish, process } = args;
 
   if (error) return TimesCircleIcon; // error icon
   if (finish) return CheckIcon; // success icon
   if (process) return InProgress; // spinner icon
   return ClockIcon; // idle/waiting icon
-}
+};
 
 /**
  * Returns an array of step descriptors that represent the progress states
  * for a single plugin, including a final step (index 6) to handle
  * “cancelled” or “finishedWithError”.
  */
-export function getStatusLabels(
+export const getStatusLabels = (
   labels: PluginStatusLabels,
   pluginDetails: PluginInstance,
   previousStatus: string,
-) {
+) => {
   // Each item represents how we want to display that step in the UI.
   type StatusItem = {
     description: string;
@@ -403,4 +409,102 @@ export function getStatusLabels(
   }
 
   return status;
-}
+};
+
+export const getCommand = (
+  plugin: Plugin,
+  params: PluginInstanceParameter[],
+  parameters: PluginParameter[],
+) => {
+  const { dock_image, selfexec } = plugin;
+  const modifiedParams: {
+    name?: string;
+    value?: string;
+  }[] = [];
+
+  const instanceParameters = params;
+  const pluginParameters = parameters;
+
+  // Create a lookup map for plugin parameters to avoid O(n²) nested loop
+  const pluginParamsMap = new Map();
+  for (const pluginParam of pluginParameters) {
+    pluginParamsMap.set(pluginParam.name, pluginParam);
+  }
+
+  // Single pass through instance parameters - O(n) complexity
+  for (const instanceParam of instanceParameters) {
+    const pluginParam = pluginParamsMap.get(instanceParam.param_name);
+
+    if (pluginParam) {
+      const isBoolean = instanceParam.type === "boolean";
+      const isString = instanceParam.type === "string";
+      const value = instanceParam.value;
+      const paramName = instanceParam.param_name;
+
+      // Check if parameter name contains "password" (case insensitive)
+      const isPassword =
+        paramName.toLowerCase().includes("password") ||
+        pluginParam.data.flag?.toLowerCase().includes("password");
+
+      // If it's a password, mask the value with asterisks of the same length
+      const displayValue = isPassword
+        ? "*".repeat(value ? value.length : 0)
+        : value;
+
+      // For password fields, ensure the masked value is used consistently
+      const safeValue = isPassword
+        ? displayValue
+        : isString && needsQuoting(displayValue)
+          ? customQuote(displayValue)
+          : displayValue;
+
+      modifiedParams.push({
+        name: pluginParam.data.flag,
+        value: isBoolean ? " " : safeValue,
+      });
+    }
+  }
+
+  let command = `$> apptainer exec --bind $PWD/in:/incoming,$PWD/out:/outgoing docker://${dock_image} ${selfexec} `;
+  let parameterCommand = [];
+
+  if (modifiedParams.length) {
+    parameterCommand = modifiedParams.map(
+      (param) => `${param.name} ${param.value}`,
+    );
+    if (parameterCommand.length > 0) {
+      command += `${parameterCommand.join(" ")} \\\n`;
+    }
+  }
+  command = `${command}/incoming /outgoing \n \n`;
+
+  return command;
+};
+
+export const getExecTime = (selected?: PluginInstance) => {
+  if (!selected) {
+    return "";
+  }
+
+  let runtime = 0;
+  const start = new Date(selected.start_date);
+  const end = new Date(selected.end_date);
+  const elapsed = end.getTime() - start.getTime(); // milliseconds between start and end
+  runtime += elapsed;
+
+  // format millisecond amount into human-readable string
+  const runtimeStrings = [];
+  const timeParts = [
+    ["day", Math.floor(runtime / (1000 * 60 * 60 * 24))],
+    ["hr", Math.floor((runtime / (1000 * 60 * 60)) % 24)],
+    ["min", Math.floor((runtime / 1000 / 60) % 60)],
+    ["sec", Math.floor((runtime / 1000) % 60)],
+  ];
+  for (const part of timeParts) {
+    const [name, value] = part;
+    if (+value > 0) {
+      runtimeStrings.push(`${value} ${name}`);
+    }
+  }
+  return runtimeStrings.join(", ");
+};

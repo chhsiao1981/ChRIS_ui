@@ -1,0 +1,14 @@
+.hide {
+  display: none;
+}
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.btn {
+  width: fit-content;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}

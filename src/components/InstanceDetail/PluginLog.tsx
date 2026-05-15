@@ -1,19 +1,17 @@
 import { isEmpty } from "lodash";
-import React from "react";
 import LogTerminal from "./LogTerminal";
 
 type Props = {
   text?: string;
   log?: any;
+  isHide: boolean;
 };
-const PluginLog = ({ text, log }: Props) => {
+
+export default (props: Props) => {
+  const { text, log, isHide } = props;
   let terminalOutput = text ? text : "";
   terminalOutput +=
     log && !isEmpty(log) ? log.compute.logs : "Fetching logs ......";
 
-  return <LogTerminal text={terminalOutput} />;
+  return <LogTerminal text={terminalOutput} isHide={isHide} />;
 };
-
-const PluginLogMemoed = React.memo(PluginLog);
-
-export default PluginLogMemoed;

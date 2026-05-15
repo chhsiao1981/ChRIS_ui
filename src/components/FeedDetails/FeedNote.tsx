@@ -7,25 +7,27 @@ import { Button, Form, FormGroup, TextArea } from "@patternfly/react-core";
 import { type ChangeEvent, useEffect, useState } from "react";
 import { fetchNote } from "../../api/common";
 import * as DoFeed from "../../reducers/feed";
+import styles from "./FeedNote.module.css";
 
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
 
 type Props = {
   useFeed: UseThunk<DoFeed.State, TDoFeed>;
+  isHide: boolean;
 };
 export default (props: Props) => {
-  const { useFeed } = props;
-  const [classStateFeed, _] = useFeed;
-  const feedState = getState(classStateFeed) || DoFeed.defaultState;
-  const { data: feed } = feedState;
+  const { useFeed, isHide } = props;
+  const [classFeed, _] = useFeed;
+  const feed = getState(classFeed) || DoFeed.defaultState;
+  const { data: feedData } = feed;
 
   const [value, setValue] = useState("");
 
   useEffect(() => {
-    fetchNote(feed).then((note) => {
+    fetchNote(feedData).then((note) => {
       setValue(note?.data.content);
     });
-  }, [feed]);
+  }, [feedData]);
 
   const [typing, setTyping] = useState(false);
   const handleChange = (
@@ -35,10 +37,10 @@ export default (props: Props) => {
     setValue(value);
   };
 
-  const handleSave = async () => {
+  const onSave = async () => {
     setTyping(true);
     try {
-      const note = await fetchNote(feed);
+      const note = await fetchNote(feedData);
       await note?.put({
         title: "Description",
         content: value,
@@ -51,9 +53,12 @@ export default (props: Props) => {
     }
   };
 
+  const classNameForm = isHide ? styles.hide : "";
+  const classNameWrap = isHide ? styles.hide : styles.wrap;
+
   return (
     <>
-      <Form>
+      <Form className={classNameForm}>
         <FormGroup type="string" fieldId="selection">
           <TextArea
             className="feed-details__textarea"
@@ -61,7 +66,7 @@ export default (props: Props) => {
             onChange={handleChange}
             onKeyDown={async (event: any) => {
               if (event.key === "Enter") {
-                handleSave();
+                onSave();
               }
             }}
             isRequired
@@ -69,21 +74,8 @@ export default (props: Props) => {
           />
         </FormGroup>
       </Form>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <Button
-          style={{
-            width: "fit-content",
-            marginTop: "1rem",
-            marginBottom: "1rem",
-          }}
-          variant="primary"
-          onClick={handleSave}
-        >
+      <div className={classNameWrap}>
+        <Button className={styles.btn} variant="primary" onClick={onSave}>
           Save
         </Button>
         {typing && "Saving your note..."}
