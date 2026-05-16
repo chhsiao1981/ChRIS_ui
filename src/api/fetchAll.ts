@@ -1,11 +1,13 @@
-import type { ApiParams, ApiResult } from "./api";
+import type { ApiResult } from "./api";
 import api from "./api";
 import type { List } from "./types";
 
-export default async <T>(params: ApiParams): Promise<ApiResult<List<T>>> => {
-  if (!params.query) {
-    params.query = { limit: 20, offset: 0 };
-  }
+export default async <T>(endpoint: string): Promise<ApiResult<List<T>>> => {
+  const params = {
+    endpoint,
+    query: { offset: 0, limit: 20 },
+    isJson: true,
+  };
   const { status, data, errmsg } = await api<List<T>>(params);
   if (errmsg) {
     return { status, errmsg };
@@ -13,9 +15,8 @@ export default async <T>(params: ApiParams): Promise<ApiResult<List<T>>> => {
   if (!data) {
     return { status: 599, errmsg: "unable to get data" };
   }
-  const ret = Object.assign({}, data);
 
-  while (ret.next) {
+  while (data.next) {
     params.query.offset += params.query.limit;
     const {
       status: eachStatus,
@@ -29,10 +30,15 @@ export default async <T>(params: ApiParams): Promise<ApiResult<List<T>>> => {
       return { status: 599, errmsg: "unable to get data" };
     }
 
-    ret.results = ret.results.concat(eachData.results);
-    ret.next = eachData.next;
+    data.results = data.results.concat(eachData.results);
+    data.next = eachData.next;
   }
-  ret.count = ret.results.length;
+  if (data.count !== data.results.length) {
+    return {
+      status: 599,
+      errmsg: `count does not match results: count: ${data.count} results: ${data.results.length}`,
+    };
+  }
 
-  return { status: 200, data: ret, errmsg };
+  return { status: 200, data };
 };

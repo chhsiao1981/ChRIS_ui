@@ -1,7 +1,7 @@
 import type { Datetime } from "./datetime";
 import type { FileBrowserFolder } from "./fileBrowser";
 import type { ID } from "./id";
-import type { PluginInstance } from "./pluginInstance";
+import type { Instance } from "./pluginInstance";
 
 export type FeedType = "private" | "public";
 
@@ -25,11 +25,11 @@ export interface Feed {
   finished_jobs: number;
   errored_jobs: number;
   cancelled_jobs: number;
-  pluginInstance?: PluginInstance; // XXX for cache.
+  pluginInstance?: Instance; // XXX for cache.
   folder?: FileBrowserFolder; // XXX for cache.
 }
 
 export type FeedAndPluginInstance = {
   feed: Feed;
-  pluginInstance: PluginInstance;
+  pluginInstance: Instance;
 };

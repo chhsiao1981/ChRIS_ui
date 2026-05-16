@@ -1,4 +1,5 @@
 import api from "../api";
+import fetchAll from "../fetchAll";
 import type {
   ID,
   List,
@@ -20,6 +21,10 @@ export const getPluginInstanceList = (
     },
     isJson: true,
   });
+
+export const getAllPluginInstanceList = async (dataID: ID) => {
+  return fetchAll<PluginInstance>(`/${dataID}/plugininstances/`);
+};
 
 export const getPluginInstanceListByWorkflow = (
   workflowID: ID,
@@ -58,7 +63,7 @@ export const createPluginInstance = (
     isJson: true,
   });
 
-export const getPluginInstanceParameterList = (
+export const getInstanceParameterList = (
   pluginID: ID,
   offset: number = 0,
   limit: number = 20,
@@ -68,6 +73,11 @@ export const getPluginInstanceParameterList = (
     query: { limit, offset },
     isJson: true,
   });
+
+export const getAllInstanceParameterList = async (pluginID: ID) =>
+  fetchAll<PluginInstanceParameter>(
+    `/plugins/instances/${pluginID}/parameters/`,
+  );
 
 export const getPluginInstance = (theID: ID) =>
   api<PluginInstance>({

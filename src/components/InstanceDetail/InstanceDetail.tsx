@@ -1,12 +1,6 @@
 import { Button } from "@patternfly/react-core";
-import { useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useNavigate } from "react-router";
-import type {
-  Plugin,
-  PluginInstanceParameter,
-  PluginParameter,
-} from "../../api/types";
 import { SpinContainer } from "../Common";
 import FeedNote from "../FeedDetails/FeedNote";
 import "./InstanceDetail.css";
@@ -26,20 +20,6 @@ import { getCommand } from "./utils";
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 type TDoFeed = ThunkModuleToFunc<typeof DoFeed>;
 type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
-
-interface INodeState {
-  plugin?: Plugin;
-  instanceParameters?: PluginInstanceParameter[];
-  pluginParameters?: PluginParameter[];
-}
-
-function getInitialState() {
-  return {
-    plugin: undefined,
-    instanceParameters: undefined,
-    pluginParameters: undefined,
-  };
-}
 
 type Props = {};
 
@@ -61,43 +41,17 @@ export default (_props: Props) => {
   const pluginInstance =
     getState(classPluginInstance) || DoPluginInstance.defaultState;
   const { selectedInstance } = pluginInstance;
+  const plugin = selectedInstance?.plugin;
+  const instanceParameters = selectedInstance?.instanceParams;
+  const pluginParameters = selectedInstance?.pluginParams;
 
-  const [nodeState, setNodeState] = useState<INodeState>(getInitialState);
   const navigate = useNavigate();
-  const { plugin, instanceParameters, pluginParameters } = nodeState;
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const instanceParameters = await selectedInstance?.getParameters({
-        limit: 100,
-        offset: 0,
-      });
-
-      const plugin = await selectedInstance?.getPlugin();
-      const pluginParameters = await plugin?.getPluginParameters({
-        limit: 100,
-        offset: 0,
-      });
-
-      if (plugin && pluginParameters && instanceParameters) {
-        setNodeState({
-          plugin,
-          instanceParameters,
-          pluginParameters,
-        });
-      }
-    };
-
-    fetchData();
-  }, [selectedInstance]);
 
   const { data } = usePluginInstanceResourceQuery(selectedInstance);
 
-  const command = getCommand;
-
   const text =
     plugin && instanceParameters && pluginParameters
-      ? command(plugin, instanceParameters, pluginParameters)
+      ? getCommand(plugin, instanceParameters, pluginParameters)
       : "";
 
   return (

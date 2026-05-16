@@ -9,8 +9,13 @@ import {
   createPluginInstance as apiCreatePluginInstance,
   deletePluginInstance as apiDeletePluginInstance,
 } from "../api/serverApi";
-import { getPluginParameters } from "../api/serverApi/plugin";
 import {
+  getAllPluginParameterList,
+  getPlugin,
+  getPluginParameters,
+} from "../api/serverApi/plugin";
+import {
+  getAllInstanceParameterList,
   getPluginInstanceList,
   getPluginInstanceParameters,
 } from "../api/serverApi/pluginInstance";
@@ -69,12 +74,16 @@ export const init = (): Thunk<State> => {
   };
 };
 
-// XXX need to replace the name as setSelectedPluginInstance
 export const setSelectedInstance = (
   myID: string,
   selectedInstance: PluginInstance,
 ): Thunk<State> => {
-  return (dispatch, _getClassState) => {
+  return async (dispatch, _getClassState) => {
+    const err = await getInstanceInfo(selectedInstance);
+    if (err) {
+      dispatch(setError(myID, "setSelectedInstance", err));
+      return;
+    }
     dispatch(setData<State>(myID, { selectedInstance }));
   };
 };
@@ -129,7 +138,7 @@ export const updateInstance = (
     if (!me) {
       return;
     }
-    const { instanceList, treeNodeMap } = me;
+    const { instanceList, treeNodeMap, selectedInstance } = me;
 
     // 1. check existence
     const idx = instanceList.results.findIndex(
@@ -151,13 +160,14 @@ export const updateInstance = (
       },
     );
 
-    // 3. newNode
+    // 3. newTreeNodeMap
+    // 3.1. noewNode
     const newNode = instanceToTreeNode(instance);
     const { id: theID, previous_id: parentID } = instance;
     const origNode = treeNodeMap[theID];
     newNode.children = origNode.children;
 
-    // 4. newParentNode
+    // 3.2. newParentNode
     const newParentNode = updateInstanceUpdateParentNode(
       newNode,
       theID,
@@ -165,26 +175,36 @@ export const updateInstance = (
       treeNodeMap,
     );
 
-    // 5. setup toUpdateNode
+    // 3.3. setup toUpdateNode
     const toUpdateNode = { [theID]: newNode };
     if (newParentNode && parentID) {
       toUpdateNode[parentID] = newParentNode;
     }
 
-    // 6. newTreeNodeMap
+    // 3.4. newTreeNodeMap
     const newTreeNodeMap: Record<ID, TreeNodeDatum> = Object.assign(
       {},
       treeNodeMap,
       toUpdateNode,
     );
 
-    // 4. setup to-update
+    // 4. selectedInstance. assuming that plugin / instanceParams / pluginParams has been obtained.
+    if (instance.id === selectedInstance?.id) {
+      instance.plugin = selectedInstance.plugin;
+      instance.instanceParams = selectedInstance.instanceParams;
+      instance.pluginParams = selectedInstance.pluginParams;
+    }
+
+    // 5. setup to-update
     const toUpdate: Partial<State> = {
       instanceList: newInstanceList,
       treeNodeMap: newTreeNodeMap,
     };
     if (!parentID) {
       toUpdate.rootNode = newNode;
+    }
+    if (instance.id === selectedInstance?.id) {
+      toUpdate.selectedInstance = instance;
     }
 
     dispatch(setData<State>(myID, toUpdate));
@@ -224,7 +244,14 @@ export const setInstanceListAndSelectedInstance = (
   selectedInstance?: PluginInstance,
   instanceList?: List<PluginInstance>,
 ): Thunk<State> => {
-  return (dispatch, _getClass) => {
+  return async (dispatch, _getClass) => {
+    if (selectedInstance) {
+      const err = await getInstanceInfo(selectedInstance);
+      if (err) {
+        dispatch(setError(myID, "setSelectedInstance", err));
+        return;
+      }
+    }
     dispatch(
       setData<State>(myID, {
         selectedInstance,
@@ -715,4 +742,45 @@ const toParameterByFlag = (input: PluginNodeParameterMap) => {
     },
     {},
   );
+};
+
+const getInstanceInfo = async (
+  selectedInstance: PluginInstance,
+): Promise<Err | undefined> => {
+  if (selectedInstance.plugin) {
+    return;
+  }
+  const {
+    status,
+    data: plugin,
+    errmsg,
+  } = await getPlugin(selectedInstance.plugin_id);
+  if (errmsg) {
+    return errmsg;
+  }
+  if (!plugin) {
+    return "unable to get plugin";
+  }
+
+  const { data: instanceParameterList, errmsg: errmsg2 } =
+    await getAllInstanceParameterList(selectedInstance.id);
+  if (errmsg2) {
+    return errmsg2;
+  }
+  if (!instanceParameterList) {
+    return "unable to get instanceParameters";
+  }
+
+  const { data: pluginParameterList, errmsg: errmsg3 } =
+    await getAllPluginParameterList(plugin.id);
+  if (errmsg3) {
+    return errmsg3;
+  }
+  if (!pluginParameterList) {
+    return "unable to get pluginParameters";
+  }
+
+  selectedInstance.plugin = plugin;
+  selectedInstance.instanceParams = instanceParameterList.results;
+  selectedInstance.pluginParams = pluginParameterList.results;
 };

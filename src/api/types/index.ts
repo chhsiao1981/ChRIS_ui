@@ -29,9 +29,9 @@ import type {
 } from "./piping";
 import type { Plugin, PluginMeta, PluginParameter } from "./plugin";
 import {
-  type PluginInstance,
-  type PluginInstanceParameter,
-  PluginInstanceStatus,
+  type Instance,
+  type InstanceParameter,
+  InstanceStatus,
 } from "./pluginInstance";
 import type { Tag } from "./tag";
 import type { AuthToken, User, UserInfo } from "./user";
@@ -54,8 +54,8 @@ export type {
   PipingDefaultParameter,
   PipingInfo,
   UploadPipingInfo,
-  PluginInstance,
-  PluginInstanceParameter,
+  Instance as PluginInstance,
+  InstanceParameter as PluginInstanceParameter,
   Plugin,
   PluginMeta,
   PluginParameter,
@@ -76,4 +76,4 @@ export type {
   Workflow,
 };
 
-export { PluginInstanceStatus };
+export { InstanceStatus as PluginInstanceStatus };

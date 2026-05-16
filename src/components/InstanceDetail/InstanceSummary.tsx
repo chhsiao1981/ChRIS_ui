@@ -41,7 +41,7 @@ export default (props: Props) => {
       <PluginTitle />
       <Grid className="node-details__grid">
         <GridItem title="Status">
-          <StatusTitle pluginStatus={data?.pluginStatus} />,
+          <StatusTitle pluginStatus={data?.pluginStatus} />
         </GridItem>
       </Grid>
       <Status pluginStatus={data?.pluginStatus} />
@@ -64,7 +64,7 @@ export default (props: Props) => {
           </GridItem>
           <GridItem title="Plugin">
             <span style={{ fontFamily: "monospace" }}>
-              {selectedInstance?.plugin_name}, ver{" "}
+              {selectedInstance?.plugin_name} v
               {selectedInstance?.plugin_version}
             </span>
           </GridItem>
@@ -78,7 +78,7 @@ export default (props: Props) => {
           </GridItem>
           <Fragment>
             <GridItem title="Total Execution Time">
-              <span>{getExecTime(selectedInstance)}</span>,
+              <span>{getExecTime(selectedInstance)}</span>
             </GridItem>
           </Fragment>
 

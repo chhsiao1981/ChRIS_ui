@@ -37,7 +37,7 @@ export const defaultState: State = {
     open: true,
     maximized: false,
     minimized: false,
-    currentlyActive: "node",
+    currentlyActive: "summary",
   },
   files: {
     open: true,

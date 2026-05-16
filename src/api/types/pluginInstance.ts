@@ -1,8 +1,8 @@
 import type { Datetime } from "./datetime";
 import type { ID } from "./id";
-import type { PluginType } from "./plugin";
+import type { Plugin, PluginParameter, PluginType } from "./plugin";
 
-export enum PluginInstanceStatus {
+export enum InstanceStatus {
   SUCCESS = "finishedSuccessfully",
   CANCELLED = "cancelled",
   FINISHED_WITH_ERROR = "finishedWithError",
@@ -14,8 +14,8 @@ export enum PluginInstanceStatus {
   UNKNOWN_ERROR = "unknownError",
 }
 
-// legacy: plugin-instance
-export interface PluginInstance {
+// legacy: instance
+export interface Instance {
   id: ID;
   title: string;
   previous_id: ID | null;
@@ -28,7 +28,7 @@ export interface PluginInstance {
   start_date: Datetime; // yyyy-mm-ddTHH:MM:SS.ffffffTZ
   end_date: Datetime; // yyyy-mm-ddTHH:MM:SS.ffffffTZ
   output_path: string;
-  status: PluginInstanceStatus;
+  status: InstanceStatus;
   pipeline_id: ID;
   pipeline_name: string;
   workflow_id: ID;
@@ -41,10 +41,13 @@ export interface PluginInstance {
   gpu_limit: number;
   size: number;
   error_code: string;
-  [param_name: string]: any; // for parameters // XXX naming-injection.
+  plugin?: Plugin; // XXX plugin
+  pluginParams?: PluginParameter[]; // XXX pluginParams
+  instanceParams?: InstanceParameter[];
+  [param_name: string]: any; // XXX for parameter naming-injection.
 }
 
-export interface PluginInstanceParameter {
+export interface InstanceParameter {
   id: ID;
   param_name: string;
   value: string;

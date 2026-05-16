@@ -24,9 +24,11 @@ export default (props: Props) => {
   const [value, setValue] = useState("");
 
   useEffect(() => {
+    /*
     fetchNote(feedData).then((note) => {
       setValue(note?.data.content);
     });
+    */
   }, [feedData]);
 
   const [typing, setTyping] = useState(false);

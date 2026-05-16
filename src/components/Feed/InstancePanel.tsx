@@ -4,12 +4,12 @@ import {
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
-import type { CSSProperties } from "react";
 import { Panel } from "react-resizable-panels";
 import * as DoDrawer from "../../reducers/drawer";
 import DrawerActionButton from "../DrawerUtils/DrawerActionButton";
 import { onMaximize, onMinimize } from "../FeedUtils";
 import InstanceDetail from "../InstanceDetail/InstanceDetail";
+import styles from "./InstancePanel.module.css";
 
 type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
 
@@ -21,22 +21,12 @@ export default () => {
 
   const { node } = drawer;
 
-  const nodeStyle: CSSProperties = {
-    overflow: "scroll",
-  };
-  if (!node.open) {
-    nodeStyle.display = "none";
-  }
+  const className = !node.open ? styles.hide : styles["custom-panel"];
+
+  console.info("InstancePanel: className:", className);
 
   return (
-    <Panel
-      className="custom-panel"
-      id="2"
-      order={2}
-      defaultSize={47}
-      minSize={20}
-      style={nodeStyle}
-    >
+    <Panel className={className} id="2" order={2} defaultSize={47} minSize={20}>
       <DrawerActionButton
         onMaximize={() => onMaximize(drawerID, "node", doDrawer)}
         onMinimize={() => onMinimize(drawerID, doDrawer)}

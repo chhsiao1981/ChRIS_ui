@@ -1,0 +1,10 @@
+.custom-panel {
+  background-color: var(--pf-v5-c-page__main-section--BackgroundColor);
+  border-right: 1px solid var(--pf-global--BorderColor--dark);
+
+  overflow: scroll;
+}
+
+.hide {
+  display: none;
+}
