@@ -23,7 +23,7 @@ export default (props: Props) => {
   const { feed, isStaff } = props;
 
   const [orientation, setOrientation] = useState<Orientation>("vertical");
-  const [isToggleLabel, setIsToggleLabel] = useState(false);
+  const [isToggleLabel, setIsToggleLabel] = useState(true);
   const [is3D, setIs3D] = useState(false);
   const [isScaleEnabled, setIsScaleEnabled] = useState(false);
   const [scaleType, setScaleType] = useState<OverlayScaleType>("time");
