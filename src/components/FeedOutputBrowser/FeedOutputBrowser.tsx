@@ -1,13 +1,16 @@
 import { Alert } from "../Antd";
 import "./FeedOutputBrowser.css";
 import {
+  getDefaultID,
   getState,
   type ThunkModuleToFunc,
   useThunk,
 } from "@chhsiao1981/use-thunk";
+import { useEffect } from "react";
 import * as DoExplorer from "../../reducers/explorer";
 import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { EmptyStateLoader } from "./EmptyStateLoader";
+import styles from "./FeedOutputBrowser.module.css";
 import FetchFilesLoader from "./FetchFilesLoader";
 import FileBrowserPanelGroup from "./FileBrowserPanelGroup";
 
@@ -16,7 +19,8 @@ type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
 export default () => {
   const useExplorer = useThunk<DoExplorer.State, TDoExplorer>(DoExplorer);
-  const [classExplorer, _doExplorer] = useExplorer;
+  const [classExplorer, doExplorer] = useExplorer;
+  const explorerID = getDefaultID(classExplorer);
   const explorer = getState(classExplorer) || DoExplorer.defaultState;
   const { error } = explorer;
   const isError = !!error;
@@ -36,13 +40,19 @@ export default () => {
     status === "cancelled";
 
   const isHideFetchFilesLoader = isFinished;
-  const isHideFileBrowser = !isFinished || !selectedInstance || isError;
+  const isHideFileBrowser = !isFinished || isError;
   const isHideError = !isFinished || !isError;
   const isHideEmptyStateLoader =
     !isHideFetchFilesLoader || !isHideFileBrowser || !isHideError;
 
+  useEffect(() => {
+    if (!selectedInstance) {
+      return;
+    }
+  }, [selectedInstance]);
+
   return (
-    <div style={{ height: "100%" }} className="feed-output-browser">
+    <div className={styles.root}>
       <FetchFilesLoader
         title="Plugin executing. Files will be fetched when plugin completes"
         isHide={isHideFetchFilesLoader}

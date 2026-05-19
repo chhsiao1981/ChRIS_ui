@@ -61,7 +61,7 @@ export default (props: Props) => {
   const [previouslyActive, setPreviouslyActive] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const size = useSize(dicomImageRef);
-  const fname = selectedFile?.data?.fname || "";
+  const fname = selectedFile?.fname || "";
 
   const [toolState, setToolState] = useState<LocalToolState>({
     Zoom: false,
