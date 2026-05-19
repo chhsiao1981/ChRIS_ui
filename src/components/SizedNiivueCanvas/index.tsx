@@ -1,12 +1,6 @@
-import {
-  getState,
-  type ThunkModuleToFunc,
-  type UseThunk,
-} from "@chhsiao1981/use-thunk";
 import { Niivue, NVImageFromUrlOptions, SLICE_TYPE } from "@niivue/niivue";
 import { useEffect, useRef, useState } from "react";
 import { getToken } from "../../api/api.ts";
-import * as DoUser from "../../reducers/user";
 import FreeSurferColorLUT from "../Preview/displays/FreesurferColorLUT.v7.4.1.json";
 import BlackBody from "../Preview/displays/mipav/black_body.json";
 import Cardiac from "../Preview/displays/mipav/cardiac.json";
@@ -84,8 +78,6 @@ const _COLOR_MAP: { [key: string]: ColorMap } = {
   [DisplayColorMap.Ratio]: Ratio,
 };
 
-type TDoUser = ThunkModuleToFunc<typeof DoUser>;
-
 type Props = {
   size?: number;
   isScaling?: boolean;
@@ -100,8 +92,6 @@ type Props = {
   isRadiologistView: boolean;
 
   isHide?: boolean;
-
-  useUser: UseThunk<DoUser.State, TDoUser>;
 };
 
 export default (props: Props) => {
@@ -116,8 +106,6 @@ export default (props: Props) => {
     sliceType: propsSliceType,
     isRadiologistView,
     isHide,
-
-    useUser,
   } = props;
   const sliceType = propsSliceType || SliceType.Multiplanar;
 
@@ -130,10 +118,6 @@ export default (props: Props) => {
   ]);
 
   const [volumeUrl, setVolumeUrl] = useState("");
-
-  const [classStateUser, _] = useUser;
-  const user = getState(classStateUser) || DoUser.defaultState;
-  const { isLoggedIn } = user;
 
   // useEffect
   useEffect(() => {
@@ -159,7 +143,6 @@ export default (props: Props) => {
     });
     nv.attachToCanvas(glRef.current);
     nv.onLocationChange = (location) => {
-      console.info("SizedNiivueCanvas: location:", location);
       if (onLocationChange) {
         onLocationChange(location as CrosshairLocation);
       }
@@ -190,10 +173,6 @@ export default (props: Props) => {
       return;
     }
 
-    console.info(
-      "SizedNiivueCanvas: updated colormap: volumes:",
-      theNiivue.volumes.length,
-    );
     if (!theNiivue.volumes.length) {
       return;
     }
@@ -201,21 +180,6 @@ export default (props: Props) => {
     theNiivue.volumes[0].setColormap(colormap);
     theNiivue.volumes[0].cal_min = calMin;
     theNiivue.volumes[0].cal_max = calMax;
-
-    console.info(
-      "SizedNiivueCanvas: to refreshLayers: colormap:",
-      colormap,
-      "calMax:",
-      calMax,
-      "volumes[0].cal_max:",
-      theNiivue.volumes[0].cal_max,
-      "calMin:",
-      calMin,
-      "volumes[0].cal_min:",
-      theNiivue.volumes[0].cal_min,
-      "volumes:",
-      theNiivue.volumes[0],
-    );
 
     theNiivue.refreshLayers(theNiivue.volumes[0], 0);
     theNiivue.refreshDrawing(true);
@@ -261,39 +225,21 @@ export default (props: Props) => {
       ),
     );
 
-    console.info("SizedNiivueCanvas: volumes:", volumes);
-
     const token = getToken();
-    const authedVolumes = !isLoggedIn
-      ? volumes
-      : volumes.map((v) => {
-          return {
-            ...v,
-            headers: {
-              Authorization: `Token ${token}`,
-            },
-          };
-        });
+    const authedVolumes = volumes.map((v) => {
+      return {
+        ...v,
+        headers: {
+          Authorization: `Token ${token}`,
+        },
+      };
+    });
 
     setVolumeUrl(urls[0]);
     (async () => {
       await theNiivue.loadVolumes(authedVolumes);
-      console.info("after theNiivue.loadVolumes:", theNiivue.volumes.length);
     })();
-  }, [theNiivue, urls, isLoggedIn, isHide]);
-
-  /*
-  const fullOptions = React.useMemo(() => {
-    // set textHeight.
-    // Internal to niivue, the font size scales with the outer canvas size.
-    // To undo this effect, we need to divide by the canvas' width or height.
-    // See https://github.com/niivue/niivue/issues/857
-    const multiplier =
-      2 / (isScaling ? Math.min(canvasWidth, canvasHeight) : 800);
-    const textHeight = multiplier * (size || 10);
-    return options ? { ...options, textHeight } : { textHeight };
-  }, [options, size, isScaling, canvasWidth, canvasHeight]);
-  */
+  }, [theNiivue, urls, isHide]);
 
   return (
     <div className={styles.niivueContainer}>

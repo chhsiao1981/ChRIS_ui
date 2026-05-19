@@ -253,8 +253,6 @@ export default (props: Props) => {
         </div>
 
         <Operations
-          username={username}
-          isStaff={isStaff}
           classNames={operationsClassNames}
           useCart={useCart}
           operationID={operationID}

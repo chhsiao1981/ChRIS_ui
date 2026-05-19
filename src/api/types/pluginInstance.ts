@@ -1,5 +1,11 @@
 import type { Datetime } from "./datetime";
+import type {
+  FileBrowserFolder,
+  FileBrowserFolderFile,
+  FileBrowserFolderLinkFile,
+} from "./fileBrowser";
 import type { ID } from "./id";
+import type { List } from "./list";
 import type { Plugin, PluginParameter, PluginType } from "./plugin";
 
 export enum InstanceStatus {
@@ -43,7 +49,8 @@ export interface Instance {
   error_code: string;
   plugin?: Plugin; // XXX plugin
   pluginParams?: PluginParameter[]; // XXX pluginParams
-  instanceParams?: InstanceParameter[];
+  instanceParams?: InstanceParameter[]; // XXX instanceParams
+
   [param_name: string]: any; // XXX for parameter naming-injection.
 }
 

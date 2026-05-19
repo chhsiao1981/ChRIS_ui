@@ -1,6 +1,4 @@
-import type { ThunkModuleToFunc, UseThunk } from "@chhsiao1981/use-thunk";
 import type { FileBrowserFolderFile, PACSFile } from "../../../api/types";
-import type * as DoUser from "../../../reducers/user";
 import {
   CatchallDisplay,
   DcmDisplay,
@@ -13,15 +11,11 @@ import {
   VideoDisplay,
 } from "./index";
 
-type TDoUser = ThunkModuleToFunc<typeof DoUser>;
-
 type Props = {
   selectedFile?: FileBrowserFolderFile | PACSFile;
   viewerName: string;
   preview?: string;
   isHide?: boolean;
-
-  useUser: UseThunk<DoUser.State, TDoUser>;
 };
 
 // XXX Because it is possible that some special display requires some persistently attached (ex: d3/niivue/canvas/etc., we use display-none strategy.
@@ -52,30 +46,6 @@ export default (props: Props) => {
     !isShowNiivue &&
     !isShowVideo;
 
-  console.info(
-    "ViewerDisplay: viewerName:",
-    viewerName,
-    "isShowJSON:",
-    isShowJSON,
-    "isShowIframe:",
-    isShowIframe,
-    "isShowImage:",
-    isShowImage,
-    "isShowDCM:",
-    isShowDCM,
-    "isShowPDF:",
-    isShowPDF,
-    "isShowXtk:",
-    isShowXtk,
-    "isShowText:",
-    isShowText,
-    "isShowNiivue:",
-    isShowNiivue,
-    "isShowVideo:",
-    isShowVideo,
-    "isShowCatchAll:",
-    isShowCatchAll,
-  );
   return (
     <>
       <JsonDisplay {...props} isHide={!isShowJSON} />

@@ -93,12 +93,10 @@ type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 type Props = {
   selectedFile?: IFileBlob;
   isHide?: boolean;
-
-  useUser: UseThunk<DoUser.State, TDoUser>;
 };
 
 export default (props: Props) => {
-  const { selectedFile, isHide, useUser } = props;
+  const { selectedFile, isHide } = props;
   const [sliceTypeName, setSliceTypeName] = useState(SliceType.Multiplanar);
   const [crosshairText, setCrosshairText] = useState("");
   const [displayType, setDisplayType] = useState(DisplayType.IMG4096);
@@ -252,13 +250,11 @@ export default (props: Props) => {
           calMax={calMax}
           calMin={calMin}
           onLocationChange={(c: CrosshairLocation) => {
-            console.info("NiiVueDisplay: onLocationChange: c:", c);
             setCrosshairText(c.string);
           }}
           sliceType={sliceTypeName}
           isRadiologistView={isRadiologistView}
           isHide={isHide}
-          useUser={useUser}
         />
       </div>
     </>

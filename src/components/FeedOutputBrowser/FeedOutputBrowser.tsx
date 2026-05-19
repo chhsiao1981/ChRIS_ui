@@ -1,44 +1,43 @@
 import { Alert } from "../Antd";
 import "./FeedOutputBrowser.css";
 import {
+  getState,
   type ThunkModuleToFunc,
-  type UseThunk,
   useThunk,
 } from "@chhsiao1981/use-thunk";
-import * as DoDrawer from "../../reducers/drawer";
+import * as DoExplorer from "../../reducers/explorer";
+import * as DoPluginInstance from "../../reducers/pluginInstance";
 import { EmptyStateLoader } from "./EmptyStateLoader";
 import FetchFilesLoader from "./FetchFilesLoader";
-import FileBrowser from "./FileBrowser";
-import { useFeedBrowser } from "./useFeedBrowser";
+import FileBrowserPanelGroup from "./FileBrowserPanelGroup";
 
-type TDoDrawer = ThunkModuleToFunc<typeof DoDrawer>;
+type TDoExplorer = ThunkModuleToFunc<typeof DoExplorer>;
+type TDoPluginInstance = ThunkModuleToFunc<typeof DoPluginInstance>;
 
-type Props = {
-  statuses: { [id: number]: string };
-};
+export default () => {
+  const useExplorer = useThunk<DoExplorer.State, TDoExplorer>(DoExplorer);
+  const [classExplorer, _doExplorer] = useExplorer;
+  const explorer = getState(classExplorer) || DoExplorer.defaultState;
+  const { error } = explorer;
+  const isError = !!error;
 
-export default (props: Props) => {
-  const { statuses } = props;
-  const useDrawer = useThunk<DoDrawer.State, TDoDrawer>(DoDrawer);
+  const usePluginInstance = useThunk<DoPluginInstance.State, TDoPluginInstance>(
+    DoPluginInstance,
+  );
+  const [classPluginInstance, _doPluginInstance] = usePluginInstance;
+  const pluginInstance =
+    getState(classPluginInstance) || DoPluginInstance.defaultState;
+  const { selectedInstance, statuses } = pluginInstance;
+  const status =
+    statuses[selectedInstance?.id || ""] || selectedInstance?.status || "";
+  const isFinished =
+    status === "finishedSuccessfully" ||
+    status === "finishedWithError" ||
+    status === "cancelled";
 
-  const {
-    selected,
-    pluginFilesPayload,
-    handleFileClick,
-    filesLoading,
-    isError,
-    error,
-    currentPath,
-    fetchMore,
-    observerTarget,
-    handlePagination,
-    finished,
-  } = useFeedBrowser(statuses, useDrawer);
-
-  const isHideFetchFilesLoader = finished;
-  const isHideFileBrowser =
-    !finished || !pluginFilesPayload || !selected || isError;
-  const isHideError = !finished || !isError;
+  const isHideFetchFilesLoader = isFinished;
+  const isHideFileBrowser = !isFinished || !selectedInstance || isError;
+  const isHideError = !isFinished || !isError;
   const isHideEmptyStateLoader =
     !isHideFetchFilesLoader || !isHideFileBrowser || !isHideError;
 
@@ -48,22 +47,8 @@ export default (props: Props) => {
         title="Plugin executing. Files will be fetched when plugin completes"
         isHide={isHideFetchFilesLoader}
       />
-      <FileBrowser
-        selected={selected}
-        handleFileClick={handleFileClick}
-        pluginFilesPayload={pluginFilesPayload}
-        currentPath={currentPath}
-        fetchMore={fetchMore}
-        observerTarget={observerTarget}
-        handlePagination={handlePagination}
-        isLoading={filesLoading}
-        isHide={isHideFileBrowser}
-      />
-      <Alert
-        showIcon={!isHideError}
-        type="error"
-        description={error?.message}
-      />
+      <FileBrowserPanelGroup isHide={isHideFileBrowser} />
+      <Alert showIcon={!isHideError} type="error" description={error} />
       <EmptyStateLoader title="" isHide={isHideEmptyStateLoader} />
     </div>
   );

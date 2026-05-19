@@ -13,7 +13,7 @@ import {
 import * as DoCart from "../../../reducers/cart";
 import type * as DoFeedList from "../../../reducers/feedList";
 import * as DoOperation from "../../../reducers/operation";
-import type * as DoUser from "../../../reducers/user";
+import * as DoUser from "../../../reducers/user";
 import { AddNodeProvider } from "../../AddNode/context";
 import { CreateFeedProvider } from "../../CreateFeed/context";
 import { PipelineProvider } from "../../PipelinesCopy/context";
@@ -47,8 +47,6 @@ type Styles = {
 };
 
 type Props = {
-  username: string;
-  isStaff: boolean;
   styles?: Styles;
   classNames?: ClassNames;
 
@@ -68,8 +66,6 @@ type Props = {
 // Components in FeedListView, FileBrowser, and FeedView.
 export default (props: Props) => {
   const {
-    username,
-    isStaff,
     styles,
     classNames,
 
@@ -98,6 +94,10 @@ export default (props: Props) => {
   const cart = getState(classCart) || DoCart.defaultState;
   const { selectedPaths } = cart;
   const selectedCount = selectedPaths.length;
+
+  const [classUser, doUser] = useUser;
+  const user = getState(classUser) || DoUser.defaultState;
+  const { username, isStaff } = user;
 
   const toolbarItems = (
     <Fragment>

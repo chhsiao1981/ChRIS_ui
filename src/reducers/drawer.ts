@@ -1,6 +1,5 @@
 import {
   init as _init,
-  genUUID,
   getState,
   type State as rState,
   setData,
@@ -9,6 +8,14 @@ import {
 import { Role } from "./types";
 
 export const myClass = "chris-ui/drawer";
+
+// Drawer is for the 4 panels in the FeedView.
+//   [graph] [instance/node]
+//   [files] [preview]
+//   graph: show the pipeline graph.
+//   instance/node: summary / note / terminal (plugin-log)
+//   files: file list in feed-output-browser.
+//   preview: preview of the selected file.
 
 type DrawerState = {
   open: boolean;
@@ -64,7 +71,7 @@ const defaultStateClinician: State = {
     open: false,
     maximized: false,
     minimized: false,
-    currentlyActive: "node",
+    currentlyActive: "summary",
   },
   files: {
     open: true,
@@ -212,17 +219,17 @@ export const minimize = (myID: string): Thunk<State> => {
   };
 };
 
-export const setFilePreviewPanel = (myID: string): Thunk<State> => {
+export const openPreviewPanel = (myID: string): Thunk<State> => {
   return (dispatch, _) => {
-    const toUpdate = {
+    const toUpdate: Partial<State> = {
       preview: {
         open: true,
-        maximize: false,
+        maximized: false,
         minimized: false,
         currentlyActive: "preview",
       },
     };
-    dispatch(setData(myID, toUpdate));
+    dispatch(setData<State>(myID, toUpdate));
   };
 };
 

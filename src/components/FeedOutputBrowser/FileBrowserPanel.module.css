@@ -1,0 +1,8 @@
+.hide {
+  display: none;
+}
+
+.root {
+  display: flex;
+  flex-direction: column;
+}

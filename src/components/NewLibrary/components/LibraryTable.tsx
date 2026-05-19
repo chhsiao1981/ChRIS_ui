@@ -81,8 +81,8 @@ type RowProps = {
   size: number;
   type: "folder" | "file" | "link";
   computedPath: string;
-  handleFolderClick: () => void;
-  handleFileClick: () => void;
+  onFolderClick: () => void;
+  onFileClick: () => void;
   origin: {
     type: OperationContext;
     additionalKeys: string[];
@@ -101,8 +101,8 @@ export const BaseRow = (props: RowProps) => {
     size,
     type,
     computedPath,
-    handleFolderClick,
-    handleFileClick,
+    onFolderClick: handleFolderClick,
+    onFileClick: handleFileClick,
     origin,
 
     username,
@@ -376,11 +376,11 @@ export default (props: TableProps) => {
               owner={resource.data.owner_username}
               size={0}
               computedPath={computedPath}
-              handleFolderClick={() => {
+              onFolderClick={() => {
                 const name = getFolderName(resource, computedPath);
                 handleFolderClick(name);
               }}
-              handleFileClick={() => {
+              onFileClick={() => {
                 return;
               }}
               origin={origin}
@@ -397,10 +397,10 @@ export default (props: TableProps) => {
               owner={resource.data.owner_username}
               size={resource.data.fsize}
               computedPath={computedPath}
-              handleFolderClick={() => {
+              onFolderClick={() => {
                 return;
               }}
-              handleFileClick={() => {
+              onFileClick={() => {
                 handleFileClick(resource);
               }}
               origin={origin}
@@ -417,10 +417,10 @@ export default (props: TableProps) => {
               owner={resource.data.owner_username}
               size={resource.data.fsize}
               computedPath={computedPath}
-              handleFolderClick={() => {
+              onFolderClick={() => {
                 return;
               }}
-              handleFileClick={() => {
+              onFileClick={() => {
                 navigate(resource.data.path);
               }}
               origin={origin}

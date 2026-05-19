@@ -1,0 +1,35 @@
+.header {
+  padding: 8px 0;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navigation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breadcrumb-popover {
+  max-width: 80vw;
+  overflow-x: auto;
+  padding: 12px;
+}
+
+.breadcrumb-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.label {
+  font-size: 13px;
+  white-space: nowrap;
+  text-decoration: underline dotted;
+  cursor: pointer;
+}

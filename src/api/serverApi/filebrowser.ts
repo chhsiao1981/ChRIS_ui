@@ -150,7 +150,7 @@ export const deleteFileBrowserFolderLinkFile = (theID: ID) =>
   });
 
 export const getLinkedResource = (theID: ID) => {
-  api<FileBrowserFolderFile>({
+  api<FileBrowserFolderLinkFile>({
     endpoint: `filebrowser/linkfiles/${theID}/`,
   });
 };

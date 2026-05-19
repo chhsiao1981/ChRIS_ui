@@ -1,11 +1,7 @@
-import type { ThunkModuleToFunc, UseThunk } from "@chhsiao1981/use-thunk";
 import { Label, Text } from "@patternfly/react-core";
 import { fileViewerMap, getFileExtension } from "../../api/model";
 import type { FileBrowserFolderFile, PACSFile } from "../../api/types";
-import type * as DoUser from "../../reducers/user";
 import ViewerDisplay from "./displays/ViewerDisplay";
-
-type TDoUser = ThunkModuleToFunc<typeof DoUser>;
 
 type Props = {
   selectedFile?: FileBrowserFolderFile | PACSFile;
@@ -13,12 +9,10 @@ type Props = {
   handleNext?: () => void;
   handlePrevious?: () => void;
   isHide?: boolean;
-
-  useUser: UseThunk<DoUser.State, TDoUser>;
 };
 
 export default (props: Props) => {
-  const { selectedFile, preview, isHide, useUser } = props;
+  const { selectedFile, preview, isHide } = props;
   let viewerName = "";
   if (selectedFile) {
     const fileType = getFileExtension(selectedFile.fname);
@@ -43,7 +37,6 @@ export default (props: Props) => {
       viewerName={viewerName}
       selectedFile={selectedFile}
       isHide={isHide}
-      useUser={useUser}
     />
   );
 };

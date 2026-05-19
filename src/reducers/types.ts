@@ -113,3 +113,9 @@ export type TreeNodeDatum = {
   item: PluginInstance;
   children: TreeNodeDatum[];
 };
+
+export type FileBrowserBreadCrumb = {
+  value: string;
+  isSelectedInstancePath: boolean;
+  path: string;
+};
