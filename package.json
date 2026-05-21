@@ -6,6 +6,7 @@
     "__start_stop:comment": "CHRIS_BACKEND_PATH is relative to third-party/chris-backend/docker",
     "start": "pnpm run dev:01-docker-switch-docker && CHRIS_BACKEND_PATH=.. docker compose -f docker/docker-compose-dev.yaml up -d",
     "stop": "CHRIS_BACKEND_PATH=.. docker compose -f docker/docker-compose-dev.yaml down && pnpm run dev:02-docker-switch-local",
+    "clean": "CHRIS_BACKEND_PATH=.. docker compose -f docker/docker-compose-dev.yaml down -v && pnpm run dev:02-docker-switch-local",
     "__dev:docker:comment": "",
     "dev:00-docker-node-env": "docker build -t chris-ui:dev-env -f ./docker/Dockerfile.dev .",
     "dev:01-docker-switch-docker": "mkdir -p node_modules.docker && rm -f node_modules && ln -s node_modules.docker node_modules && mkdir -p .pnpm-store.docker && rm -f .pnpm-store && ln -s .pnpm-store.docker .pnpm-store",
